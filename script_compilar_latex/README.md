@@ -1,4 +1,5 @@
 # compilar_latex.sh — Script Universal de Compilación LaTeX
+#readme 
 
 Script de shell completo para compilar documentos LaTeX con **pdflatex**, **XeLaTeX** y **LuaLaTeX**, con soporte para bibliografía, índices, glosarios, modo watch, limpieza automática y mucho más.
 

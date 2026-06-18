@@ -2,7 +2,7 @@
 # ==============================================================================
 #  compilar_latex.sh — Script universal de compilación LaTeX
 #  Soporta: pdflatex · xelatex · lualatex
-#  Autor  : generado como plantilla reutilizable
+#  Autor  : Edison Achalma
 #  Versión: 2.0.0
 # ==============================================================================
 #
