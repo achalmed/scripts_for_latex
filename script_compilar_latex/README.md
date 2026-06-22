@@ -186,67 +186,66 @@ compilar ~/Documents/pub_numerus-scriptum/python_intro.tex
 ### Ejemplos por caso de uso
 
 ```bash
-# ── 1. Artículo (detección automática de motor) ─────────────────────────────
+# ── 1. Artículo (detección automática de motor)
 compilar ~/Documents/pub_dialectica-y-mercado/posts/2023-03-03-el-capitalismo/index
 
-# ── 2. Artículo de econometría con Biber ────────────────────────────────────
+# ── 2. Artículo de econometría con Biber
 compilar --biber -p 3 ~/Documents/pub_epsilon-y-beta/01-fundamentos-econometria/2021-03-01-01-modelo-clasico-de-regresion-lineal/index
 
-# ── 3. Presentación Beamer (slides), abrir al terminar ──────────────────────
+# ── 3. Presentación Beamer (slides), abrir al terminar
 compilar -e xelatex -a ~/Documents/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
-# ── 4. Libro preuniversitario con índice y glosario ─────────────────────────
+# ── 4. Libro preuniversitario con índice y glosario
 compilar -e lualatex -i -g ~/Documents/CampusTeX-Preuniversitario/aritmetica/main
 
-# ── 5. Modo watch mientras escribes un informe ──────────────────────────────
+# ── 5. Modo watch mientras escribes un informe
 compilar -w ~/Documents/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
 
-# ── 6. Solo limpiar auxiliares (sin recompilar) ─────────────────────────────
+# ── 6. Solo limpiar auxiliares (sin recompilar)
 compilar -c ~/Documents/pub_chaska/i3wm/2020-02-15-introduccion-a-i3wm/index
 
-# ── 7. Compilar silenciosamente (batch o cron) ──────────────────────────────
+# ── 7. Compilar silenciosamente (batch o cron)
 compilar -s ~/Documents/pub_methodica/posts/2025-01-12-recursos-de-bibliografia-y-documentacion/index && echo "OK" || echo "ERROR"
 
-# ── 8. Borrador rápido (sin imágenes, más veloz) ────────────────────────────
+# ── 8. Borrador rápido (sin imágenes, más veloz)
 compilar --draft ~/Documents/pub_numerus-scriptum/python/2025-05-10-visualizacion-de-datos-con-python/index
 
-# ── 9. Tesis con múltiples capítulos (\include) ─────────────────────────────
+# ── 9. Tesis con múltiples capítulos (\include)
 compilar -e lualatex --biber -p 3 ~/Documents/01\ notes/1\ plan\ de\ tesis\ desigualdad\ socioeconomica\ y\ la\ pobreza/index
 
-# ── 10. Debug: ver log completo y guardarlo ──────────────────────────────────
+# ── 10. Debug: ver log completo y guardarlo
 compilar -v --log /tmp/debug.log ~/Documents/pub_epsilon-y-beta/estadistica/2018-05-16-estadigrafos/index
 
-# ── 11. CV — LuaLaTeX + Biber + PDF en carpeta separada ─────────────────────
+# ── 11. CV — LuaLaTeX + Biber + PDF en carpeta separada
 cd ~/Documents/doc_cv/main
 compilar -e lualatex -p 3 --biber -o ../output index
 # sin cd previo:
 compilar -e lualatex -p 3 --biber -o ../output ~/Documents/doc_cv/main/index
-
+```
 
 ---
 
 ## 🗂️ Arquitectura
 
 ```
-
 script_compilar_latex/
-├── main.sh # Punto de entrada: carga módulos, define variables globales,
-│ # orquesta el flujo completo de compilación
+├── main.sh   # Punto de entrada: carga módulos, define variables globales,
+│             # orquesta el flujo completo de compilación
 ├── config.sh # Valores por defecto, constantes, inicialización de colores
 ├── README.md # Esta documentación
 └── lib/
-├── logger.sh # Funciones de salida: info, ok, warn, error, paso, titulo
-├── resolver.sh # Resuelve cualquier ruta al .tex → TEX_DIR / TEX_BASE / TEX_PATH
-├── detector.sh # Detecta el motor LaTeX apropiado inspeccionando el .tex
-├── validator.sh # Valida argumentos CLI y verifica dependencias del sistema
-├── cli.sh # Parseo de argumentos y texto de ayuda
-├── compiler.sh # Invoca LaTeX, BibTeX/Biber, makeindex, makeglossaries;
-│ # construye flags; muestra errores del log; limpia auxiliares
-├── output.sh # Banner, info del PDF (tamaño/páginas/metadata), mover PDF,
-│ # abrir PDF, sugerir apertura manual
-└── watch.sh # Modo watch: inotifywait (Linux) / fswatch (macOS)
+├── logger.sh      # Funciones de salida: info, ok, warn, error, paso, titulo
+├── resolver.sh    # Resuelve cualquier ruta al .tex → TEX_DIR / TEX_BASE / TEX_PATH
+├── detector.sh    # Detecta el motor LaTeX apropiado inspeccionando el .tex
+├── validator.sh   # Valida argumentos CLI y verifica dependencias del sistema
+├── cli.sh         # Parseo de argumentos y texto de ayuda
+├── compiler.sh    # Invoca LaTeX, BibTeX/Biber, makeindex, makeglossaries;
+│                  # construye flags; muestra errores del log; limpia auxiliares
+├── output.sh      # Banner, info del PDF (tamaño/páginas/metadata), mover PDF,
+│                  # abrir PDF, sugerir apertura manual
+└── watch.sh       # Modo watch: inotifywait (Linux) / fswatch (macOS)
 
-````
+```
 
 ### Responsabilidad de cada módulo
 
@@ -312,7 +311,7 @@ Era necesario hacer `cd` al directorio del `.tex` antes de invocar el script.
 compilar ~/Documents/pub_dialectica-y-mercado/capitulo1
 compilar ../pub_axiomata/paper
 compilar /home/achalmaedison/Documents/pub_res-publica/libro
-````
+```
 
 El módulo `lib/resolver.sh` resuelve la ruta, y `lib/compiler.sh` compila
 siempre con `pushd "$TEX_DIR"` para que LaTeX encuentre todos los archivos
