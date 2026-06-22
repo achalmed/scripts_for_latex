@@ -45,22 +45,22 @@ archivo y sin requerir `cd` previos.
 
 ### Dependencias obligatorias
 
-| Herramienta | Paquete (Arch) | Paquete (Debian/Ubuntu) | Para qué |
-|-------------|----------------|--------------------------|----------|
-| `pdflatex` / `xelatex` / `lualatex` | `texlive-most` | `texlive-full` | Motor de compilación |
+| Herramienta                         | Paquete (Arch) | Paquete (Debian/Ubuntu) | Para qué             |
+| ----------------------------------- | -------------- | ----------------------- | -------------------- |
+| `pdflatex` / `xelatex` / `lualatex` | `texlive-most` | `texlive-full`          | Motor de compilación |
 
 ### Dependencias opcionales
 
-| Herramienta | Paquete | Para qué |
-|-------------|---------|----------|
-| `bibtex` | incluido en texlive | Bibliografía clásica (`-b`) |
-| `biber` | `biber` | Bibliografía con biblatex (`--biber`) |
-| `makeindex` | incluido en texlive | Índices temáticos (`-i`) |
-| `makeglossaries` | `texlive-glossaries` | Glosarios (`-g`) |
-| `pdfinfo` | `poppler` / `poppler-utils` | Mostrar páginas y metadata del PDF |
-| `inotifywait` | `inotify-tools` | Modo watch en Linux (`-w`) |
-| `fswatch` | `fswatch` (Homebrew) | Modo watch en macOS (`-w`) |
-| `evince` / `okular` / `zathura` | (varios) | Abrir PDF automáticamente (`-a`) |
+| Herramienta                     | Paquete                     | Para qué                              |
+| ------------------------------- | --------------------------- | ------------------------------------- |
+| `bibtex`                        | incluido en texlive         | Bibliografía clásica (`-b`)           |
+| `biber`                         | `biber`                     | Bibliografía con biblatex (`--biber`) |
+| `makeindex`                     | incluido en texlive         | Índices temáticos (`-i`)              |
+| `makeglossaries`                | `texlive-glossaries`        | Glosarios (`-g`)                      |
+| `pdfinfo`                       | `poppler` / `poppler-utils` | Mostrar páginas y metadata del PDF    |
+| `inotifywait`                   | `inotify-tools`             | Modo watch en Linux (`-w`)            |
+| `fswatch`                       | `fswatch` (Homebrew)        | Modo watch en macOS (`-w`)            |
+| `evince` / `okular` / `zathura` | (varios)                    | Abrir PDF automáticamente (`-a`)      |
 
 ```bash
 # Arch Linux / Archcraft
@@ -164,97 +164,104 @@ compilar ~/Documents/pub_numerus-scriptum/python_intro.tex
 
 ### Opciones completas
 
-| Flag | Descripción | Default |
-|------|-------------|---------|
-| `-e, --engine ENGINE` | Motor: `auto`, `pdflatex`, `xelatex`, `lualatex` | `auto` |
-| `-p, --pasadas N` | Número de compilaciones | `2` (o `3` con biblio) |
-| `--draft` | Modo borrador: más rápido, sin imágenes | desactivado |
-| `-b, --bibtex` | Ejecuta BibTeX entre compilaciones | — |
-| `--biber` | Ejecuta Biber (para biblatex) | — |
-| `-i, --makeindex` | Ejecuta makeindex | — |
-| `-g, --makeglossaries` | Ejecuta makeglossaries | — |
-| `-o, --output DIR` | Mueve el PDF al directorio indicado | (en el dir del .tex) |
-| `-s, --silencioso` | Suprime salida del compilador | — |
-| `-v, --verbose` | Muestra salida completa del compilador | — |
-| `-a, --abrir` | Abre el PDF automáticamente al terminar | — |
-| `--log FILE` | Guarda el log en FILE | `ARCHIVO.log` |
-| `-c, --limpiar` | Solo elimina auxiliares y sale | — |
-| `-w, --watch` | Recompila automáticamente al detectar cambios | — |
-| `-h, --help` | Muestra la ayuda | — |
-| `--version` | Muestra la versión | — |
+| Flag                   | Descripción                                      | Default                |
+| ---------------------- | ------------------------------------------------ | ---------------------- |
+| `-e, --engine ENGINE`  | Motor: `auto`, `pdflatex`, `xelatex`, `lualatex` | `auto`                 |
+| `-p, --pasadas N`      | Número de compilaciones                          | `2` (o `3` con biblio) |
+| `--draft`              | Modo borrador: más rápido, sin imágenes          | desactivado            |
+| `-b, --bibtex`         | Ejecuta BibTeX entre compilaciones               | —                      |
+| `--biber`              | Ejecuta Biber (para biblatex)                    | —                      |
+| `-i, --makeindex`      | Ejecuta makeindex                                | —                      |
+| `-g, --makeglossaries` | Ejecuta makeglossaries                           | —                      |
+| `-o, --output DIR`     | Mueve el PDF al directorio indicado              | (en el dir del .tex)   |
+| `-s, --silencioso`     | Suprime salida del compilador                    | —                      |
+| `-v, --verbose`        | Muestra salida completa del compilador           | —                      |
+| `-a, --abrir`          | Abre el PDF automáticamente al terminar          | —                      |
+| `--log FILE`           | Guarda el log en FILE                            | `ARCHIVO.log`          |
+| `-c, --limpiar`        | Solo elimina auxiliares y sale                   | —                      |
+| `-w, --watch`          | Recompila automáticamente al detectar cambios    | —                      |
+| `-h, --help`           | Muestra la ayuda                                 | —                      |
+| `--version`            | Muestra la versión                               | —                      |
 
 ### Ejemplos por caso de uso
 
 ```bash
-# ── 1. Artículo simple ──────────────────────────────────────────────────────
-# (motor detectado automáticamente según el contenido del .tex)
-compilar ~/Documents/pub_dialectica-y-mercado/articulo_main
+# ── 1. Artículo (detección automática de motor) ─────────────────────────────
+compilar ~/Documents/pub_dialectica-y-mercado/posts/2023-03-03-el-capitalismo/index
 
-# ── 2. Tesis con Biber (biblatex) ──────────────────────────────────────────
-compilar --biber -p 3 ~/Documents/03\ writing/tesis_economia
+# ── 2. Artículo de econometría con Biber ────────────────────────────────────
+compilar --biber -p 3 ~/Documents/pub_epsilon-y-beta/01-fundamentos-econometria/2021-03-01-01-modelo-clasico-de-regresion-lineal/index
 
-# ── 3. Presentación Beamer, abrir al terminar ───────────────────────────────
-compilar -e xelatex -a ~/Documents/03\ writing/slides_microeconomia
+# ── 3. Presentación Beamer (slides), abrir al terminar ──────────────────────
+compilar -e xelatex -a ~/Documents/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
-# ── 4. Libro con índice, glosario y salida en build/ ───────────────────────
-compilar -e lualatex -i -g -o build ~/Documents/pub_res-publica/libro_metodologia
+# ── 4. Libro preuniversitario con índice y glosario ─────────────────────────
+compilar -e lualatex -i -g ~/Documents/CampusTeX-Preuniversitario/aritmetica/main
 
-# ── 5. Modo watch durante la escritura ──────────────────────────────────────
-compilar -w ~/Documents/02\ analysis/informe_islm
+# ── 5. Modo watch mientras escribes un informe ──────────────────────────────
+compilar -w ~/Documents/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
 
-# ── 6. Solo limpiar auxiliares de un documento ──────────────────────────────
-compilar -c ~/Documents/pub_chaska/presentacion
+# ── 6. Solo limpiar auxiliares (sin recompilar) ─────────────────────────────
+compilar -c ~/Documents/pub_chaska/i3wm/2020-02-15-introduccion-a-i3wm/index
 
-# ── 7. Compilar silenciosamente (scripts CI o cron) ─────────────────────────
-compilar -s ~/Documents/pub_axiomata/paper && echo "OK" || echo "ERROR"
+# ── 7. Compilar silenciosamente (batch o cron) ──────────────────────────────
+compilar -s ~/Documents/pub_methodica/posts/2025-01-12-recursos-de-bibliografia-y-documentacion/index && echo "OK" || echo "ERROR"
 
-# ── 8. Modo borrador para escritura rápida ──────────────────────────────────
-compilar --draft ~/Documents/pub_numerus-scriptum/python_economists
+# ── 8. Borrador rápido (sin imágenes, más veloz) ────────────────────────────
+compilar --draft ~/Documents/pub_numerus-scriptum/python/2025-05-10-visualizacion-de-datos-con-python/index
 
-# ── 9. Forzar motor específico ignorando la detección automática ─────────────
-compilar -e lualatex ~/Documents/CampusTeX-Preuniversitario/modulo_algebra
+# ── 9. Tesis con múltiples capítulos (\include) ─────────────────────────────
+compilar -e lualatex --biber -p 3 ~/Documents/01\ notes/1\ plan\ de\ tesis\ desigualdad\ socioeconomica\ y\ la\ pobreza/index
 
-# ── 10. Debug con log personalizado ─────────────────────────────────────────
-compilar -v --log /tmp/debug_latex.log ~/Documents/pub_epsilon-y-beta/econometria
-```
+# ── 10. Debug: ver log completo y guardarlo ──────────────────────────────────
+compilar -v --log /tmp/debug.log ~/Documents/pub_epsilon-y-beta/estadistica/2018-05-16-estadigrafos/index
+
+# ── 11. CV — LuaLaTeX + Biber + PDF en carpeta separada ─────────────────────
+cd ~/Documents/doc_cv/main
+compilar -e lualatex -p 3 --biber -o ../output index
+# sin cd previo:
+compilar -e lualatex -p 3 --biber -o ../output ~/Documents/doc_cv/main/index
+
 
 ---
 
 ## 🗂️ Arquitectura
 
 ```
+
 script_compilar_latex/
-├── main.sh          # Punto de entrada: carga módulos, define variables globales,
-│                    # orquesta el flujo completo de compilación
-├── config.sh        # Valores por defecto, constantes, inicialización de colores
-├── README.md        # Esta documentación
+├── main.sh # Punto de entrada: carga módulos, define variables globales,
+│ # orquesta el flujo completo de compilación
+├── config.sh # Valores por defecto, constantes, inicialización de colores
+├── README.md # Esta documentación
 └── lib/
-    ├── logger.sh    # Funciones de salida: info, ok, warn, error, paso, titulo
-    ├── resolver.sh  # Resuelve cualquier ruta al .tex → TEX_DIR / TEX_BASE / TEX_PATH
-    ├── detector.sh  # Detecta el motor LaTeX apropiado inspeccionando el .tex
-    ├── validator.sh # Valida argumentos CLI y verifica dependencias del sistema
-    ├── cli.sh       # Parseo de argumentos y texto de ayuda
-    ├── compiler.sh  # Invoca LaTeX, BibTeX/Biber, makeindex, makeglossaries;
-    │                # construye flags; muestra errores del log; limpia auxiliares
-    ├── output.sh    # Banner, info del PDF (tamaño/páginas/metadata), mover PDF,
-    │                # abrir PDF, sugerir apertura manual
-    └── watch.sh     # Modo watch: inotifywait (Linux) / fswatch (macOS)
-```
+├── logger.sh # Funciones de salida: info, ok, warn, error, paso, titulo
+├── resolver.sh # Resuelve cualquier ruta al .tex → TEX_DIR / TEX_BASE / TEX_PATH
+├── detector.sh # Detecta el motor LaTeX apropiado inspeccionando el .tex
+├── validator.sh # Valida argumentos CLI y verifica dependencias del sistema
+├── cli.sh # Parseo de argumentos y texto de ayuda
+├── compiler.sh # Invoca LaTeX, BibTeX/Biber, makeindex, makeglossaries;
+│ # construye flags; muestra errores del log; limpia auxiliares
+├── output.sh # Banner, info del PDF (tamaño/páginas/metadata), mover PDF,
+│ # abrir PDF, sugerir apertura manual
+└── watch.sh # Modo watch: inotifywait (Linux) / fswatch (macOS)
+
+````
 
 ### Responsabilidad de cada módulo
 
-| Archivo | Responsabilidad |
-|---------|----------------|
-| `main.sh` | Punto de entrada. Carga módulos, inicializa variables, llama `parsear_args → resolver_ruta_tex → detectar_engine → verificar_dependencias → compilar / modo_watch`. Define `compilar()` que orquesta el ciclo completo de pasadas. |
-| `config.sh` | Todos los defaults y constantes en un solo lugar. Cambiar `DEFAULT_ENGINE` o `DEFAULT_PASADAS` aquí afecta todo el script. |
-| `lib/logger.sh` | `info`, `ok`, `warn`, `error`, `paso`, `titulo`, `separador`, `dim`. Toda salida al usuario pasa por aquí. |
-| `lib/resolver.sh` | Acepta cualquier forma de ruta (absoluta, relativa, tilde, con o sin `.tex`) y resuelve `TEX_PATH`, `TEX_DIR`, `TEX_BASE`. |
-| `lib/detector.sh` | Inspecciona el `.tex` con grep buscando `fontspec`, `luacode`, etc. y elige `pdflatex`, `xelatex` o `lualatex`. |
-| `lib/validator.sh` | Valida engine, pasadas, y que todos los binarios requeridos estén instalados. |
-| `lib/cli.sh` | `parsear_args()` y `mostrar_ayuda()`. |
-| `lib/compiler.sh` | `ejecutar_latex`, `ejecutar_bibliografia`, `ejecutar_indices`, `mostrar_errores_log`, `limpiar_auxiliares`. Siempre hace `pushd TEX_DIR` antes de compilar. |
-| `lib/output.sh` | `banner`, `mostrar_info_pdf`, `mover_pdf`, `abrir_pdf`, `sugerir_apertura`, `elapsed`. |
-| `lib/watch.sh` | `modo_watch`, `compilar_segura`, `_watch_linux`, `_watch_macos`. |
+| Archivo            | Responsabilidad                                                                                                                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main.sh`          | Punto de entrada. Carga módulos, inicializa variables, llama `parsear_args → resolver_ruta_tex → detectar_engine → verificar_dependencias → compilar / modo_watch`. Define `compilar()` que orquesta el ciclo completo de pasadas. |
+| `config.sh`        | Todos los defaults y constantes en un solo lugar. Cambiar `DEFAULT_ENGINE` o `DEFAULT_PASADAS` aquí afecta todo el script.                                                                                                         |
+| `lib/logger.sh`    | `info`, `ok`, `warn`, `error`, `paso`, `titulo`, `separador`, `dim`. Toda salida al usuario pasa por aquí.                                                                                                                         |
+| `lib/resolver.sh`  | Acepta cualquier forma de ruta (absoluta, relativa, tilde, con o sin `.tex`) y resuelve `TEX_PATH`, `TEX_DIR`, `TEX_BASE`.                                                                                                         |
+| `lib/detector.sh`  | Inspecciona el `.tex` con grep buscando `fontspec`, `luacode`, etc. y elige `pdflatex`, `xelatex` o `lualatex`.                                                                                                                    |
+| `lib/validator.sh` | Valida engine, pasadas, y que todos los binarios requeridos estén instalados.                                                                                                                                                      |
+| `lib/cli.sh`       | `parsear_args()` y `mostrar_ayuda()`.                                                                                                                                                                                              |
+| `lib/compiler.sh`  | `ejecutar_latex`, `ejecutar_bibliografia`, `ejecutar_indices`, `mostrar_errores_log`, `limpiar_auxiliares`. Siempre hace `pushd TEX_DIR` antes de compilar.                                                                        |
+| `lib/output.sh`    | `banner`, `mostrar_info_pdf`, `mover_pdf`, `abrir_pdf`, `sugerir_apertura`, `elapsed`.                                                                                                                                             |
+| `lib/watch.sh`     | `modo_watch`, `compilar_segura`, `_watch_linux`, `_watch_macos`.                                                                                                                                                                   |
 
 ---
 
@@ -305,7 +312,7 @@ Era necesario hacer `cd` al directorio del `.tex` antes de invocar el script.
 compilar ~/Documents/pub_dialectica-y-mercado/capitulo1
 compilar ../pub_axiomata/paper
 compilar /home/achalmaedison/Documents/pub_res-publica/libro
-```
+````
 
 El módulo `lib/resolver.sh` resuelve la ruta, y `lib/compiler.sh` compila
 siempre con `pushd "$TEX_DIR"` para que LaTeX encuentre todos los archivos
@@ -318,11 +325,11 @@ relativos (`\include`, `\input`, imágenes, `.bib`, `.sty`).
 **Ahora**: Con `--engine auto` (nuevo default), el módulo `lib/detector.sh`
 inspecciona el `.tex` y elige:
 
-| Indicadores en el `.tex` | Motor elegido |
-|--------------------------|---------------|
-| `\directlua`, `\luaexec`, `\luacode` | `lualatex` |
-| `\usepackage{fontspec}`, `\usepackage{polyglossia}`, `\usepackage{unicode-math}` | `xelatex` |
-| (ninguno de los anteriores) | `pdflatex` |
+| Indicadores en el `.tex`                                                         | Motor elegido |
+| -------------------------------------------------------------------------------- | ------------- |
+| `\directlua`, `\luaexec`, `\luacode`                                             | `lualatex`    |
+| `\usepackage{fontspec}`, `\usepackage{polyglossia}`, `\usepackage{unicode-math}` | `xelatex`     |
+| (ninguno de los anteriores)                                                      | `pdflatex`    |
 
 El motor detectado se muestra en la salida para que siempre sepas cuál se usó.
 Puedes sobreescribirlo con `-e pdflatex` si lo necesitas.
@@ -413,8 +420,8 @@ compilar -e lualatex ~/Documents/CampusTeX-Preuniversitario/modulo
 
 ## 🌍 Variables de Entorno
 
-| Variable | Efecto |
-|----------|--------|
+| Variable     | Efecto                                                           |
+| ------------ | ---------------------------------------------------------------- |
 | `NO_COLOR=1` | Desactiva todos los colores en la salida (estándar no-color.org) |
 
 ```bash
