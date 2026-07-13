@@ -1,0 +1,27 @@
+# ============================================================
+# Proyecto : scripts_for_latex
+# Ruta     : /home/achalmaedison/Documents/scripts_for_latex
+# Generado : 2026-07-13 02:08:28
+# Script   : main.sh v2.1.0
+# Profund. : 6 niveles
+# Formato  : txt
+# Excluye  : _extensions _freeze _partials _site site_libs build __pycache__ log output temp .git .quarto node_modules .Rproj.user index_cache __MACOSX *.aux *.log *.out *.toc *.bbl *.blg *.synctex.gz *.fff *.ttt *.fls *.fdb_latexmk *.pyc *.pyo *.egg-info *.ipynb_checkpoints .DS_Store Thumbs.db .Rhistory .RData estructura.txt
+# ============================================================
+
+[4.0K Jul 10 22:06]  /home/achalmaedison/Documents/scripts_for_latex
+├── [  28 Jun 20 11:40]  README.md
+└── [4.0K Jun 22 12:32]  script_compilar_latex
+    ├── [2.6K Jun 22 12:26]  config.sh
+    ├── [4.0K Jun 22 12:29]  lib
+    │   ├── [7.1K Jun 22 12:28]  cli.sh
+    │   ├── [5.6K Jun 22 12:29]  compiler.sh
+    │   ├── [2.6K Jun 22 12:27]  detector.sh
+    │   ├── [1.3K Jun 22 12:26]  logger.sh
+    │   ├── [4.2K Jun 22 12:29]  output.sh
+    │   ├── [4.6K Jun 22 12:27]  resolver.sh
+    │   ├── [3.6K Jun 22 12:28]  validator.sh
+    │   └── [2.3K Jun 22 12:29]  watch.sh
+    ├── [7.4K Jun 22 12:30]  main.sh
+    └── [ 20K Jun 22 16:49]  README.md
+
+3 directories, 12 files
