@@ -195,8 +195,8 @@ compilar --biber -p 3 ~/Documents/pub_epsilon-y-beta/01-fundamentos-econometria/
 # ── 3. Presentación Beamer (slides), abrir al terminar
 compilar -e xelatex -a ~/Documents/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
-# ── 4. Libro preuniversitario con índice y glosario
-compilar -e lualatex -i -g ~/Documents/CampusTeX-Preuniversitario/aritmetica/main
+# ── 4. Documento de curso con índice y glosario
+compilar -e lualatex -i -g ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
 
 # ── 5. Modo watch mientras escribes un informe
 compilar -w ~/Documents/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
@@ -412,7 +412,7 @@ Especifícalo explícitamente para ignorar la detección:
 
 ```bash
 compilar -e pdflatex ~/Documents/mi_documento
-compilar -e lualatex ~/Documents/CampusTeX-Preuniversitario/modulo
+compilar -e lualatex ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
 ```
 
 ---
@@ -476,6 +476,7 @@ el `TEX_DIR`. Si tus capítulos están en subdirectorios del `.tex` principal
 demás auxiliares al terminar. Si necesitas conservarlo para depuración,
 usa `--log /ruta/de/backup.log` antes de compilar: ese archivo no se elimina.
 
-**Sobre LuaLaTeX y proyectos CampusTeX**: LuaLaTeX es notablemente más lento
-que pdflatex/xelatex en proyectos grandes. Si solo necesitas compatibilidad
-Unicode sin scripting Lua, usa xelatex para mejor rendimiento.
+**Sobre LuaLaTeX y proyectos grandes** (libros, manuales de curso): LuaLaTeX es
+notablemente más lento que pdflatex/xelatex en proyectos grandes. Si solo
+necesitas compatibilidad Unicode sin scripting Lua, usa xelatex para mejor
+rendimiento.
