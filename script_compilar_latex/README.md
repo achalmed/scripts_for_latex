@@ -152,14 +152,14 @@ compilar ../pub_dialectica-y-mercado/articulo
 compilar 03\ writing/nota_metodologica
 
 # Ruta con tilde
-compilar ~/Documents/pub_axiomata/paper
+compilar ~/Documents/website-achalma/_pubs/pub_axiomata/paper
 compilar ~/Documents/03\ writing/informe_unsch
 
 # Ruta absoluta completa
-compilar /home/achalmaedison/Documents/pub_res-publica/capitulo1
+compilar /home/achalmaedison/Documents/website-achalma/_pubs/pub_res-publica/capitulo1
 
 # Con extensión .tex explícita (también funciona)
-compilar ~/Documents/pub_numerus-scriptum/python_intro.tex
+compilar ~/Documents/website-achalma/_pubs/pub_numerus-scriptum/python_intro.tex
 ```
 
 ### Opciones completas
@@ -187,34 +187,34 @@ compilar ~/Documents/pub_numerus-scriptum/python_intro.tex
 
 ```bash
 # ── 1. Artículo (detección automática de motor)
-compilar ~/Documents/pub_dialectica-y-mercado/posts/2023-03-03-el-capitalismo/index
+compilar ~/Documents/website-achalma/_pubs/pub_dialectica-y-mercado/posts/2023-03-03-el-capitalismo/index
 
 # ── 2. Artículo de econometría con Biber
-compilar --biber -p 3 ~/Documents/pub_epsilon-y-beta/01-fundamentos-econometria/2021-03-01-01-modelo-clasico-de-regresion-lineal/index
+compilar --biber -p 3 ~/Documents/website-achalma/_pubs/pub_epsilon-y-beta/01-fundamentos-econometria/2021-03-01-01-modelo-clasico-de-regresion-lineal/index
 
 # ── 3. Presentación Beamer (slides), abrir al terminar
-compilar -e xelatex -a ~/Documents/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
+compilar -e xelatex -a ~/Documents/website-achalma/_pubs/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
 # ── 4. Documento de curso con índice y glosario
 compilar -e lualatex -i -g ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
 
 # ── 5. Modo watch mientras escribes un informe
-compilar -w ~/Documents/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
+compilar -w ~/Documents/website-achalma/_pubs/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
 
 # ── 6. Solo limpiar auxiliares (sin recompilar)
-compilar -c ~/Documents/pub_chaska/i3wm/2020-02-15-introduccion-a-i3wm/index
+compilar -c ~/Documents/website-achalma/_pubs/pub_chaska/i3wm/2020-02-15-introduccion-a-i3wm/index
 
 # ── 7. Compilar silenciosamente (batch o cron)
-compilar -s ~/Documents/pub_methodica/posts/2025-01-12-recursos-de-bibliografia-y-documentacion/index && echo "OK" || echo "ERROR"
+compilar -s ~/Documents/website-achalma/_pubs/pub_methodica/posts/2025-01-12-recursos-de-bibliografia-y-documentacion/index && echo "OK" || echo "ERROR"
 
 # ── 8. Borrador rápido (sin imágenes, más veloz)
-compilar --draft ~/Documents/pub_numerus-scriptum/python/2025-05-10-visualizacion-de-datos-con-python/index
+compilar --draft ~/Documents/website-achalma/_pubs/pub_numerus-scriptum/python/2025-05-10-visualizacion-de-datos-con-python/index
 
 # ── 9. Tesis con múltiples capítulos (\include)
 compilar -e lualatex --biber -p 3 ~/Documents/01\ notes/1\ plan\ de\ tesis\ desigualdad\ socioeconomica\ y\ la\ pobreza/index
 
 # ── 10. Debug: ver log completo y guardarlo
-compilar -v --log /tmp/debug.log ~/Documents/pub_epsilon-y-beta/estadistica/2018-05-16-estadigrafos/index
+compilar -v --log /tmp/debug.log ~/Documents/website-achalma/_pubs/pub_epsilon-y-beta/estadistica/2018-05-16-estadigrafos/index
 
 # ── 11. CV — LuaLaTeX + Biber + PDF en carpeta separada
 cd ~/Documents/doc_cv/main
@@ -308,9 +308,9 @@ Era necesario hacer `cd` al directorio del `.tex` antes de invocar el script.
 **Ahora**: Se puede indicar cualquier ruta:
 
 ```bash
-compilar ~/Documents/pub_dialectica-y-mercado/capitulo1
+compilar ~/Documents/website-achalma/_pubs/pub_dialectica-y-mercado/capitulo1
 compilar ../pub_axiomata/paper
-compilar /home/achalmaedison/Documents/pub_res-publica/libro
+compilar /home/achalmaedison/Documents/website-achalma/_pubs/pub_res-publica/libro
 ```
 
 El módulo `lib/resolver.sh` resuelve la ruta, y `lib/compiler.sh` compila
@@ -344,7 +344,7 @@ Verifica:
 
 ```bash
 # ¿Existe el archivo?
-ls ~/Documents/pub_dialectica-y-mercado/*.tex
+ls ~/Documents/website-achalma/_pubs/pub_dialectica-y-mercado/*.tex
 
 # ¿La ruta tiene espacios? Usa comillas o escapa el espacio
 compilar "~/Documents/03 writing/nota"
@@ -369,7 +369,7 @@ which xelatex && xelatex --version
 Usa al menos 3 pasadas con el procesador de bibliografía:
 
 ```bash
-compilar --biber -p 3 ~/Documents/pub_axiomata/paper
+compilar --biber -p 3 ~/Documents/website-achalma/_pubs/pub_axiomata/paper
 ```
 
 ### Error de fuente con XeLaTeX
@@ -424,7 +424,7 @@ compilar -e lualatex ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_
 | `NO_COLOR=1` | Desactiva todos los colores en la salida (estándar no-color.org) |
 
 ```bash
-NO_COLOR=1 compilar ~/Documents/pub_axiomata/paper
+NO_COLOR=1 compilar ~/Documents/website-achalma/_pubs/pub_axiomata/paper
 ```
 
 ---
