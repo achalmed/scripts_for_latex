@@ -29,13 +29,13 @@
 #  ----------------------------------------------------------------------
 #  compilar                                          → compila index.tex en el CWD
 #  compilar tesis                                    → compila tesis.tex en el CWD
-#  compilar ~/Documents/website-achalma/_pubs/pub_dialectica/articulo      → ruta con tilde
+#  compilar ~/Documents/04\ index/_pubs/pub_dialectica/articulo      → ruta con tilde
 #  compilar ../pub_axiomata/paper                    → ruta relativa
-#  compilar /home/achalmaedison/Documents/website-achalma/_pubs/pub_res-publica/capitulo1
+#  compilar /home/achalmaedison/Documents/04\ index/_pubs/pub_res-publica/capitulo1
 #  compilar -e xelatex ~/Documents/03\ writing/nota
-#  compilar --biber -p 3 ~/Documents/website-achalma/_pubs/pub_numerus-scriptum/python_intro
+#  compilar --biber -p 3 ~/Documents/04\ index/_pubs/pub_numerus-scriptum/python_intro
 #  compilar -w ~/Documents/02\ analysis/informe      → modo watch
-#  compilar -c ~/Documents/website-achalma/_pubs/pub_chaska/slides         → solo limpiar auxiliares
+#  compilar -c ~/Documents/04\ index/_pubs/pub_chaska/slides         → solo limpiar auxiliares
 #
 # ==============================================================================
 

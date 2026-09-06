@@ -19,7 +19,7 @@ ${BOLD}ARCHIVO / RUTA${NC}
     index                          → busca index.tex en el directorio actual
     tesis                          → busca tesis.tex en el directorio actual
     ../pub_dialectica/capitulo1    → ruta relativa al directorio actual
-    /home/achalmaedison/Documents/website-achalma/_pubs/pub_dialectica/articulo
+    /home/achalmaedison/Documents/04\ index/_pubs/pub_dialectica/articulo
                                    → ruta absoluta completa
     ~/Documents/03\ writing/nota   → con tilde de home
 
@@ -67,23 +67,23 @@ ${BOLD}EJEMPLOS${NC}
   ./compilar_latex.sh
 
   # Compilar un archivo en cualquier lugar de tu sistema
-  ./compilar_latex.sh ~/Documents/website-achalma/_pubs/pub_dialectica-y-mercado/articulo
+  ./compilar_latex.sh ~/Documents/04\ index/_pubs/pub_dialectica-y-mercado/articulo
   ./compilar_latex.sh /home/achalmaedison/Documents/03\ writing/nota_metodologica
 
   # Documento con bibliografía (biblatex + Biber)
-  ./compilar_latex.sh --biber -p 3 ~/Documents/website-achalma/_pubs/pub_axiomata/paper
+  ./compilar_latex.sh --biber -p 3 ~/Documents/04\ index/_pubs/pub_axiomata/paper
 
   # Presentación Beamer con XeLaTeX, abrir al terminar
   ./compilar_latex.sh -e xelatex -a ~/Documents/03\ writing/slides_unsch
 
   # LuaLaTeX con índice y glosario, salida en build/
-  ./compilar_latex.sh -e lualatex -i -g -o build ~/Documents/website-achalma/_pubs/pub_res-publica/libro
+  ./compilar_latex.sh -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/pub_res-publica/libro
 
   # Modo watch durante la escritura
   ./compilar_latex.sh -w ~/Documents/02\ analysis/informe
 
   # Solo limpiar auxiliares de un documento
-  ./compilar_latex.sh -c ~/Documents/website-achalma/_pubs/pub_numerus-scriptum/capitulo2
+  ./compilar_latex.sh -c ~/Documents/04\ index/_pubs/pub_numerus-scriptum/capitulo2
 
   # Compilar silenciosamente (para CI/CD o cron)
   ./compilar_latex.sh -s ~/Documents/03\ writing/reporte && echo "OK"
