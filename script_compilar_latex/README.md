@@ -196,7 +196,7 @@ compilar --biber -p 3 ~/Documents/website-achalma/_pubs/pub_epsilon-y-beta/01-fu
 compilar -e xelatex -a ~/Documents/website-achalma/_pubs/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
 # ── 4. Documento de curso con índice y glosario
-compilar -e lualatex -i -g ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
+compilar -e lualatex -i -g ~/Documents/Academic_Class_Framework/areas/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
 
 # ── 5. Modo watch mientras escribes un informe
 compilar -w ~/Documents/website-achalma/_pubs/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
@@ -412,7 +412,7 @@ Especifícalo explícitamente para ignorar la detección:
 
 ```bash
 compilar -e pdflatex ~/Documents/mi_documento
-compilar -e lualatex ~/Documents/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
+compilar -e lualatex ~/Documents/Academic_Class_Framework/areas/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
 ```
 
 ---
