@@ -1,0 +1,16 @@
+# suite.yml — contrato de la suite (esquema en core/suite.schema.yml); core/suites.py generar escribe los índices y READMEs.
+nombre: compilar_latex
+objetivo: latex
+resumen: Compilador universal de LaTeX (LuaLaTeX + Biber) para los frameworks de escritura, clases y libros; alias `compilar`.
+escribe_en:
+- archivos
+simula_por_defecto: false
+comandos:
+- main.sh documento.tex
+- main.sh --clean documento.tex
+- main.sh --help
+estado: activo
+depende_de:
+- lualatex
+- biber
+- latexmk
