@@ -19,7 +19,7 @@ ${BOLD}ARCHIVO / RUTA${NC}
     index                          → busca index.tex en el directorio actual
     tesis                          → busca tesis.tex en el directorio actual
     ../pub_dialectica/capitulo1    → ruta relativa al directorio actual
-    /home/achalmaedison/Documents/04\ index/_pubs/pub_dialectica/articulo
+    ~/Documents/04\ index/_pubs/pub_dialectica/articulo
                                    → ruta absoluta completa
     ~/Documents/03\ writing/nota   → con tilde de home
 
@@ -68,7 +68,7 @@ ${BOLD}EJEMPLOS${NC}
 
   # Compilar un archivo en cualquier lugar de tu sistema
   ./compilar_latex.sh ~/Documents/04\ index/_pubs/pub_dialectica-y-mercado/articulo
-  ./compilar_latex.sh /home/achalmaedison/Documents/03\ writing/nota_metodologica
+  ./compilar_latex.sh ~/Documents/03\ writing/nota_metodologica
 
   # Documento con bibliografía (biblatex + Biber)
   ./compilar_latex.sh --biber -p 3 ~/Documents/04\ index/_pubs/pub_axiomata/paper
