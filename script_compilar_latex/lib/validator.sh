@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/validator.sh — Validación de argumentos y dependencias del sistema
-# Proyecto: compilar_latex
 # ==============================================================================
 
 # validar_engine()

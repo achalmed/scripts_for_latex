@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/output.sh — Presentación de resultados: info del PDF, mover, abrir, banner
-# Proyecto: compilar_latex
 # ==============================================================================
 
 # banner()

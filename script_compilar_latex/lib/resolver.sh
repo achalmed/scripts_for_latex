@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/resolver.sh — Resolución de rutas del archivo .tex de entrada
-# Proyecto: compilar_latex
 # ==============================================================================
 # El script siempre vive en:
 #   /home/achalmaedison/Documents/scripts_for_latex/script_compilar_latex/

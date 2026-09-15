@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/compiler.sh — Lógica de compilación LaTeX
-# Proyecto: compilar_latex
 # ==============================================================================
 # Contiene las funciones que realmente invocan los binarios LaTeX.
 # Trabaja siempre en TEX_DIR (el directorio donde vive el .tex),

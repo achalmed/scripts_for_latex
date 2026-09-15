@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # config.sh — Configuración centralizada y valores por defecto
-# Proyecto: compilar_latex
-# Autor   : Edison Achalma
-# Versión : 3.0.0
 # ==============================================================================
 # Todos los valores modificables del script viven aquí.
 # Cambiar un default en este archivo afecta todo el proyecto.

@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
-#  compilar_latex / main.sh — Punto de entrada
+#  script_compilar_latex/main.sh — Punto de entrada
 #  Script universal de compilación LaTeX
 #
-#  Autor  : Edison Achalma <achalmaedison@gmail.com>
-#  GitHub : github.com/achalmed
-#  ORCID  : 0000-0001-6996-3364
-#  Versión: 3.0.0
 # ==============================================================================
 #
 #  INSTALACIÓN (una sola vez)

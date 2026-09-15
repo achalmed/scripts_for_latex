@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/watch.sh — Modo watch: recompilación automática al detectar cambios
-# Proyecto: compilar_latex
 # ==============================================================================
 # Vigila el directorio del .tex (TEX_DIR) en busca de cambios en
 # archivos .tex, .bib, .sty y .cls.

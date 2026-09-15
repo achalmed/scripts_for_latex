@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/detector.sh — Detección automática del motor LaTeX más adecuado
-# Proyecto: compilar_latex
 # ==============================================================================
 # Cuando el usuario no especifica --engine, este módulo inspecciona el .tex
 # y elige el motor más adecuado según las paquetes y comandos que usa.

@@ -16,7 +16,7 @@ main.sh --clean documento.tex
 main.sh --help
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-09-07); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-09-15); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 > Compila documentos LaTeX con **pdflatex**, **xelatex** o **lualatex** desde

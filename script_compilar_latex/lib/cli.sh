@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # lib/cli.sh — Interfaz de línea de comandos (parseo de argumentos)
-# Proyecto: compilar_latex
 # ==============================================================================
 
 # mostrar_ayuda()
