@@ -38,12 +38,12 @@
 # Salir inmediatamente si un comando falla, variable no definida, o pipe falla
 set -euo pipefail
 
-# ── Directorio del script (siempre fijo, independiente del CWD) ───────────────
+# --- Directorio del script (siempre fijo, independiente del CWD) -----------
 # Guardar el CWD del usuario ANTES de cualquier cd, para resolver rutas relativas
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly USER_CWD="$(pwd)"
 
-# ── Cargar módulos ────────────────────────────────────────────────────────────
+# --- Cargar módulos --------------------------------------------------------
 # shellcheck source=config.sh
 source "${SCRIPT_DIR}/config.sh"
 
@@ -74,7 +74,7 @@ source "${SCRIPT_DIR}/lib/output.sh"
 # shellcheck source=lib/watch.sh
 source "${SCRIPT_DIR}/lib/watch.sh"
 
-# ── Variables de estado global ────────────────────────────────────────────────
+# --- Variables de estado global --------------------------------------------
 # Inicializadas con los defaults de config.sh; sobreescritas por parsear_args()
 ARCHIVO="$DEFAULT_ARCHIVO"
 ENGINE="$DEFAULT_ENGINE"
@@ -103,7 +103,7 @@ ARCHIVO_BASE=""
 # Ruta final del PDF (poblada por mover_pdf en compilar())
 PDF_FINAL=""
 
-# ── Función principal de compilación ─────────────────────────────────────────
+# --- Función principal de compilación --------------------------------------
 # compilar()
 # Orquesta el ciclo completo: pasadas LaTeX + bibliografía + índices + resultado.
 # Se llama desde main() o desde compilar_segura() en modo watch.
@@ -124,26 +124,26 @@ compilar() {
     [ -n "$DIRECTORIO_SALIDA" ] && info "Salida PDF : ${DIRECTORIO_SALIDA}/"
     echo ""
 
-    # ── Pasada 1: siempre obligatoria ─────────────────────────────────────
+    # --- Pasada 1: siempre obligatoria -------------------------------------
     ejecutar_latex 1
 
-    # ── Bibliografía (requiere que la pasada 1 haya generado .aux) ────────
+    # --- Bibliografía (requiere que la pasada 1 haya generado .aux) --------
     if ( $USAR_BIBTEX || $USAR_BIBER ) && [ "$PASADAS" -ge 2 ]; then
         ejecutar_bibliografia
     fi
 
-    # ── Índices / glosarios ───────────────────────────────────────────────
+    # --- Índices / glosarios -----------------------------------------------
     if ( $USAR_MAKEINDEX || $USAR_MAKEGLOSSARIES ) && [ "$PASADAS" -ge 2 ]; then
         ejecutar_indices
     fi
 
-    # ── Pasadas adicionales (para resolver referencias cruzadas) ──────────
+    # --- Pasadas adicionales (para resolver referencias cruzadas) ----------
     local p
     for (( p=2; p<=PASADAS; p++ )); do
         ejecutar_latex "$p"
     done
 
-    # ── Resultado final ───────────────────────────────────────────────────
+    # --- Resultado final ---------------------------------------------------
     separador
     mostrar_info_pdf
     mover_pdf
@@ -154,7 +154,7 @@ compilar() {
     sugerir_apertura
 }
 
-# ── main() ────────────────────────────────────────────────────────────────────
+# --- main() ----------------------------------------------------------------
 main() {
     banner
 
