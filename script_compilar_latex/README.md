@@ -215,7 +215,7 @@ compilar --biber -p 3 ~/Documents/04 index/_pubs/pub_epsilon-y-beta/01-fundament
 compilar -e xelatex -a ~/Documents/04 index/_pubs/pub_aequilibria/posts/2023-07-30-exposicion-paridad-tasas-interes/index
 
 # ── 4. Documento de curso con índice y glosario
-compilar -e lualatex -i -g ~/Documents/10 Class/areas/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
+compilar -e lualatex -i -g ~/Documents/10 Class/docencia/cursos/matematicas-i/05-recursos/index
 
 # ── 5. Modo watch mientras escribes un informe
 compilar -w ~/Documents/04 index/_pubs/pub_res-publica/posts/2023-05-11-cualidades-de-los-servidores-publicos/index
@@ -431,7 +431,7 @@ Especifícalo explícitamente para ignorar la detección:
 
 ```bash
 compilar -e pdflatex ~/Documents/mi_documento
-compilar -e lualatex ~/Documents/10 Class/areas/Academic_Class-Math/course_01_matematicas_i/06_RECURSOS/index
+compilar -e lualatex ~/Documents/10 Class/docencia/cursos/matematicas-i/05-recursos/index
 ```
 
 ---
