@@ -8,10 +8,10 @@ escribe_en:
 simula_por_defecto: false
 comandos:
 - main.sh documento.tex
-- main.sh --clean documento.tex
+- main.sh --limpiar documento.tex
 - main.sh --help
 estado: activo
 depende_de:
 - lualatex
 - biber
-- latexmk
+- core/shell-lib

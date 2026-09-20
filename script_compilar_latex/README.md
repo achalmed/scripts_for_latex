@@ -1,4 +1,8 @@
-# compilar_latex — Script Universal de Compilación LaTeX
+---
+tipo: readme
+estado: activo
+---
+# script_compilar_latex/ — compilador universal de LaTeX: cualquier .tex, desde cualquier ruta (v3.0.0)
 
 <!-- suite:inicio -->
 **Suite `compilar_latex`** · objetivo *latex* · estado *activo* · bash · interfaz cli
@@ -6,23 +10,23 @@
 Compilador universal de LaTeX (LuaLaTeX + Biber) para los frameworks de escritura, clases y libros; alias `compilar`.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: lualatex, biber, latexmk
+- Depende de: lualatex, biber, core/shell-lib
 
 Comandos:
 
 ```bash
 main.sh documento.tex
-main.sh --clean documento.tex
+main.sh --limpiar documento.tex
 main.sh --help
 ```
 
 <sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-09-20); no se edita a mano.</sub>
 <!-- suite:fin -->
 
-> Compila documentos LaTeX con **pdflatex**, **xelatex** o **lualatex** desde
-> cualquier directorio del sistema, indicando la ruta exacta del `.tex`.
-> Detecta el motor automáticamente, gestiona bibliografía, índices, glosarios,
-> modo watch y limpieza de auxiliares.
+> Compila documentos LaTeX desde cualquier directorio del sistema, indicando la ruta exacta del `.tex`. El motor
+> normativo del ecosistema es **LuaLaTeX + Biber** (regla 7 del `CLAUDE.md` raíz); `pdflatex` y `xelatex` se aceptan
+> por compatibilidad con documentos antiguos. Detecta el motor si no se indica, gestiona bibliografía, índices,
+> glosarios, modo watch y limpieza de auxiliares.
 
 ---
 
@@ -39,6 +43,7 @@ main.sh --help
 - [Variables de Entorno](#variables-de-entorno)
 - [Cómo Contribuir](#cómo-contribuir)
 - [Notas y Advertencias](#notas-y-advertencias)
+- [Límite honesto](#límite-honesto)
 
 ---
 
@@ -285,35 +290,9 @@ script_compilar_latex/
 
 ## 🐛 Bugs Corregidos
 
-### Bug #1: `set -euo pipefail` rompía el modo watch
-
-- **Ubicación**: `set -e` global + `compilar_segura()` (línea 620 original)
-- **Descripción**: El `set -e` global hacía que el `|| { ... }` en
-  `compilar_segura` no capturase el error correctamente; cualquier fallo
-  de compilación terminaba el proceso watch en vez de continuar esperando.
-- **Corrección**: En `lib/watch.sh`, `compilar_segura()` desactiva `set -e`
-  localmente (`set +e`) antes de llamar a `compilar`, captura el código de
-  retorno explícitamente y reactiva `set -e` antes de retornar.
-
-### Bug #2: `local status=${PIPESTATUS[0]}` siempre retornaba 0
-
-- **Ubicación**: `ejecutar_latex()` (líneas 335 y 346 originales)
-- **Descripción**: En Bash, `local variable=$(comando)` evalúa `local` como
-  el comando y su exit code siempre es 0, descartando el exit code real.
-  El error del motor LaTeX pasaba silenciosamente desapercibido.
-- **Corrección**: En `lib/compiler.sh`, se declara `local status=0` primero
-  y luego se asigna `status=${PIPESTATUS[0]}` en línea separada.
-
-### Bug #3: `limpiar_auxiliares()` no encontraba los auxiliares
-
-- **Ubicación**: `limpiar_auxiliares()` (línea 432 original)
-- **Descripción**: Cuando `ARCHIVO` contenía una ruta (no solo un nombre base),
-  la función construía rutas incorrectas: buscaba `ruta/al/tex/nombre.aux` en
-  el CWD del script en lugar de en el directorio del `.tex`.
-- **Corrección**: La función ahora usa `TEX_DIR` y `TEX_BASE` (siempre
-  absolutos y correctamente resueltos) en lugar de `ARCHIVO` crudo. Además
-  ejecuta la limpieza con `pushd "$TEX_DIR"` para manejar correctamente
-  los `.aux` de subdirectorios con `\include`.
+Los tres errores de Bash corregidos en la reescritura modular (`set -e` y el modo watch, `local` y `PIPESTATUS`,
+limpieza de auxiliares con rutas) están documentados en `docs/historial/bugs-corregidos.md`; siguen vigentes como
+restricciones de diseño de `lib/watch.sh`, `lib/compiler.sh` y `limpiar_auxiliares()`.
 
 ---
 
@@ -350,7 +329,12 @@ inspecciona el `.tex` y elige:
 | (ninguno de los anteriores)                                                      | `pdflatex`    |
 
 El motor detectado se muestra en la salida para que siempre sepas cuál se usó.
-Puedes sobreescribirlo con `-e pdflatex` si lo necesitas.
+Puedes sobreescribirlo con `-e lualatex` si lo necesitas.
+
+> **Motor normativo.** En este ecosistema todo documento nuevo se compila con LuaLaTeX + Biber (regla 7 del
+> `CLAUDE.md` raíz). La detección elige `pdflatex` cuando el `.tex` no da pistas, así que para un documento del
+> ecosistema se pasa `-e lualatex --biber`; `pdflatex` y `xelatex` quedan como compatibilidad con documentos antiguos
+> y no se recomiendan para nada nuevo.
 
 ---
 
@@ -489,13 +473,26 @@ ruta absoluta, úsala directamente: `-o /home/achalmaedison/pdfs`.
 
 **Sobre el modo watch en proyectos con `\include`**: El watch vigila todo
 el `TEX_DIR`. Si tus capítulos están en subdirectorios del `.tex` principal
-(por ejemplo `capitulos/intro.tex`), también se detectarán sus cambios.
+(por ejemplo, un `capitulos/` con `intro.tex`), también se detectarán sus cambios.
 
 **Sobre la limpieza de auxiliares**: El `.log` se elimina junto con los
 demás auxiliares al terminar. Si necesitas conservarlo para depuración,
 usa `--log /ruta/de/backup.log` antes de compilar: ese archivo no se elimina.
 
-**Sobre LuaLaTeX y proyectos grandes** (libros, manuales de curso): LuaLaTeX es
-notablemente más lento que pdflatex/xelatex en proyectos grandes. Si solo
-necesitas compatibilidad Unicode sin scripting Lua, usa xelatex para mejor
-rendimiento.
+**Sobre LuaLaTeX y proyectos grandes** (libros, manuales de curso): LuaLaTeX es más lento que pdflatex o xelatex en
+proyectos grandes. En este ecosistema no se cambia de motor por rendimiento (regla 7 del `CLAUDE.md` raíz): se usa
+`--draft` mientras se escribe, menos pasadas, o el build del framework al que pertenece el documento.
+
+---
+
+## Límite honesto
+
+- **No usa latexmk**: un número fijo de pasadas (`-p`, 2 por defecto y 3 con bibliografía); si hacen falta más, se piden.
+- **`--engine auto` cae en `pdflatex`** cuando el `.tex` no da pistas: para el modo normativo se pasa `-e lualatex --biber`.
+- **No compila los frameworks**: `03 writing`, `10 Class`, `11 Book` y `sgdp/marco_documental` tienen su propio build;
+  este script es para el `.tex` suelto.
+- **`--output DIR` es relativo al directorio de invocación**, no al del `.tex`.
+- **El modo watch depende de `inotifywait` o `fswatch`** y vigila toda la carpeta del `.tex`, subcarpetas incluidas.
+- **La limpieza borra el `.log`** salvo que se pida `--log FILE`, y solo las extensiones de `EXTENSIONES_AUXILIARES`
+  en `config.sh`.
+- Sin pruebas automáticas: `bash -n` y compilar un `.tex` de prueba.
