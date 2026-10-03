@@ -5,6 +5,9 @@ titulo: "Errores corregidos en la reescritura modular de compilar_latex"
 ---
 # Errores corregidos en la reescritura modular de compilar_latex
 
+> Lo vigente está en `../decisiones.md`: las correcciones #1 y #2 resultaron incompletas
+> (§Pendientes 1–3, 2026-10-03).
+
 Bitácora de depuración: por qué `lib/watch.sh`, `lib/compiler.sh` y `limpiar_auxiliares()` están escritos como están.
 Vivía en el manual (`script_compilar_latex/README.md` §«Bugs Corregidos») hasta DOC6 (2026-09-20). Las «líneas
 originales» se refieren al script monolítico anterior a la división en módulos (v3.0.0).
