@@ -1,70 +1,33 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# lib/detector.sh — Detección automática del motor LaTeX más adecuado
+# lib/detector.sh — Elección del motor LaTeX cuando el usuario no pasa --engine
 # ==============================================================================
-# Cuando el usuario no especifica --engine, este módulo inspecciona el .tex
-# y elige el motor más adecuado según las paquetes y comandos que usa.
+# La regla del ecosistema es LuaLaTeX + Biber (~/Documents/CLAUDE.md, regla 7). «auto» respeta un
+# comentario mágico en las 5 primeras líneas del .tex («% !TEX program = pdflatex|xelatex|lualatex»),
+# que es como el material heredado pide otro motor, y si no lo hay elige lualatex. Es la misma
+# convención que latex_engine() de 10 Class/scripts/lib/common.sh.
 #
-# Heurística (en orden de prioridad):
-#   1. fontspec / polyglossia / unicode-math → xelatex o lualatex
-#   2. luacode / luaexec / directlua        → lualatex
-#   3. Sin indicadores especiales            → pdflatex (máxima compatibilidad)
-#
-# Para la distinción xelatex vs lualatex cuando hay fontspec:
-#   - luacode o directlua → lualatex
-#   - caso contrario      → xelatex (más rápido para documentos estándar)
+# Antes adivinaba por paquetes (fontspec → xelatex; nada → pdflatex): eso contradecía la regla
+# y fallaba con \usepackage[opciones]{fontspec} (docs/decisiones.md).
 
 # detectar_engine()
-# Lee el archivo .tex y determina el motor más apropiado.
-#
-# Arguments:
-#   $1 - Ruta absoluta al archivo .tex principal
-#
-# Outputs (stdout):
-#   El nombre del motor: pdflatex | xelatex | lualatex
-#
-# Returns:
-#   0 siempre (siempre hay un motor sugerido)
+# Arguments: $1 - Ruta absoluta al archivo .tex principal
+# Outputs (stdout): pdflatex | xelatex | lualatex
 detectar_engine() {
-    local tex_file="$1"
-
-    # Grep sin distinción de mayúsculas; solo el nombre del paquete o comando
-    local usa_lua=false
-    local usa_fontspec=false
-
-    # Indicadores de scripting Lua embebido
-    if grep -qiE '\\(directlua|luaexec|luacode)' "$tex_file" 2>/dev/null; then
-        usa_lua=true
-    fi
-
-    # Indicadores de fuentes del sistema o Unicode avanzado
-    if grep -qiE '\\usepackage\{(fontspec|polyglossia|unicode-math)\}' \
-            "$tex_file" 2>/dev/null; then
-        usa_fontspec=true
-    fi
-
-    if $usa_lua; then
-        echo "lualatex"
-    elif $usa_fontspec; then
-        echo "xelatex"
+    local tex_file="$1" magico
+    magico="$(head -5 "$tex_file" 2>/dev/null \
+        | grep -oiE '%[[:space:]]*!TEX[[:space:]]+(TS-)?program[[:space:]]*=[[:space:]]*(pdflatex|xelatex|lualatex)' \
+        | head -1 | grep -oiE '(pdflatex|xelatex|lualatex)$' || true)"
+    if [ -n "$magico" ]; then
+        echo "${magico,,}"
     else
-        echo "pdflatex"
+        echo "lualatex"
     fi
 }
 
 # detectar_y_anunciar_engine()
-# Llama a detectar_engine() e imprime un mensaje informativo si se usó
-# la detección automática (no cuando el usuario eligió explícitamente).
-#
-# Arguments:
-#   $1 - Ruta absoluta al .tex
-#   $2 - Valor actual de ENGINE (puede ser "auto" o uno ya elegido)
-#
-# Sets (global):
-#   ENGINE — el motor final que se usará
-#
-# Returns:
-#   0 siempre
+# Arguments: $1 - Ruta al .tex; $2 - ENGINE actual ("auto" o uno elegido)
+# Sets (global): ENGINE — el motor final que se usará
 detectar_y_anunciar_engine() {
     local tex_file="$1"
     local engine_actual="$2"
@@ -76,6 +39,6 @@ detectar_y_anunciar_engine() {
     fi
 
     ENGINE="$(detectar_engine "$tex_file")"
-    info "Motor detectado automáticamente: ${BOLD}${ENGINE}${NC}"
-    dim "(usa --engine para sobreescribir: pdflatex | xelatex | lualatex)"
+    info "Motor: ${BOLD}${ENGINE}${NC}"
+    dim "(lualatex salvo «% !TEX program = …» en el .tex; --engine lo fija)"
 }

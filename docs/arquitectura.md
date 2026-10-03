@@ -20,15 +20,17 @@ Para quien amplía o mantiene `script_compilar_latex/`. El uso está en
 3. `resolver_ruta_tex` (`resolver.sh`) contra el directorio desde el que se invocó (`USER_CWD`,
    guardado antes de cualquier `cd`); si falla, `sugerir_tex_cercanos` y salida 1.
 4. Con `-c`: `limpiar_auxiliares` y salida 0, sin mirar el motor.
-5. `detectar_y_anunciar_engine` (`detector.sh`): con `auto`, decide por `grep` sobre el `.tex`
-   principal.
+5. `detectar_y_anunciar_engine` (`detector.sh`): con `auto`, el `% !TEX program` de las 5 primeras
+   líneas del `.tex` o, sin él, lualatex.
 6. `verificar_dependencias` (`validator.sh`): binarios obligatorios según las opciones.
-7. `LOG_FILE` por defecto: `<TEX_DIR>/<TEX_BASE>.log`.
-8. `modo_watch` (`watch.sh`) o `compilar` + `limpiar_auxiliares`.
+7. `SALIDA_LOG`: el archivo de `--log` (`LATEX_LOG`) o un temporal que se borra al salir.
+8. `modo_watch` (`watch.sh`), o `compilar` y, si devolvió 0, `limpiar_auxiliares` (si no, salida 1
+   con los auxiliares en su sitio).
 
-`compilar()`, en `main.sh`, vacía el log, ejecuta la pasada 1, la bibliografía y los índices (si
-hay al menos 2 pasadas), las pasadas 2…N, y luego `mostrar_info_pdf`, `mover_pdf` y `abrir_pdf`
-(`output.sh`).
+`compilar()`, en `main.sh`, vacía `SALIDA_LOG`, anota la hora de inicio, ejecuta la pasada 1, la
+bibliografía y los índices (si hay al menos 2 pasadas) y las pasadas 2…N, y devuelve 1 en cuanto una
+pasada falla. Después, en `--draft`, solo informa de que compila; si no, `mostrar_info_pdf` (que
+rechaza un PDF anterior a la compilación o vacío), `mover_pdf` y `abrir_pdf` (`output.sh`).
 
 ## Módulos
 
@@ -50,13 +52,13 @@ hay al menos 2 pasadas), las pasadas 2…N, y luego `mostrar_info_pdf`, `mover_p
 Los módulos se comunican por variables globales que declara `main.sh` con los valores de
 `config.sh` y que `parsear_args` sobrescribe: `ARCHIVO`, `ENGINE`, `PASADAS`, `MODO_SILENCIOSO`,
 `SOLO_LIMPIAR`, `MODO_WATCH`, `MODO_DRAFT`, `DIRECTORIO_SALIDA`, `USAR_BIBTEX`, `USAR_BIBER`,
-`USAR_MAKEINDEX`, `USAR_MAKEGLOSSARIES`, `ABRIR_PDF`, `VERBOSE`, `LOG_FILE`, `TIEMPO_INICIO`; las
+`USAR_MAKEINDEX`, `USAR_MAKEGLOSSARIES`, `ABRIR_PDF`, `VERBOSE`, `LATEX_LOG`, `SALIDA_LOG`,
+`TIEMPO_INICIO`, `INICIO_COMPILACION`; las
 rutas `TEX_PATH`, `TEX_DIR`, `TEX_BASE` (y sus alias `ARCHIVO_DIR`, `ARCHIVO_BASE`); y `PDF_FINAL`.
 Cada función documenta en su cabecera qué globales lee y cuáles fija.
 
-`LOG_FILE` es también el nombre que lee `core/shell-lib/logger.sh` para copiar cada mensaje a un
-archivo: por eso los mensajes del logger acaban dentro del log del motor (`decisiones.md`
-§Pendientes).
+`LOG_FILE` no se usa: es el nombre que lee `core/shell-lib/logger.sh` para copiar cada mensaje a
+un archivo, y cuando la suite lo usaba los mensajes del logger acababan en el log del motor.
 
 ## La relación con `core/`
 
@@ -88,11 +90,12 @@ No se define otro logger. El manifiesto `suite.yml` sigue `core/suite.schema.yml
 - Funciones y variables en español, como el resto del ecosistema; cabecera de cada función con
   propósito, argumentos, globales leídas y fijadas, y retorno.
 - Todo cambio de directorio con `pushd`/`popd` dentro de la función que lo necesita.
-- `set -euo pipefail` global. Un código de salida se captura en una línea aparte de `local`
-  (`local x=$(…)` devuelve el de `local`), y nunca detrás de `|| true`, que reescribe
-  `PIPESTATUS` (`decisiones.md` §Pendientes).
-- Rutas: ninguna de máquina en código (el comentario de cabecera de `resolver.sh` aún la
-  tiene).
+- `set -euo pipefail` global. El estado de un pipeline se lee con `set +e` y `PIPESTATUS` en la
+  línea siguiente, nunca detrás de `|| true` (que lo reescribe); un código de salida se captura en
+  una línea aparte de `local` (`local x=$(…)` devuelve el de `local`).
+- Una función que puede fallar en el ciclo de compilación devuelve 1 (`return`), no `exit`: el
+  modo watch la llama con `set +e` y tiene que seguir vigilando.
+- Rutas: ninguna de máquina en código; en comentarios, `~/Documents/…`.
 
 ## Cómo se verifica
 

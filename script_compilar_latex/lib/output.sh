@@ -28,7 +28,16 @@ mostrar_info_pdf() {
 
     if [ ! -f "$pdf" ]; then
         error "No se encontró el PDF esperado: ${pdf}"
-        exit 1
+        return 1
+    fi
+    # Un PDF anterior a esta corrida no es el resultado: el motor no lo escribió.
+    if [ "$(stat -c %Y "$pdf")" -lt "$INICIO_COMPILACION" ]; then
+        error "El PDF no se actualizó en esta compilación: ${pdf}"
+        return 1
+    fi
+    if [ ! -s "$pdf" ]; then
+        error "El PDF quedó vacío (0 bytes): ${pdf}"
+        return 1
     fi
 
     ok "PDF generado: ${BOLD}${pdf}${NC}"

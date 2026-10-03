@@ -25,9 +25,9 @@ logger) y de una instalación TeX Live; su remoto en GitHub es público y se lla
 carpeta.
 
 El motor normativo del ecosistema es **LuaLaTeX + Biber** (regla 7 del `CLAUDE.md` raíz). Esta
-herramienta acepta además `pdflatex` y `xelatex` por compatibilidad con documentos antiguos, y su
-detección automática **elige `pdflatex`** cuando el `.tex` no da pistas: para el modo normativo hay
-que pedir `-e lualatex --biber`.
+herramienta lo aplica por defecto: `auto` elige **lualatex**, salvo que el `.tex` declare otro motor
+con `% !TEX program = …` en sus 5 primeras líneas (material heredado). La bibliografía se pide con
+`--biber`.
 
 Quién compila qué en el ecosistema (comprobado en el código de cada repo):
 
@@ -79,21 +79,12 @@ El manual (opciones, ejemplos por caso, problemas frecuentes) es `script_compila
 
 ## Límite honesto
 
-- **En el modo normal (sin `-s` ni `-v`) no detecta el error del motor**: tras la pasada que
-  falla viene la siguiente; si no hay PDF, termina con «No se encontró el PDF esperado», y **si
-  queda un PDF anterior lo da por bueno y sale con 0**. Con `-s` o `-v` el error sí corta, pero
-  sin el extracto del log. Detalle en `docs/decisiones.md` §Pendientes.
-- **`--engine auto` elige `pdflatex`** salvo que el `.tex` principal contenga `\directlua`,
-  `\luaexec` o `\luacode` (→ lualatex) o `\usepackage{fontspec|polyglossia|unicode-math}` escrito
-  sin opciones (→ xelatex). Es lo que recibe `10 Class`, que llama sin `-e`.
 - **No usa latexmk**: pasadas fijas (`-p`, 2 por defecto y 3 si se pide bibliografía o glosario).
-- **La limpieza borra todos los `*.aux` del árbol** bajo la carpeta del `.tex`, no solo los del
-  documento; el `.log` se borra salvo `--log FILE`, y el logger vuelve a crearlo con una línea.
-- **El modo watch termina al primer fallo** y vigila solo la carpeta del `.tex`, sin subcarpetas;
-  necesita `inotifywait` (Linux) o `fswatch` (macOS).
+- **El modo watch vigila solo la carpeta del `.tex`, sin subcarpetas**, y necesita `inotifywait`
+  (Linux) o `fswatch` (macOS).
 - **La tilde entre comillas no se expande**: `"~/Documents/…"` falla; se escribe
   `"$HOME/Documents/…"` o la tilde fuera de las comillas con el espacio escapado.
-- **`--draft` no produce PDF**: con lualatex deja uno de 0 bytes en lugar del anterior.
+- **`--draft` no produce PDF**: comprueba que compila; con lualatex el PDF anterior se pierde.
 - **`-o DIR` es relativo al directorio desde el que se invoca**, no al del `.tex`.
 - **Sin pruebas automáticas**: se verifica con `bash -n` y compilando un `.tex` mínimo fuera de los
   repos.

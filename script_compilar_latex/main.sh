@@ -10,14 +10,10 @@
 #  El script vive siempre en:
 #    ~/Documents/scripts_for_latex/script_compilar_latex/
 #
-#  Para usarlo desde cualquier directorio, crea un alias en tu ~/.zshrc o
-#  ~/.config/fish/config.fish:
+#  Para usarlo desde cualquier directorio, crea un alias en tu ~/.zshrc:
 #
 #    # zsh
 #    alias compilar='~/Documents/scripts_for_latex/script_compilar_latex/main.sh'
-#
-#    # fish
-#    alias compilar '~/Documents/scripts_for_latex/script_compilar_latex/main.sh'
 #
 #  Luego recargas: source ~/.zshrc  (o abre una nueva terminal)
 #
@@ -27,8 +23,7 @@
 #  compilar tesis                                    → compila tesis.tex en el CWD
 #  compilar ~/Documents/04\ index/_pubs/pub_dialectica/articulo      → ruta con tilde
 #  compilar ../pub_axiomata/paper                    → ruta relativa
-#  compilar /home/achalmaedison/Documents/04\ index/_pubs/pub_res-publica/capitulo1
-#  compilar -e xelatex ~/Documents/03\ writing/nota
+#  compilar --biber ~/Documents/03\ writing/nota            → lualatex + biber
 #  compilar --biber -p 3 ~/Documents/04\ index/_pubs/pub_numerus-scriptum/python_intro
 #  compilar -w ~/Documents/02\ analysis/informe      → modo watch
 #  compilar -c ~/Documents/04\ index/_pubs/pub_chaska/slides         → solo limpiar auxiliares
@@ -90,8 +85,11 @@ USAR_MAKEINDEX=false
 USAR_MAKEGLOSSARIES=false
 ABRIR_PDF=false
 VERBOSE=false
-LOG_FILE=""
+LATEX_LOG=""          # --log: copia de la salida del compilador (opcional)
+SALIDA_LOG=""         # donde se anota la salida de esta corrida (LATEX_LOG o un temporal)
+# No se llama LOG_FILE: ese nombre es del logger de core/, que escribiría sus mensajes en él.
 TIEMPO_INICIO=$(date +%s)
+INICIO_COMPILACION=0  # segundo en que empezó la compilación en curso (para saber si el PDF es nuevo)
 
 # Rutas resueltas del .tex (pobladas por resolver_ruta_tex en main())
 TEX_PATH=""
@@ -107,9 +105,11 @@ PDF_FINAL=""
 # compilar()
 # Orquesta el ciclo completo: pasadas LaTeX + bibliografía + índices + resultado.
 # Se llama desde main() o desde compilar_segura() en modo watch.
+# Returns: 0 si hay PDF nuevo (o, en --draft, si compiló); 1 en cuanto algo falla.
 compilar() {
-    # Limpiar / inicializar el log de esta sesión
-    > "$LOG_FILE"
+    # Limpiar / inicializar el registro de esta corrida
+    > "$SALIDA_LOG"
+    INICIO_COMPILACION=$(date +%s)
 
     titulo "Compilando: ${TEX_BASE}.tex  [engine: ${ENGINE}]"
 
@@ -125,7 +125,7 @@ compilar() {
     echo ""
 
     # --- Pasada 1: siempre obligatoria -------------------------------------
-    ejecutar_latex 1
+    ejecutar_latex 1 || return 1
 
     # --- Bibliografía (requiere que la pasada 1 haya generado .aux) --------
     if ( $USAR_BIBTEX || $USAR_BIBER ) && [ "$PASADAS" -ge 2 ]; then
@@ -140,12 +140,20 @@ compilar() {
     # --- Pasadas adicionales (para resolver referencias cruzadas) ----------
     local p
     for (( p=2; p<=PASADAS; p++ )); do
-        ejecutar_latex "$p"
+        ejecutar_latex "$p" || return 1
     done
 
     # --- Resultado final ---------------------------------------------------
     separador
-    mostrar_info_pdf
+    if $MODO_DRAFT; then
+        # -draftmode no escribe el PDF (lualatex lo deja en 0 bytes): se dice, no se anuncia uno.
+        [ -f "${TEX_DIR}/${TEX_BASE}.pdf" ] && [ ! -s "${TEX_DIR}/${TEX_BASE}.pdf" ] \
+            && rm -f "${TEX_DIR}/${TEX_BASE}.pdf"
+        ok "Borrador: el documento compila. No se genera PDF en modo --draft."
+        separador
+        return 0
+    fi
+    mostrar_info_pdf || return 1
     mover_pdf
     abrir_pdf
     separador
@@ -183,17 +191,21 @@ main() {
     # 5. Verificar que todos los binarios necesarios estén instalados
     verificar_dependencias
 
-    # 6. Definir la ruta del log (ahora que TEX_DIR y TEX_BASE están resueltos)
-    if [ -z "$LOG_FILE" ]; then
-        LOG_FILE="${TEX_DIR}/${TEX_BASE}.log"
+    # 6. Dónde se anota la salida: --log o un temporal (nunca el .log que escribe el motor)
+    if [ -n "$LATEX_LOG" ]; then
+        SALIDA_LOG="$LATEX_LOG"
+    else
+        SALIDA_LOG="$(mktemp -t compilar-latex.XXXXXX)"
+        trap 'rm -f "$SALIDA_LOG"' EXIT
     fi
 
-    # 7. Ejecutar
+    # 7. Ejecutar. Si falla, los auxiliares (y el .log del motor) se quedan para revisarlos.
     if $MODO_WATCH; then
         modo_watch
-    else
-        compilar
+    elif compilar; then
         limpiar_auxiliares
+    else
+        exit 1
     fi
 }
 

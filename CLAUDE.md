@@ -11,9 +11,9 @@ archivo. Léase antes: `README.md` (qué compila cada framework y qué pasa por 
 
 ## Reglas que no se negocian
 
-- **LuaLaTeX + Biber es el motor normativo** (regla 7 del `CLAUDE.md` raíz): ningún ejemplo, valor
-  por defecto nuevo ni documento del ecosistema se escribe para pdflatex o xelatex; compilar con
-  ellos se conserva por compatibilidad y no se amplía.
+- **LuaLaTeX + Biber es el motor normativo** (regla 7 del `CLAUDE.md` raíz): `auto` elige lualatex
+  salvo un `% !TEX program = …` en las 5 primeras líneas del `.tex`; pdflatex y xelatex se conservan
+  solo para material heredado que lo declare, y no se amplían.
 - **Un punto de entrada y un módulo por responsabilidad**: `main.sh` orquesta; cada `lib/*.sh`
   tiene una tarea (`docs/arquitectura.md`); `config.sh` concentra los valores por defecto y ningún
   módulo los redefine.
@@ -46,15 +46,15 @@ PDF anterior en la carpeta.
 
 ## Detalles que cuesta redescubrir
 
-- **El modo normal no ve el error del motor**: `… | grep … || true` deja `PIPESTATUS` en 0. Con
-  `-s` y `-v`, `set -e` corta antes de mostrar el extracto. El watch muere al primer `exit 1`. Todo
-  en `docs/decisiones.md` §Pendientes, sin corregir.
-- **`LOG_FILE` es a la vez el log del motor y el archivo al que el logger de `core/` copia cada
-  mensaje**: por eso queda un `<nombre>.log` de una línea tras la limpieza.
-- **`--engine auto` acaba en `pdflatex`** si el `.tex` principal no usa `\directlua`, `\luaexec`,
-  `\luacode` ni `\usepackage{fontspec|polyglossia|unicode-math}` escrito sin opciones.
-- **`--draft` no produce PDF** (con lualatex, uno de 0 bytes).
-- **La limpieza borra todos los `*.aux` del árbol** bajo la carpeta del `.tex`.
+- **El estado del motor se lee con `set +e` y `PIPESTATUS` justo después del pipeline**
+  (`ejecutar_latex`): un `|| true` o un `set -e` activo lo pierden, y el script anunciaba éxito con
+  un PDF viejo. Un fallo hace `return 1`, no `exit`, para que el watch sobreviva; y `mostrar_info_pdf`
+  rechaza un PDF anterior a la compilación o vacío.
+- **`LOG_FILE` es del logger de `core/`**: no se usa aquí. La salida de una corrida va a
+  `SALIDA_LOG` (el `--log` o un temporal); el extracto de errores sale del `.log` del motor.
+- **`--draft` no produce PDF**: lo dice y borra el de 0 bytes que deja lualatex.
+- **La limpieza borra los auxiliares del documento y los `.aux` que su `.aux` declara con
+  `\@input`**, nunca otros de la carpeta.
 - **La bandera de limpieza es `-c`/`--limpiar`**; `--clean` no existe.
 - **`-o DIR` es relativo al directorio de invocación**; se compila con `pushd "$TEX_DIR"` para que
   `\include` e `\input` resuelvan.

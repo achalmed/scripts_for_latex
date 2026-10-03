@@ -76,7 +76,7 @@ carpeta llamada `~`. Si no encuentra el archivo, lista hasta diez `.tex` cercano
 |---|---|---|
 | `-e, --engine M` | `auto`, `lualatex`, `pdflatex` o `xelatex` | `auto` |
 | `-p, --pasadas N` | número de pasadas del motor | 2; sube a 3 con `-b`, `--biber` o `-g` |
-| `--draft` | `-draftmode` en **todas** las pasadas (y `-no-pdf` con xelatex): comprueba que compila, pero no da PDF; con lualatex deja un PDF de 0 bytes en lugar del anterior | — |
+| `--draft` | `-draftmode` en **todas** las pasadas (y `-no-pdf` con xelatex): comprueba que compila y no da PDF (con lualatex el anterior se pierde; el de 0 bytes se borra) | — |
 | `-b, --bibtex` | BibTeX tras la primera pasada | — |
 | `--biber` | Biber tras la primera pasada (excluye `-b`) | — |
 | `-i, --makeindex` | makeindex tras la primera pasada | — |
@@ -95,28 +95,15 @@ Sin `-s` ni `-v`, de la salida del motor solo se ven las líneas con `!`, `Warni
 
 ### Cómo elige el motor `auto`
 
-`lib/detector.sh` busca en el `.tex` principal (no en los que este incluye):
+`lib/detector.sh` lee las 5 primeras líneas del `.tex` principal:
 
 | si encuentra | elige |
 |---|---|
-| `\directlua`, `\luaexec` o `\luacode` | `lualatex` |
-| `\usepackage{fontspec}`, `\usepackage{polyglossia}` o `\usepackage{unicode-math}`, sin opciones entre corchetes | `xelatex` |
-| ninguna de las anteriores | `pdflatex` |
+| `% !TEX program = pdflatex`, `xelatex` o `lualatex` (también `!TEX TS-program`) | ese motor |
+| nada de eso | `lualatex`, el motor del ecosistema |
 
-Por eso un documento del ecosistema se compila con `-e lualatex`: la detección nunca concluye
-lualatex por `fontspec` y no ve `\usepackage[…]{fontspec}` ni lo que cargue una clase.
-
-## Ejemplos
-
-```bash
-compilar -e lualatex --biber -p 3 documento              # el modo normativo
-compilar -e lualatex -i -g documento                     # con índice y glosario (3 pasadas)
-compilar -e lualatex --biber -o ../salida documento      # el PDF a ../salida/
-compilar -s -e lualatex documento && echo OK             # para un script: sin ruido
-compilar -v -e lualatex --log /tmp/depura.log documento  # todo, y el log a salvo
-compilar -w -e lualatex documento                        # vigilar mientras se escribe
-compilar -c documento                                    # solo limpiar
-```
+El comentario mágico es la vía del material heredado que necesita otro motor; es la misma
+convención que usa `10 Class`.
 
 ## Qué borra la limpieza
 
@@ -124,11 +111,11 @@ Al terminar bien (y con `-c`), en la carpeta del `.tex`:
 
 - `<nombre>.<ext>` para cada extensión de `EXTENSIONES_AUXILIARES` en `config.sh` (`aux`, `bbl`,
   `bcf`, `blg`, `log`, `toc`, `synctex.gz`, `run.xml`…; la lista completa la da `--help`), y
-- **todos los `*.aux` de esa carpeta y de sus subcarpetas**, sean o no del documento (para los
-  `\include` en subcarpetas). Ojo con compilar un `.tex` en una carpeta que contiene otros
-  proyectos.
+- los `.aux` de los `\include` que el `.aux` principal declara con `\@input{…}` (rutas relativas
+  dentro de la carpeta). Ningún otro `.aux` de la carpeta se toca.
 
-Si la compilación falla, los auxiliares se quedan. El `.log` se borra salvo con `--log FILE`.
+Si la compilación falla, los auxiliares se quedan, incluido el `.log` del motor, que es de donde
+sale el extracto de errores. `--log FILE` guarda además una copia de la salida de la corrida.
 
 ## Problemas frecuentes
 
@@ -137,23 +124,19 @@ Si la compilación falla, los auxiliares se quedan. El `.log` se borra salvo con
 | «No se encontró el archivo» | la ruta no llegó entera (espacio sin escapar, tilde entre comillas) o falta el `.tex`; mira la lista de cercanos que imprime |
 | «Herramientas no instaladas: …» | falta un binario obligatorio para las opciones pedidas: instálalo o quita la opción |
 | el PDF no recoge la bibliografía | falta `--biber` (o `-b`); con él las pasadas suben a 3 |
-| «¡Compilación completada!» pero el PDF no cambió | en el modo normal un error del motor no se detecta y vale el PDF anterior; repite con `-v` y lee el log (`../docs/decisiones.md` §Pendientes) |
-| sale con 1 sin decir por qué | con `-s` o `-v` el error del motor corta en seco; el detalle está en `<nombre>.log` (o en `--log FILE`) |
-| salió con `pdflatex` o `xelatex` | la detección automática; pasa `-e lualatex` |
+| «El PDF no se actualizó en esta compilación» | el motor no escribió el PDF aunque no dio error; lee `<nombre>.log` |
+| salió con `pdflatex` o `xelatex` | el `.tex` lo pide con `% !TEX program = …`; quítalo o pasa `-e lualatex` |
 | `-w` no arranca | falta `inotifywait` (paquete `inotify-tools`) o `fswatch` |
-| `-w` se cierra tras un error | límite conocido: el modo watch termina al primer fallo |
-| el PDF pesa 0 bytes | se compiló con `--draft`: esa opción no produce PDF; recompila sin ella |
+| no hay PDF tras `--draft` | es lo esperado: esa opción solo comprueba que compila |
 | `-a` no abre nada | no hay visor de la lista; el PDF queda donde dice la salida |
 
 ## Límite honesto
 
-- **Errores del motor**: en el modo normal no se detectan (vale un PDF anterior y la salida es 0);
-  con `-s` o `-v` cortan sin extracto del log.
-- **`auto` elige `pdflatex`** cuando el `.tex` no da pistas; el modo normativo es explícito.
 - **Sin latexmk**: pasadas fijas; si hacen falta más, se piden con `-p`.
-- **La limpieza borra todos los `*.aux` del árbol** de la carpeta del `.tex`.
-- **El modo watch** termina al primer fallo y no vigila subcarpetas.
-- **`--draft` no produce PDF** y con lualatex sustituye el anterior por uno vacío.
+- **`auto` mira solo el comentario mágico**, no lo que el documento carga: un `.tex` heredado que
+  exija pdflatex sin declararlo falla con lualatex y hay que añadirle la línea o pasar `-e`.
+- **El modo watch** no vigila subcarpetas.
+- **`--draft` no produce PDF**: con lualatex el PDF anterior se pierde.
 - **No compila los frameworks** (`03 writing`, `10 Class` para `academic-*`, `11 Book`,
   `sgdp/marco_documental`): cada uno tiene su build.
 - Sin pruebas automáticas: `bash -n` y un `.tex` mínimo.

@@ -15,7 +15,7 @@ readonly SCRIPT_NAME="compilar_latex"
 DEFAULT_ARCHIVO="index"
 
 # Motor LaTeX: pdflatex | xelatex | lualatex
-# "auto" → el script detecta automáticamente (ver lib/detector.sh)
+# "auto" → %!TEX program del .tex o, sin él, lualatex (ver lib/detector.sh)
 DEFAULT_ENGINE="auto"
 
 # Número mínimo de pasadas de compilación.

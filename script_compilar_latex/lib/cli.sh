@@ -11,7 +11,7 @@ mostrar_ayuda() {
 ${BOLD}${SCRIPT_NAME}${NC} v${VERSION} — Compilador universal LaTeX
 
 ${BOLD}USO${NC}
-  ./compilar_latex.sh [OPCIONES] [ARCHIVO_O_RUTA]
+  compilar [OPCIONES] [ARCHIVO_O_RUTA]
 
 ${BOLD}ARCHIVO / RUTA${NC}
   Puede ser cualquiera de estas formas:
@@ -27,20 +27,18 @@ ${BOLD}ARCHIVO / RUTA${NC}
 
 ${BOLD}MOTOR${NC}
   -e, --engine ENGINE     Motor LaTeX a usar:
-                            auto      detecta automáticamente (default)
-                            pdflatex  máxima compatibilidad
-                            xelatex   Unicode nativo, fuentes del sistema
-                            lualatex  Lua embebido, tipografía avanzada
+                            auto      lualatex, salvo %!TEX program (default)
+                            lualatex  el motor del ecosistema
+                            pdflatex  solo para material heredado que lo exija
+                            xelatex   solo para material heredado que lo exija
 
-  Detección automática inspecciona el .tex buscando:
-    fontspec / polyglossia / unicode-math → xelatex
-    \\directlua / luacode                  → lualatex
-    (nada especial)                        → pdflatex
+  auto lee las 5 primeras líneas del .tex: «% !TEX program = pdflatex|xelatex|lualatex»
+  manda; sin esa línea, lualatex (regla del ecosistema: LuaLaTeX + Biber).
 
 ${BOLD}COMPILACIÓN${NC}
   -p, --pasadas N         Número de compilaciones (default: 2)
                           Se ajusta a 3 automáticamente si usas bibliografía.
-  --draft                 Modo borrador: omite imágenes, más rápido.
+  --draft                 Modo borrador: comprueba que compila, SIN producir PDF.
 
 ${BOLD}BIBLIOGRAFÍA E ÍNDICES${NC}
   -b, --bibtex            Ejecuta BibTeX entre compilaciones.
@@ -63,29 +61,29 @@ ${BOLD}UTILIDADES${NC}
 
 ${BOLD}EJEMPLOS${NC}
   # Compilar index.tex en el directorio actual (detección automática de motor)
-  ./compilar_latex.sh
+  compilar
 
   # Compilar un archivo en cualquier lugar de tu sistema
-  ./compilar_latex.sh ~/Documents/04\ index/_pubs/pub_dialectica-y-mercado/articulo
-  ./compilar_latex.sh ~/Documents/03\ writing/nota_metodologica
+  compilar ~/Documents/04\ index/_pubs/pub_dialectica-y-mercado/articulo
+  compilar ~/Documents/03\ writing/nota_metodologica
 
   # Documento con bibliografía (biblatex + Biber)
-  ./compilar_latex.sh --biber -p 3 ~/Documents/04\ index/_pubs/pub_axiomata/paper
+  compilar --biber -p 3 ~/Documents/04\ index/_pubs/pub_axiomata/paper
 
-  # Presentación Beamer con XeLaTeX, abrir al terminar
-  ./compilar_latex.sh -e xelatex -a ~/Documents/03\ writing/slides_unsch
+  # Presentación Beamer con bibliografía, abrir al terminar
+  compilar --biber -a ~/Documents/03\ writing/slides_unsch
 
   # LuaLaTeX con índice y glosario, salida en build/
-  ./compilar_latex.sh -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/pub_res-publica/libro
+  compilar -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/pub_res-publica/libro
 
   # Modo watch durante la escritura
-  ./compilar_latex.sh -w ~/Documents/02\ analysis/informe
+  compilar -w ~/Documents/02\ analysis/informe
 
   # Solo limpiar auxiliares de un documento
-  ./compilar_latex.sh -c ~/Documents/04\ index/_pubs/pub_numerus-scriptum/capitulo2
+  compilar -c ~/Documents/04\ index/_pubs/pub_numerus-scriptum/capitulo2
 
   # Compilar silenciosamente (para CI/CD o cron)
-  ./compilar_latex.sh -s ~/Documents/03\ writing/reporte && echo "OK"
+  compilar -s ~/Documents/03\ writing/reporte && echo "OK"
 
 ${BOLD}VARIABLES DE ENTORNO${NC}
   NO_COLOR=1    Desactiva todos los colores en la salida.
@@ -106,7 +104,7 @@ EOF
 # Sets (global):
 #   ARCHIVO ENGINE PASADAS MODO_SILENCIOSO SOLO_LIMPIAR MODO_WATCH
 #   MODO_DRAFT DIRECTORIO_SALIDA USAR_BIBTEX USAR_BIBER USAR_MAKEINDEX
-#   USAR_MAKEGLOSSARIES ABRIR_PDF VERBOSE LOG_FILE
+#   USAR_MAKEGLOSSARIES ABRIR_PDF VERBOSE LATEX_LOG
 parsear_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -125,7 +123,7 @@ parsear_args() {
                 shift 2
                 ;;
             --log)
-                LOG_FILE="${2:?"--log requiere una ruta de archivo"}"
+                LATEX_LOG="${2:?"--log requiere una ruta de archivo"}"
                 shift 2
                 ;;
             -s|--silencioso)    MODO_SILENCIOSO=true;      shift ;;

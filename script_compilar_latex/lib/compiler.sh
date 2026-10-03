@@ -42,11 +42,11 @@ construir_flags() {
 #   $1 - Número de pasada actual (para mostrar en el log)
 #
 # Globals leídas:
-#   ENGINE PASADAS TEX_DIR TEX_BASE LOG_FILE VERBOSE MODO_SILENCIOSO
+#   ENGINE PASADAS TEX_DIR TEX_BASE SALIDA_LOG VERBOSE MODO_SILENCIOSO
 #
 # Returns:
 #   0 si el motor terminó sin errores
-#   Exits 1 si hubo errores de compilación
+#   1 si el motor falló (no hace exit: el modo watch tiene que sobrevivir al fallo)
 ejecutar_latex() {
     local num_pasada="$1"
     local -a flags
@@ -60,27 +60,34 @@ ejecutar_latex() {
     # Compilar desde el directorio del .tex para que \include / \input funcionen
     pushd "$TEX_DIR" > /dev/null
 
+    # El estado del MOTOR se captura con set +e y PIPESTATUS leído en la línea siguiente al
+    # pipeline: con `set -e` el script moría antes de leerlo (-s, -v) y con `|| true` PIPESTATUS
+    # pasaba a ser el de `true` (modo normal), así que un fallo se anunciaba como éxito.
+    local -a estados
+    set +e
     if $VERBOSE; then
-        "${cmd[@]}" 2>&1 | tee -a "$LOG_FILE"
-        status=${PIPESTATUS[0]}
+        "${cmd[@]}" 2>&1 | tee -a "$SALIDA_LOG"
+        estados=("${PIPESTATUS[@]}")
     elif $MODO_SILENCIOSO; then
-        "${cmd[@]}" >> "$LOG_FILE" 2>&1
-        status=$?
+        "${cmd[@]}" >> "$SALIDA_LOG" 2>&1
+        estados=("$?")
     else
-        # Modo normal: filtrar solo líneas relevantes (errores, warnings)
-        "${cmd[@]}" 2>&1 | tee -a "$LOG_FILE" \
+        # Modo normal: filtrar solo líneas relevantes (errores, warnings); grep sin coincidencias
+        # sale con 1 y no cuenta.
+        "${cmd[@]}" 2>&1 | tee -a "$SALIDA_LOG" \
             | grep -E --color=never \
-                '(^!|Warning|Error|Overfull|Underfull|LaTeX Font|Package|Class)' \
-            || true
-        status=${PIPESTATUS[0]}
+                '(^!|Warning|Error|Overfull|Underfull|LaTeX Font|Package|Class)'
+        estados=("${PIPESTATUS[@]}")
     fi
+    set -e
+    status=${estados[0]}
 
     popd > /dev/null
 
     if [ "$status" -ne 0 ]; then
         error "El compilador terminó con errores en la pasada ${num_pasada}."
         mostrar_errores_log
-        exit 1
+        return 1
     fi
 }
 
@@ -89,17 +96,17 @@ ejecutar_latex() {
 # También se ejecuta desde TEX_DIR.
 #
 # Globals leídas:
-#   USAR_BIBTEX USAR_BIBER TEX_DIR TEX_BASE LOG_FILE MODO_SILENCIOSO
+#   USAR_BIBTEX USAR_BIBER TEX_DIR TEX_BASE SALIDA_LOG MODO_SILENCIOSO
 ejecutar_bibliografia() {
     pushd "$TEX_DIR" > /dev/null
 
     if $USAR_BIBTEX; then
         paso "Ejecutando BibTeX..."
         if $MODO_SILENCIOSO; then
-            bibtex "$TEX_BASE" >> "$LOG_FILE" 2>&1 \
+            bibtex "$TEX_BASE" >> "$SALIDA_LOG" 2>&1 \
                 || warn "BibTeX reportó advertencias (revisa ${TEX_BASE}.blg)"
         else
-            bibtex "$TEX_BASE" 2>&1 | tee -a "$LOG_FILE" \
+            bibtex "$TEX_BASE" 2>&1 | tee -a "$SALIDA_LOG" \
                 || warn "BibTeX reportó advertencias (revisa ${TEX_BASE}.blg)"
         fi
     fi
@@ -107,10 +114,10 @@ ejecutar_bibliografia() {
     if $USAR_BIBER; then
         paso "Ejecutando Biber..."
         if $MODO_SILENCIOSO; then
-            biber "$TEX_BASE" >> "$LOG_FILE" 2>&1 \
+            biber "$TEX_BASE" >> "$SALIDA_LOG" 2>&1 \
                 || warn "Biber reportó advertencias (revisa ${TEX_BASE}.blg)"
         else
-            biber "$TEX_BASE" 2>&1 | tee -a "$LOG_FILE" \
+            biber "$TEX_BASE" 2>&1 | tee -a "$SALIDA_LOG" \
                 || warn "Biber reportó advertencias (revisa ${TEX_BASE}.blg)"
         fi
     fi
@@ -122,19 +129,19 @@ ejecutar_bibliografia() {
 # Invoca makeindex y/o makeglossaries según la configuración.
 #
 # Globals leídas:
-#   USAR_MAKEINDEX USAR_MAKEGLOSSARIES TEX_DIR TEX_BASE LOG_FILE
+#   USAR_MAKEINDEX USAR_MAKEGLOSSARIES TEX_DIR TEX_BASE SALIDA_LOG
 ejecutar_indices() {
     pushd "$TEX_DIR" > /dev/null
 
     if $USAR_MAKEINDEX; then
         paso "Ejecutando makeindex..."
-        makeindex "$TEX_BASE" >> "$LOG_FILE" 2>&1 \
+        makeindex "$TEX_BASE" >> "$SALIDA_LOG" 2>&1 \
             || warn "makeindex reportó advertencias."
     fi
 
     if $USAR_MAKEGLOSSARIES; then
         paso "Ejecutando makeglossaries..."
-        makeglossaries "$TEX_BASE" >> "$LOG_FILE" 2>&1 \
+        makeglossaries "$TEX_BASE" >> "$SALIDA_LOG" 2>&1 \
             || warn "makeglossaries reportó advertencias."
     fi
 
@@ -142,25 +149,29 @@ ejecutar_indices() {
 }
 
 # mostrar_errores_log()
-# Extrae y muestra los primeros bloques de error del archivo .log de LaTeX.
+# Extrae y muestra los primeros bloques de error del .log que escribe el MOTOR (el completo);
+# si no existe, de la salida capturada de esta corrida.
 # Busca líneas que comienzan con ! (errores fatales de LaTeX).
 #
 # Globals leídas:
-#   LOG_FILE TEX_BASE
+#   TEX_DIR TEX_BASE SALIDA_LOG
 mostrar_errores_log() {
+    local log="${TEX_DIR}/${TEX_BASE}.log"
+    [ -f "$log" ] || log="$SALIDA_LOG"
     echo ""
     warn "Extracto de errores del log:"
     separador
-    grep -n -A 4 '^!' "$LOG_FILE" 2>/dev/null | head -50 \
+    grep -n -A 4 '^!' "$log" 2>/dev/null | head -50 \
         || echo "  (No se pudo leer el log o no hay errores con '!')"
     separador
-    echo "  Log completo: ${LOG_FILE}"
+    echo "  Log completo: ${log}"
     echo ""
 }
 
 # limpiar_auxiliares()
 # Elimina archivos auxiliares generados por LaTeX en el directorio del .tex.
-# También limpia .aux de subdirectorios (para proyectos con \include).
+# De los subdirectorios, solo los .aux que el .aux principal declara con \@input{…} (los de los
+# \include de ESTE documento): antes borraba todo *.aux bajo la carpeta, fuera de quien fuera.
 #
 # Globals leídas:
 #   TEX_DIR TEX_BASE EXTENSIONES_AUXILIARES (de config.sh)
@@ -170,6 +181,13 @@ limpiar_auxiliares() {
 
     pushd "$TEX_DIR" > /dev/null
 
+    # Los .aux de los \include se leen del .aux principal antes de borrarlo.
+    local -a aux_incluidos=()
+    if [ -f "${TEX_BASE}.aux" ]; then
+        mapfile -t aux_incluidos < <(grep -oE '\\@input\{[^}]+\.aux\}' "${TEX_BASE}.aux" \
+            | sed -E 's/^\\@input\{(.*)\}$/\1/')
+    fi
+
     for ext in "${EXTENSIONES_AUXILIARES[@]}"; do
         local archivo="${TEX_BASE}.${ext}"
         if [ -f "$archivo" ]; then
@@ -178,8 +196,14 @@ limpiar_auxiliares() {
         fi
     done
 
-    # Limpiar .aux de subdirectorios (proyectos con \include{capitulos/...})
-    find . -name '*.aux' -not -path './.git/*' -delete 2>/dev/null || true
+    local aux
+    for aux in "${aux_incluidos[@]}"; do
+        case "$aux" in /*|*..*) continue ;; esac      # solo rutas relativas dentro de la carpeta
+        if [ -f "$aux" ]; then
+            rm -f "$aux"
+            (( eliminados++ )) || true
+        fi
+    done
 
     popd > /dev/null
 

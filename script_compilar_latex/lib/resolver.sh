@@ -3,11 +3,11 @@
 # lib/resolver.sh — Resolución de rutas del archivo .tex de entrada
 # ==============================================================================
 # El script siempre vive en:
-#   /home/achalmaedison/Documents/scripts_for_latex/script_compilar_latex/
+#   ~/Documents/scripts_for_latex/script_compilar_latex/
 #
 # Los archivos .tex pueden estar en cualquier ruta bajo ~/Documents:
 #   pub_dialectica-y-mercado/capitulo1.tex
-#   /home/achalmaedison/Documents/03 writing/articulo.tex
+#   ~/Documents/03 writing/articulo.tex
 #   tesis                                          ← relativo al CWD del usuario
 #
 # Esta función resuelve la ruta y expone tres variables globales:
@@ -125,7 +125,7 @@ sugerir_tex_cercanos() {
     fi
     echo ""
     echo "  Uso con ruta completa:"
-    echo "    ./compilar_latex.sh /ruta/absoluta/al/archivo"
-    echo "    ./compilar_latex.sh ../pub_dialectica-y-mercado/capitulo1"
-    echo "    ./compilar_latex.sh ~/Documents/03\ writing/articulo"
+    echo "    compilar /ruta/absoluta/al/archivo"
+    echo "    compilar ../pub_dialectica-y-mercado/capitulo1"
+    echo "    compilar ~/Documents/03\ writing/articulo"
 }
