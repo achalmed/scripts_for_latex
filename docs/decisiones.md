@@ -116,7 +116,7 @@ número para no romper citas.
 11. **`suite.yml` dice que compila «para los frameworks de escritura, clases y libros»**, lo que
     no es cierto (§Alcance). Corregir el `resumen` obliga a regenerar los bloques
     (`core/suites.py generar --aplicar`, que escribe también `meta/INDICE_SCRIPTS.md`).
-12. **Repo público sin `LICENSE`** (NORMATIVA §15.3): la licencia la decide el autor.
+12. *Resuelto el 2026-10-04 por decisión del autor.* **Repo público sin `LICENSE`**: MIT (`LICENSE`).
 13. *Resuelto el 2026-10-03.* **¿`DEFAULT_ENGINE=lualatex`?** Alinearía la herramienta con la regla 7; antes hay que ver qué
     `.tex` de `10 Class` compila hoy con pdflatex por la detección.
 

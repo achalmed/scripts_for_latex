@@ -89,4 +89,4 @@ El manual (opciones, ejemplos por caso, problemas frecuentes) es `script_compila
 - **`-o DIR` es relativo al directorio desde el que se invoca**, no al del `.tex`.
 - **Sin pruebas automáticas**: se verifica con `bash -n` y compilando un `.tex` mínimo fuera de los
   repos.
-- **Repo público sin `LICENSE`** (§15.3 lo pide): la licencia la decide el autor.
+- **Licencia MIT** (`LICENSE`), como el resto del código del ecosistema.
