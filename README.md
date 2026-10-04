@@ -35,7 +35,7 @@ Quién compila qué en el ecosistema (comprobado en el código de cada repo):
 |---|---|---|---|
 | `03 writing` | documentos con esquema: tesis, monografías, informes, láminas | `03 writing/scripts/build.sh`: LuaLaTeX + Biber, módulos propios, sin latexmk | no |
 | `10 Class` | los `\documentclass{academic-*}` del framework | `10 Class/scripts/build.sh` | no |
-| `10 Class` | cualquier otro `.tex` de una sesión o un curso | `compile_tex` de `10 Class/scripts/lib/common.sh`, que lee la clave `compilador` de `10 Class/config/course.yml` y llama a este `main.sh` con `-s` y sin `-e` | **sí** (único consumidor por código) |
+| `10 Class` | cualquier otro `.tex` de una sesión o un curso | `compile_tex` de `10 Class/scripts/lib/common.sh` llama a este `main.sh` (contrato en `docs/arquitectura.md` §Consumidores) | **sí** (único consumidor por código) |
 | `11 Book` | libros de curso CampusTeX | `11 Book/scripts/build-course.sh`: latexmk si está instalado; si no, dos pasadas de lualatex | no |
 | `sgdp/marco_documental` | documentos oficiales | `sgdp/marco_documental/Makefile` → `sgdp/marco_documental/scripts/build.sh`, dos pasadas de lualatex | no |
 | **este repo** | el `.tex` que no pertenece a un framework: un post con LaTeX de los pubs, una nota, una prueba | `script_compilar_latex/main.sh`, pasadas explícitas, sin latexmk | — |
@@ -72,6 +72,7 @@ El manual (opciones, ejemplos por caso, problemas frecuentes) es `script_compila
 |---|---|
 | `script_compilar_latex/README.md` | **quien usa**: opciones, ejemplos, problemas frecuentes |
 | `docs/arquitectura.md` | **quien amplía o mantiene**: flujo, módulos, variables globales, cómo añadir una opción o un motor |
+| `docs/arquitectura.md` §Consumidores | **otro repo**: qué usa `10 Class` de esta herramienta y qué no se puede cambiar sin mirarlo |
 | `docs/decisiones.md` | por qué está hecho así y qué queda pendiente (errores conocidos sin corregir) |
 | `docs/historial/` | la bitácora de la reescritura modular |
 | `CLAUDE.md` | reglas para el asistente |

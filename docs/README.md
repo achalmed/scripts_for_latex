@@ -29,10 +29,10 @@ Un documento por concepto, con nombre estable. El manual de uso no vive aquí: e
 <!-- docs:inicio -->
 | documento | tipo | estado | qué es |
 |---|---|---|---|
-| [arquitectura.md](arquitectura.md) | `doc` | `activo` | Arquitectura de compilar_latex: flujo, módulos, estado global y cómo se amplía |
+| [arquitectura.md](arquitectura.md) | `doc` | `activo` | Arquitectura de compilar_latex: flujo, módulos, estado global, cómo se amplía y quién la usa |
 | [decisiones.md](decisiones.md) | `decision` | `activo` | Decisiones de scripts_for_latex |
 | [historial/README.md](historial/README.md) | `readme` | `activo` | docs/historial/ — lo cumplido: bitácoras de depuración de script_compilar_latex |
 | [historial/bugs-corregidos.md](historial/bugs-corregidos.md) | `bitacora` | `hecho` | Errores corregidos en la reescritura modular de compilar_latex |
 
-<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-10-03); no se edita a mano.</sub>
+<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-10-04); no se edita a mano.</sub>
 <!-- docs:fin -->

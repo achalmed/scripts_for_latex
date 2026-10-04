@@ -19,10 +19,9 @@ archivo. Léase antes: `README.md` (qué compila cada framework y qué pasa por 
   módulo los redefine.
 - **El logger es de `core/`**: el `logger.sh` de `lib/` envuelve `core/shell-lib/logger.sh` y
   solo añade nombres cortos; no se define otro.
-- **Los frameworks no dependen de este repo, salvo `10 Class`**: `compile_tex` de
-  `10 Class/scripts/lib/common.sh` llama a este `main.sh` (con `-s`, sin `-e`) para los `.tex` que
-  no son `academic-*`. Cambiar banderas, valores por defecto o códigos de salida es cambiar lo que
-  recibe `10 Class`: se mira allí antes.
+- **Los frameworks no dependen de este repo, salvo `10 Class`**: el contrato está en
+  `docs/arquitectura.md` §Consumidores. Cambiar la ruta, banderas, valores por defecto o códigos de
+  salida es cambiar lo que recibe `10 Class`: se mira allí antes.
 - **No se compila nada dentro de otro repo para probar**: compilar reescribe PDFs versionados. Se
   prueba con un `.tex` mínimo en una carpeta temporal.
 - **Repo público** (`meta/workspace.yml`): nada del despacho ni rutas de máquina en código y
@@ -73,5 +72,17 @@ PDF anterior en la carpeta.
 | por qué está así; errores conocidos sin corregir | `docs/decisiones.md` |
 | la reescritura modular y sus tres errores | `docs/historial/bugs-corregidos.md` |
 | quién compila qué en el ecosistema | `README.md` §Qué es; `meta/ARQUITECTURA.md` §2 y §3 |
+| qué usa `10 Class` de esta herramienta | `docs/arquitectura.md` §Consumidores |
 | el contrato de suite y el logger | `core/README.md`, `core/suite.schema.yml` |
 | el diseño editorial que este repo no trae | `sistema-editorial/README.md` |
+
+## Dónde va lo nuevo
+
+| lo que apareció | va a |
+|---|---|
+| una opción, un ejemplo, un problema frecuente | `script_compilar_latex/README.md` |
+| cómo funciona por dentro; un consumidor nuevo | `docs/arquitectura.md` (§Consumidores) |
+| por qué se decidió; un error o una carencia | `docs/decisiones.md` (§Pendientes, con fecha y dueño) |
+| lo que se hizo en una tarea | el mensaje de commit |
+
+Nunca un `.md` nuevo en la raíz ni en `docs/` por sesión, fecha o tarea.

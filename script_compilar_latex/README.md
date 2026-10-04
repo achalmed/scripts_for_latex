@@ -2,7 +2,7 @@
 tipo: readme
 estado: activo
 ---
-# script_compilar_latex/ — compilar un .tex desde cualquier ruta: manual de uso (v3.0.0)
+# script_compilar_latex/ — compilar un .tex desde cualquier ruta: manual de uso
 
 <!-- suite:inicio -->
 **Suite `compilar_latex`** · objetivo *latex* · estado *activo* · bash · interfaz cli
@@ -85,7 +85,7 @@ carpeta llamada `~`. Si no encuentra el archivo, lista hasta diez `.tex` cercano
 | `-s, --silencioso` | la salida del motor solo va al log | — |
 | `-v, --verbose` | toda la salida del motor | — |
 | `-a, --abrir` | abre el PDF con el primer visor disponible | — |
-| `--log FILE` | log en `FILE`, que la limpieza no borra | `<carpeta del .tex>/<nombre>.log` |
+| `--log FILE` | copia de la salida de la corrida en `FILE`; con una ruta relativa, ver `../docs/decisiones.md` §Pendientes 14. `FILE` no debe ser `<nombre>.log` en la carpeta del `.tex`: la limpieza lo borraría | sin copia: la salida va a un temporal que se borra al salir, y el `.log` del motor se borra al terminar bien |
 | `-c, --limpiar` | solo borra auxiliares y sale | — |
 | `-w, --watch` | compila y vuelve a compilar al guardar un `.tex`, `.bib`, `.sty` o `.cls` | — |
 | `-h, --help` · `--version` | ayuda · versión | — |

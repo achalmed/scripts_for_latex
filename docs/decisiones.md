@@ -21,6 +21,8 @@ superada no se borra: se marca «superada por».
   `.tex` que no son del framework (clave `compilador` de `10 Class/config/course.yml`).
 - **2026-09-20 — No trae diseño.** Ni clases, ni plantillas, ni preámbulos: eso es de
   `sistema-editorial` y de cada framework.
+- **2026-06-22 — Sin latexmk.** Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o
+  glosario: el usuario ve y controla cada pasada.
 
 ## Motor
 
@@ -37,7 +39,7 @@ superada no se borra: se marca «superada por».
 
 ## Robustez del ciclo de compilación (2026-10-03)
 
-Corrige los pendientes 1–3 y 5–10 de la revisión del mismo día, verificados con un `.tex` mínimo
+Corrige los pendientes 1–3, 5–8 y 10 (y el 9 en parte) de la revisión del mismo día, verificados con un `.tex` mínimo
 fuera de los repos (error con PDF anterior en modo normal, `-s` y `-v`; `\include` en subcarpeta
 con un `.aux` ajeno; `--draft`; comentario mágico):
 
@@ -52,8 +54,6 @@ con un `.aux` ajeno; `--draft`; comentario mágico):
 - **`--draft` dice que no hay PDF** y borra el de 0 bytes que deja lualatex.
 - Ayuda sin el nombre del monolito ni ejemplos con xelatex; sin ruta de máquina en `resolver.sh`
   ni alias de fish en `main.sh`.
-- **2026-06-22 — Sin latexmk.** Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o
-  glosario: el usuario ve y controla cada pasada.
 
 ## Relación con `core/`
 
@@ -66,7 +66,8 @@ con un `.aux` ajeno; `--draft`; comentario mágico):
 
 - **2026-06-22 — `set -euo pipefail` global**, con los códigos de salida capturados en línea
   aparte de `local` y `set +e` local en `compilar_segura()` (bitácora en
-  `historial/bugs-corregidos.md`). Las dos correcciones resultaron incompletas: §Pendientes.
+  `historial/bugs-corregidos.md`). Las dos correcciones resultaron incompletas (§Pendientes 1–3) y
+  se completaron el 2026-10-03 (§Robustez del ciclo de compilación).
 - **2026-10-03 — Nombres en español.** El manual anterior pedía «nombres en inglés técnico»; el
   código nunca lo siguió y el ecosistema escribe en español (NORMATIVA §9.7). Rige el español.
 
@@ -75,6 +76,8 @@ con un `.aux` ajeno; `--draft`; comentario mágico):
 - **2026-10-03 — Un lector por documento.** El manual de `script_compilar_latex/` es para quien
   usa; `arquitectura.md`, para quien amplía; las afirmaciones sobre qué framework usa qué build se
   comprobaron en el código de cada repo y el README raíz las recoge en una tabla.
+- **2026-10-04 — El contrato con `10 Class` vive en `arquitectura.md` §Consumidores.** El README y
+  `CLAUDE.md` remiten a esa sección en lugar de describir la invocación cada uno a su manera.
 
 ## Pendientes
 
@@ -102,9 +105,11 @@ número para no romper citas.
    de 0 bytes en lugar del anterior y el script lo anuncia como generado.
 8. *Resuelto el 2026-10-03.* **La detección de `auto` es estrecha**: solo mira el `.tex` principal, no reconoce
    `\usepackage[…]{fontspec}` ni lo que cargue una clase, y nunca elige lualatex por `fontspec`.
-9. *Resuelto el 2026-10-03.* **Textos de ayuda desfasados**: `mostrar_ayuda()` y `sugerir_tex_cercanos()` enseñan
-   `compilar_latex.sh` (el nombre del monolito); `mostrar_ayuda()` recomienda xelatex en sus
-   ejemplos; el banner sale también con `--help` y `--version`.
+9. **Textos de ayuda desfasados**: `mostrar_ayuda()` y `sugerir_tex_cercanos()` enseñaban
+   `compilar_latex.sh` (el nombre del monolito) y `mostrar_ayuda()` recomendaba xelatex en sus
+   ejemplos: corregido el 2026-10-03. **Reabierto el 2026-10-04:** el banner sigue saliendo con
+   `--help` y `--version`, porque `main()` llama a `banner` antes de `parsear_args` (`main.sh`);
+   comprobado ejecutando `main.sh --version`.
 10. *Resuelto el 2026-10-03.* **Ruta de máquina en un comentario**: la cabecera de `resolver.sh` cita la ruta absoluta
     del home (regla 5 del `CLAUDE.md` raíz). La cabecera de `main.sh` aún enseña a instalar un
     alias de fish que `~/.dotfiles` no tiene.
@@ -114,3 +119,14 @@ número para no romper citas.
 12. **Repo público sin `LICENSE`** (NORMATIVA §15.3): la licencia la decide el autor.
 13. *Resuelto el 2026-10-03.* **¿`DEFAULT_ENGINE=lualatex`?** Alinearía la herramienta con la regla 7; antes hay que ver qué
     `.tex` de `10 Class` compila hoy con pdflatex por la detección.
+
+Anotados el 2026-10-04 al revisar la documentación contra el código. Dueño: el autor.
+
+14. **`--log` con ruta relativa se escribe en dos sitios**: `compilar` la vacía desde el directorio de
+    invocación (`main.sh`) y `ejecutar_latex` le añade la salida dentro de `pushd "$TEX_DIR"`
+    (`script_compilar_latex/lib/compiler.sh`). Hasta corregirlo, `--log` con ruta absoluta.
+15. **La ayuda de `--log` dice «default: ARCHIVO.log»** (`script_compilar_latex/lib/cli.sh`), y sin `--log` no se guarda
+    copia; los ejemplos de la ayuda y de la cabecera de `main.sh` usan rutas que no existen
+    (`pub_dialectica`, `slides_unsch`).
+16. **`VERSION` en `config.sh` no se mantiene**: sigue en 3.0.0 tras los cambios de comportamiento del
+    2026-10-03 y nadie la consume. Decidir si se mantiene a mano o se quita (`--version` la imprime).
