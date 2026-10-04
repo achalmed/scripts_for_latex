@@ -14,7 +14,7 @@ Un documento por concepto, con nombre estable. El manual de uso no vive aquí: e
 | **quien compila** un `.tex` | `../script_compilar_latex/README.md` |
 | **quien amplía** la herramienta (una opción, un motor) | [arquitectura.md](arquitectura.md) → [decisiones.md](decisiones.md) |
 | **quien mantiene** o corrige un error | [decisiones.md](decisiones.md) §Pendientes → [arquitectura.md](arquitectura.md) → [historial/](historial/README.md) |
-| **otro repo** que quiere saber si depende de este | `../README.md` §Qué es (quién compila qué) |
+| **otro repo** que quiere saber si depende de este | `../README.md` §Qué es (quién compila qué) → [arquitectura.md](arquitectura.md) §Consumidores |
 
 ## Cómo se mantiene
 

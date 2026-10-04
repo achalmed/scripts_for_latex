@@ -1,7 +1,5 @@
-
-
-# DOC2 (2026-09-20): temporales y derivados fuera de git (NORMATIVA §5, §15.8)
+# derivado prohibido en un repo (NORMATIVA §5, D07): el árbol se pide con tree
 estructura.txt
 
-# KDE (Dolphin): icono de carpeta, no es del proyecto
+# ajeno al proyecto: icono de carpeta de KDE (Dolphin)
 .directory

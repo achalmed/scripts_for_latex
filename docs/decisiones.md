@@ -113,7 +113,7 @@ número para no romper citas.
 10. *Resuelto el 2026-10-03.* **Ruta de máquina en un comentario**: la cabecera de `resolver.sh` cita la ruta absoluta
     del home (regla 5 del `CLAUDE.md` raíz). La cabecera de `main.sh` aún enseña a instalar un
     alias de fish que `~/.dotfiles` no tiene.
-11. **`suite.yml` dice que compila «para los frameworks de escritura, clases y libros»**, lo que
+11. *Resuelto el 2026-10-04 (manifiesto y bloques regenerados).* **`suite.yml` dice que compila «para los frameworks de escritura, clases y libros»**, lo que
     no es cierto (§Alcance). Corregir el `resumen` obliga a regenerar los bloques
     (`core/suites.py generar --aplicar`, que escribe también `meta/INDICE_SCRIPTS.md`).
 12. *Resuelto el 2026-10-04 por decisión del autor.* **Repo público sin `LICENSE`**: MIT (`LICENSE`).
@@ -130,3 +130,8 @@ Anotados el 2026-10-04 al revisar la documentación contra el código. Dueño: e
     (`pub_dialectica`, `slides_unsch`).
 16. **`VERSION` en `config.sh` no se mantiene**: sigue en 3.0.0 tras los cambios de comportamiento del
     2026-10-03 y nadie la consume. Decidir si se mantiene a mano o se quita (`--version` la imprime).
+17. **`sugerir_tex_cercanos` no llega a listar** (`script_compilar_latex/lib/resolver.sh`): con
+    `set -e` y `pipefail`, un `find` que falla (carpeta inexistente o sin permiso en un subdirectorio)
+    corta el script antes de imprimir la lista y los ejemplos de uso; y con una ruta absoluta busca
+    en `<cwd>/<ruta absoluta>`, que no existe. Comprobado el 2026-10-04 ejecutando `main.sh` con una
+    ruta inexistente (sale con 1 tras el encabezado de la lista).

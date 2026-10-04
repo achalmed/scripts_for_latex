@@ -68,7 +68,8 @@ compilar nota.tex                                        # la extensión es opci
 
 La ruta es una sola palabra para la shell: un espacio sin escapar parte el argumento y el script se
 queda con la última parte. Entre comillas la shell no expande `~`, y el script la toma por una
-carpeta llamada `~`. Si no encuentra el archivo, lista hasta diez `.tex` cercanos.
+carpeta llamada `~`. Si no encuentra el archivo, intenta listar hasta diez `.tex` cercanos; con una ruta
+absoluta o una carpeta inexistente la lista no sale (`../docs/decisiones.md` §Pendientes 17).
 
 ## Opciones
 
@@ -107,7 +108,8 @@ convención que usa `10 Class`.
 
 ## Qué borra la limpieza
 
-Al terminar bien (y con `-c`), en la carpeta del `.tex`:
+Al terminar bien (y con `-c`), en la carpeta del `.tex`; en modo `-w` no se limpia nunca: los auxiliares
+se quedan entre recompilaciones hasta un `-c`:
 
 - `<nombre>.<ext>` para cada extensión de `EXTENSIONES_AUXILIARES` en `config.sh` (`aux`, `bbl`,
   `bcf`, `blg`, `log`, `toc`, `synctex.gz`, `run.xml`…; la lista completa la da `--help`), y
@@ -121,7 +123,7 @@ sale el extracto de errores. `--log FILE` guarda además una copia de la salida 
 
 | síntoma | causa y salida |
 |---|---|
-| «No se encontró el archivo» | la ruta no llegó entera (espacio sin escapar, tilde entre comillas) o falta el `.tex`; mira la lista de cercanos que imprime |
+| «No se encontró el archivo» | la ruta no llegó entera (espacio sin escapar, tilde entre comillas) o falta el `.tex`; mira la lista de cercanos, si la imprime (§Pendientes 17) |
 | «Herramientas no instaladas: …» | falta un binario obligatorio para las opciones pedidas: instálalo o quita la opción |
 | el PDF no recoge la bibliografía | falta `--biber` (o `-b`); con él las pasadas suben a 3 |
 | «El PDF no se actualizó en esta compilación» | el motor no escribió el PDF aunque no dio error; lee `<nombre>.log` |

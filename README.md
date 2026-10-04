@@ -37,7 +37,7 @@ Quién compila qué en el ecosistema (comprobado en el código de cada repo):
 | `10 Class` | los `\documentclass{academic-*}` del framework | `10 Class/scripts/build.sh` | no |
 | `10 Class` | cualquier otro `.tex` de una sesión o un curso | `compile_tex` de `10 Class/scripts/lib/common.sh` llama a este `main.sh` (contrato en `docs/arquitectura.md` §Consumidores) | **sí** (único consumidor por código) |
 | `11 Book` | libros de curso CampusTeX | `11 Book/scripts/build-course.sh`: latexmk si está instalado; si no, dos pasadas de lualatex | no |
-| `sgdp/marco_documental` | documentos oficiales | `sgdp/marco_documental/Makefile` → `sgdp/marco_documental/scripts/build.sh`, dos pasadas de lualatex | no |
+| `sgdp/marco_documental` | documentos oficiales | `sgdp/marco_documental/Makefile` → `sgdp/marco_documental/scripts/build.sh`: de 2 a 4 pasadas de lualatex, hasta que `.aux` y `.toc` dejan de cambiar | no |
 | **este repo** | el `.tex` que no pertenece a un framework: un post con LaTeX de los pubs, una nota, una prueba | `script_compilar_latex/main.sh`, pasadas explícitas, sin latexmk | — |
 
 `core/env.sh` y `core/env.py` exportan su ruta como `SCRIPTS_LATEX`; el alias `compilar` está en
