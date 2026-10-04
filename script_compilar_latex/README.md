@@ -7,10 +7,10 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `compilar_latex`** · objetivo *latex* · estado *activo* · bash · interfaz cli
 
-Compilador universal de LaTeX (LuaLaTeX + Biber) para los frameworks de escritura, clases y libros; alias `compilar`.
+Compila un .tex suelto (no de un framework) desde cualquier ruta; LuaLaTeX por defecto, Biber con --biber; alias `compilar`.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: lualatex, biber, core/shell-lib
+- Depende de: lualatex, core/shell-lib
 
 Comandos:
 
@@ -20,7 +20,7 @@ main.sh --limpiar documento.tex
 main.sh --help
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-09-20); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-04); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 El manual de uso. Para quien lo amplía o lo mantiene: `../docs/arquitectura.md`; para saber qué

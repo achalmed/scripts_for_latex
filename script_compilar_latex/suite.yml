@@ -1,8 +1,8 @@
-# script_compilar_latex/suite.yml — suite compilar_latex: Compilador universal de LaTeX (LuaLaTeX + Biber) para los frameworks de escritura, clases y libros; alias `compilar`.
+# script_compilar_latex/suite.yml — suite compilar_latex: Compila un .tex suelto (no de un framework) desde cualquier ruta; LuaLaTeX por defecto, Biber con --biber; alias `compilar`.
 # Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
 id: compilar_latex
 objetivo: latex
-resumen: Compilador universal de LaTeX (LuaLaTeX + Biber) para los frameworks de escritura, clases y libros; alias `compilar`.
+resumen: 'Compila un .tex suelto (no de un framework) desde cualquier ruta; LuaLaTeX por defecto, Biber con --biber; alias `compilar`.'
 escribe_en:
 - archivos
 simula_por_defecto: false
@@ -13,5 +13,4 @@ comandos:
 estado: activo
 depende_de:
 - lualatex
-- biber
 - core/shell-lib
