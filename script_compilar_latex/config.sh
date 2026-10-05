@@ -3,6 +3,7 @@
 # config.sh — Configuración centralizada y valores por defecto
 # ==============================================================================
 # Todos los valores modificables del script viven aquí.
+# Módulo: main.sh lo carga con `source`; no se ejecuta solo (hereda set -euo pipefail de main.sh).
 # Cambiar un default en este archivo afecta todo el proyecto.
 
 # --- Versión ---------------------------------------------------------------
