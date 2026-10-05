@@ -55,6 +55,7 @@ ${BOLD}SALIDA${NC}
 
 ${BOLD}UTILIDADES${NC}
   -c, --limpiar           Elimina archivos auxiliares y sale.
+  -n, --dry-run           Simula: dice qué ejecutaría (y, con -c, qué borraría) sin escribir nada.
   -w, --watch             Modo vigilancia: recompila al detectar cambios.
   -h, --help              Muestra esta ayuda.
       --version           Muestra la versión.
@@ -104,7 +105,7 @@ EOF
 # Sets (global):
 #   ARCHIVO ENGINE PASADAS MODO_SILENCIOSO SOLO_LIMPIAR MODO_WATCH
 #   MODO_DRAFT DIRECTORIO_SALIDA USAR_BIBTEX USAR_BIBER USAR_MAKEINDEX
-#   USAR_MAKEGLOSSARIES ABRIR_PDF VERBOSE LATEX_LOG
+#   USAR_MAKEGLOSSARIES ABRIR_PDF VERBOSE LATEX_LOG MODO_SIMULAR
 parsear_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -129,6 +130,7 @@ parsear_args() {
             -s|--silencioso)    MODO_SILENCIOSO=true;      shift ;;
             -v|--verbose)       VERBOSE=true;               shift ;;
             -c|--limpiar)       SOLO_LIMPIAR=true;          shift ;;
+            -n|--dry-run)       MODO_SIMULAR=true;          shift ;;
             -w|--watch)         MODO_WATCH=true;            shift ;;
             --draft)            MODO_DRAFT=true;            shift ;;
             -b|--bibtex)        USAR_BIBTEX=true;           shift ;;

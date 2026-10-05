@@ -7,10 +7,15 @@ escribe_en:
 - archivos
 simula_por_defecto: false
 comandos:
-- main.sh documento.tex
-- main.sh --limpiar documento.tex
+- main.sh -e lualatex --biber documento
+- main.sh --dry-run -e lualatex --biber documento
+- main.sh --limpiar documento
 - main.sh --help
 estado: activo
+interfaz: cli
+entrada: 'un .tex en cualquier carpeta; el PDF y los auxiliares se escriben junto a él (o el PDF en -o DIR)'
 depende_de:
 - lualatex
+- biber
 - core/shell-lib
+nota: '--dry-run (-n) simula sin escribir nada; prueba de suite: tests/dry-run.sh (RQ-COD-02)'

@@ -78,6 +78,7 @@ MODO_SILENCIOSO=false
 SOLO_LIMPIAR=false
 MODO_WATCH=false
 MODO_DRAFT=false
+MODO_SIMULAR=false   # --dry-run: dice qué haría y sale sin escribir nada (RQ-COD-02)
 DIRECTORIO_SALIDA=""
 USAR_BIBTEX=false
 USAR_BIBER=false
@@ -178,6 +179,11 @@ main() {
     fi
 
     # 3. Modo solo-limpiar: no necesita verificar motor ni compilar
+    if $SOLO_LIMPIAR && $MODO_SIMULAR; then
+        titulo "Simulación (--dry-run): la limpieza borraría en ${TEX_DIR}"
+        listar_auxiliares
+        exit 0
+    fi
     if $SOLO_LIMPIAR; then
         titulo "Limpieza de archivos auxiliares en: ${TEX_DIR}"
         limpiar_auxiliares
@@ -190,6 +196,12 @@ main() {
 
     # 5. Verificar que todos los binarios necesarios estén instalados
     verificar_dependencias
+
+    # 5b. --dry-run: el plan, sin temporal, sin motor y sin limpieza (también con -w)
+    if $MODO_SIMULAR; then
+        plan_de_compilacion
+        exit 0
+    fi
 
     # 6. Dónde se anota la salida: --log o un temporal (nunca el .log que escribe el motor)
     if [ -n "$LATEX_LOG" ]; then

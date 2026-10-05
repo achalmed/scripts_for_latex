@@ -209,3 +209,64 @@ limpiar_auxiliares() {
 
     ok "Eliminados ${eliminados} archivo(s) auxiliar(es)."
 }
+
+# listar_auxiliares()
+# Lo que borraría limpiar_auxiliares(), sin borrar nada: los <nombre>.<ext> de
+# EXTENSIONES_AUXILIARES que existen y los .aux que el .aux principal declara con \@input.
+#
+# Globals leídas:
+#   TEX_DIR TEX_BASE EXTENSIONES_AUXILIARES (de config.sh)
+listar_auxiliares() {
+    local -a candidatos=()
+    local ext aux
+    for ext in "${EXTENSIONES_AUXILIARES[@]}"; do
+        [ -f "${TEX_DIR}/${TEX_BASE}.${ext}" ] && candidatos+=("${TEX_BASE}.${ext}")
+    done
+    if [ -f "${TEX_DIR}/${TEX_BASE}.aux" ]; then
+        while IFS= read -r aux; do
+            case "$aux" in /*|*..*) continue ;; esac
+            [ -f "${TEX_DIR}/${aux}" ] && candidatos+=("$aux")
+        done < <(grep -oE '\\@input\{[^}]+\.aux\}' "${TEX_DIR}/${TEX_BASE}.aux" \
+                 | sed -E 's/^\\@input\{(.*)\}$/\1/' || true)
+    fi
+    if [ "${#candidatos[@]}" -eq 0 ]; then
+        info "Ningún auxiliar que borrar."
+    else
+        for aux in "${candidatos[@]}"; do dim "$aux"; done
+        info "${#candidatos[@]} archivo(s) se borrarían."
+    fi
+    return 0
+}
+
+# plan_de_compilacion()
+# --dry-run: las órdenes que ejecutaría compilar(), en su orden, dentro de TEX_DIR, y adónde iría
+# el PDF. No ejecuta el motor, no crea el temporal de SALIDA_LOG ni toca ningún archivo.
+#
+# Globals leídas:
+#   ENGINE PASADAS TEX_DIR TEX_BASE USAR_BIBTEX USAR_BIBER USAR_MAKEINDEX
+#   USAR_MAKEGLOSSARIES MODO_DRAFT MODO_WATCH DIRECTORIO_SALIDA
+plan_de_compilacion() {
+    local flags p
+    flags="$(construir_flags)"
+    titulo "Simulación (--dry-run): ${TEX_BASE}.tex  [engine: ${ENGINE}]; no se ejecuta nada"
+    info "Directorio : ${TEX_DIR}"
+    for (( p=1; p<=PASADAS; p++ )); do
+        dim "${ENGINE} ${flags} ${TEX_BASE}.tex"
+        if [ "$p" -eq 1 ] && [ "$PASADAS" -ge 2 ]; then
+            $USAR_BIBTEX         && dim "bibtex ${TEX_BASE}"
+            $USAR_BIBER          && dim "biber ${TEX_BASE}"
+            $USAR_MAKEINDEX      && dim "makeindex ${TEX_BASE}"
+            $USAR_MAKEGLOSSARIES && dim "makeglossaries ${TEX_BASE}"
+        fi
+    done
+    if $MODO_DRAFT; then
+        info "PDF        : ninguno (--draft)"
+    elif [ -n "$DIRECTORIO_SALIDA" ]; then
+        info "PDF        : ${DIRECTORIO_SALIDA}/${TEX_BASE}.pdf"
+    else
+        info "PDF        : ${TEX_DIR}/${TEX_BASE}.pdf"
+    fi
+    $MODO_WATCH && info "Watch      : no se arranca en simulación"
+    $MODO_WATCH || info "Después, la limpieza borraría los auxiliares de ${TEX_BASE} (los que existan entonces)."
+    return 0
+}
