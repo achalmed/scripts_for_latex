@@ -1,6 +1,7 @@
 ---
 tipo: doc
 estado: activo
+forma: referencia
 titulo: "Arquitectura de compilar_latex: flujo, módulos, estado global, cómo se amplía y quién la usa"
 ---
 # Arquitectura de compilar_latex
@@ -22,7 +23,9 @@ El uso está en `../script_compilar_latex/README.md`; el porqué de cada elecci�
 4. Con `-c`: `limpiar_auxiliares` y salida 0, sin mirar el motor.
 5. `detectar_y_anunciar_engine` (`detector.sh`): con `auto`, el `% !TEX program` de las 5 primeras
    líneas del `.tex` o, sin él, lualatex.
-6. `verificar_dependencias` (`validator.sh`): binarios obligatorios según las opciones.
+6. `verificar_dependencias` (`validator.sh`): binarios obligatorios según las opciones. Con `-n`
+   (`--dry-run`), `plan_de_compilacion` (`compiler.sh`) imprime las órdenes y sale con 0 sin crear el
+   temporal ni llamar al motor; con `-c -n`, `listar_auxiliares` dice qué borraría (paso 4).
 7. `SALIDA_LOG`: el archivo de `--log` (`LATEX_LOG`) o un temporal que se borra al salir.
 8. `modo_watch` (`watch.sh`), o `compilar` y, si devolvió 0, `limpiar_auxiliares` (si no, salida 1
    con los auxiliares en su sitio).
@@ -43,7 +46,7 @@ rechaza un PDF anterior a la compilación o vacío), `mover_pdf` y `abrir_pdf` (
 | `script_compilar_latex/lib/detector.sh` | el motor de `auto` | `detectar_engine`, `detectar_y_anunciar_engine` |
 | `script_compilar_latex/lib/validator.sh` | argumentos y binarios | `validar_engine`, `validar_pasadas`, `verificar_dependencias` |
 | `script_compilar_latex/lib/cli.sh` | argumentos y ayuda | `parsear_args`, `mostrar_ayuda` |
-| `script_compilar_latex/lib/compiler.sh` | invoca motor, bibliografía e índices dentro de `pushd "$TEX_DIR"`; extracto de errores; limpieza | `construir_flags`, `ejecutar_latex`, `ejecutar_bibliografia`, `ejecutar_indices`, `mostrar_errores_log`, `limpiar_auxiliares` |
+| `script_compilar_latex/lib/compiler.sh` | invoca motor, bibliografía e índices dentro de `pushd "$TEX_DIR"`; extracto de errores; limpieza | `construir_flags`, `ejecutar_latex`, `ejecutar_bibliografia`, `ejecutar_indices`, `mostrar_errores_log`, `limpiar_auxiliares`; en simulación, `plan_de_compilacion` y `listar_auxiliares` |
 | `script_compilar_latex/lib/output.sh` | banner y resultado | `banner`, `mostrar_info_pdf`, `mover_pdf`, `abrir_pdf`, `sugerir_apertura`, `elapsed` |
 | `script_compilar_latex/lib/watch.sh` | vigilancia con `inotifywait` o `fswatch` | `modo_watch`, `compilar_segura`, `_watch_linux`, `_watch_macos` |
 
@@ -51,7 +54,7 @@ rechaza un PDF anterior a la compilación o vacío), `mover_pdf` y `abrir_pdf` (
 
 Los módulos se comunican por variables globales que declara `main.sh` con los valores de
 `config.sh` y que `parsear_args` sobrescribe: `ARCHIVO`, `ENGINE`, `PASADAS`, `MODO_SILENCIOSO`,
-`SOLO_LIMPIAR`, `MODO_WATCH`, `MODO_DRAFT`, `DIRECTORIO_SALIDA`, `USAR_BIBTEX`, `USAR_BIBER`,
+`SOLO_LIMPIAR`, `MODO_WATCH`, `MODO_DRAFT`, `MODO_SIMULAR`, `DIRECTORIO_SALIDA`, `USAR_BIBTEX`, `USAR_BIBER`,
 `USAR_MAKEINDEX`, `USAR_MAKEGLOSSARIES`, `ABRIR_PDF`, `VERBOSE`, `LATEX_LOG`, `SALIDA_LOG`,
 `TIEMPO_INICIO`, `INICIO_COMPILACION`; las
 rutas `TEX_PATH`, `TEX_DIR`, `TEX_BASE` (y sus alias `ARCHIVO_DIR`, `ARCHIVO_BASE`); y `PDF_FINAL`.
@@ -107,6 +110,7 @@ for f in *.sh lib/*.sh; do bash -n "$f"; done      # bash -n comprueba un archiv
 d=$(mktemp -d)
 printf '\\documentclass{article}\\begin{document}Hola\\end{document}\n' > "$d/a.tex"
 ./main.sh -e lualatex "$d/a" && ls "$d"
+tests/dry-run.sh                                    # --dry-run, -c -n y --help no escriben; opción desconocida ≠ 0
 ```
 
 Para un error, el mismo `.tex` con un comando inexistente, en los tres modos (normal, `-s`, `-v`) y
@@ -120,9 +124,9 @@ cambiar la interfaz de estos consumidores: se mira allí antes y se anota en `de
 
 | consumidor | cómo la invoca | de qué depende |
 |---|---|---|
-| `10 Class` · `compile_tex` (`10 Class/scripts/lib/common.sh`) | toma la ruta de la clave `compilador` de `10 Class/config/course.yml` y llama `"$compilador" -s "<carpeta absoluta>/<nombre sin .tex>"` para todo `.tex` que no sea `\documentclass{academic-*}` (esos van a `10 Class/scripts/build.sh`) | la ruta de `script_compilar_latex/main.sh`; `-s`; el argumento sin extensión; salida 0 si hay PDF nuevo y 1 si no, con el PDF anterior y los auxiliares en su sitio; sin `-e`, `auto` elige por `% !TEX program` o lualatex, la misma convención que `latex_engine()` de ese archivo. Si la ruta no es ejecutable, `compile_tex` compila con `latex_engine()` dos pasadas |
+| `10 Class` · `compile_tex` (`10 Class/scripts/lib/common.sh`) | toma la ruta de la clave `compilador` de `10 Class/config/course.yml` (`$SCRIPTS_LATEX/script_compilar_latex/main.sh`; `common.sh` resuelve la variable con `core/env.sh`) y llama `"$compilador" -s "<carpeta absoluta>/<nombre sin .tex>"` para todo `.tex` que no sea `\documentclass{academic-*}` (esos van a `10 Class/scripts/build.sh`) | la ruta de `script_compilar_latex/main.sh`; `-s`; el argumento sin extensión; salida 0 si hay PDF nuevo y 1 si no, con el PDF anterior y los auxiliares en su sitio; sin `-e`, `auto` elige por `% !TEX program` o lualatex, la misma convención que `latex_engine()` de ese archivo. Si la ruta no es ejecutable, `compile_tex` compila con `latex_engine()` dos pasadas |
 | `10 Class` · `10 Class/scripts/doctor.sh` | comprueba que la ruta de `compilador` es ejecutable | la ruta de `main.sh` |
 | alias `compilar` (`~/.dotfiles/shell/.zshrc`) | apunta a `main.sh` | la ruta de `main.sh` |
-| `core/env.sh`, `core/env.py` | exportan `SCRIPTS_LATEX` con la raíz del repo | el nombre de la carpeta; hoy ningún consumidor lee la variable |
+| `core/env.sh`, `core/env.py` | exportan `SCRIPTS_LATEX` con la raíz del repo | el nombre de la carpeta; la lee `10 Class/scripts/lib/common.sh` |
 
 Ningún otro framework pasa por aquí (`../README.md` §Qué es).

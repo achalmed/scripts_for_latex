@@ -10,17 +10,20 @@ estado: activo
 Compila un .tex suelto (no de un framework) desde cualquier ruta; LuaLaTeX por defecto, Biber con --biber; alias `compilar`.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: lualatex, core/shell-lib
+- Entrada: un .tex en cualquier carpeta; el PDF y los auxiliares se escriben junto a él (o el PDF en -o DIR)
+- Depende de: lualatex, biber, core/shell-lib
+- Nota: --dry-run (-n) simula sin escribir nada; prueba de suite: tests/dry-run.sh (RQ-COD-02)
 
 Comandos:
 
 ```bash
-main.sh documento.tex
-main.sh --limpiar documento.tex
+main.sh -e lualatex --biber documento
+main.sh --dry-run -e lualatex --biber documento
+main.sh --limpiar documento
 main.sh --help
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-04); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-05); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 El manual de uso. Para quien lo amplía o lo mantiene: `../docs/arquitectura.md`; para saber qué
@@ -69,7 +72,7 @@ compilar nota.tex                                        # la extensión es opci
 La ruta es una sola palabra para la shell: un espacio sin escapar parte el argumento y el script se
 queda con la última parte. Entre comillas la shell no expande `~`, y el script la toma por una
 carpeta llamada `~`. Si no encuentra el archivo, intenta listar hasta diez `.tex` cercanos; con una ruta
-absoluta o una carpeta inexistente la lista no sale (`../docs/decisiones.md` §Pendientes 17).
+absoluta o una carpeta inexistente la lista no sale (`../estado.md` §Por hacer, P17).
 
 ## Opciones
 
@@ -86,8 +89,9 @@ absoluta o una carpeta inexistente la lista no sale (`../docs/decisiones.md` §P
 | `-s, --silencioso` | la salida del motor solo va al log | — |
 | `-v, --verbose` | toda la salida del motor | — |
 | `-a, --abrir` | abre el PDF con el primer visor disponible | — |
-| `--log FILE` | copia de la salida de la corrida en `FILE`; con una ruta relativa, ver `../docs/decisiones.md` §Pendientes 14. `FILE` no debe ser `<nombre>.log` en la carpeta del `.tex`: la limpieza lo borraría | sin copia: la salida va a un temporal que se borra al salir, y el `.log` del motor se borra al terminar bien |
+| `--log FILE` | copia de la salida de la corrida en `FILE`; con una ruta relativa, ver `../estado.md` §Por hacer (P14). `FILE` no debe ser `<nombre>.log` en la carpeta del `.tex`: la limpieza lo borraría | sin copia: la salida va a un temporal que se borra al salir, y el `.log` del motor se borra al terminar bien |
 | `-c, --limpiar` | solo borra auxiliares y sale | — |
+| `-n, --dry-run` | simula: imprime las órdenes que ejecutaría (con `-c`, los auxiliares que borraría) y sale con 0 sin escribir nada | — |
 | `-w, --watch` | compila y vuelve a compilar al guardar un `.tex`, `.bib`, `.sty` o `.cls` | — |
 | `-h, --help` · `--version` | ayuda · versión | — |
 
@@ -103,8 +107,10 @@ Sin `-s` ni `-v`, de la salida del motor solo se ven las líneas con `!`, `Warni
 | `% !TEX program = pdflatex`, `xelatex` o `lualatex` (también `!TEX TS-program`) | ese motor |
 | nada de eso | `lualatex`, el motor del ecosistema |
 
-El comentario mágico es la vía del material heredado que necesita otro motor; es la misma
-convención que usa `10 Class`.
+El comentario mágico es la vía del material heredado que necesita otro motor (la misma convención
+que usa `10 Class`). `auto` no mira lo que el documento carga: un `.tex` heredado que exija pdflatex
+sin declararlo falla con lualatex; se le añade la línea o se pasa `-e`. Los límites generales de la
+herramienta están en `../README.md` §Límite honesto.
 
 ## Qué borra la limpieza
 
@@ -123,7 +129,7 @@ sale el extracto de errores. `--log FILE` guarda además una copia de la salida 
 
 | síntoma | causa y salida |
 |---|---|
-| «No se encontró el archivo» | la ruta no llegó entera (espacio sin escapar, tilde entre comillas) o falta el `.tex`; mira la lista de cercanos, si la imprime (§Pendientes 17) |
+| «No se encontró el archivo» | la ruta no llegó entera (espacio sin escapar, tilde entre comillas) o falta el `.tex`; mira la lista de cercanos, si la imprime (`../estado.md`, P17) |
 | «Herramientas no instaladas: …» | falta un binario obligatorio para las opciones pedidas: instálalo o quita la opción |
 | el PDF no recoge la bibliografía | falta `--biber` (o `-b`); con él las pasadas suben a 3 |
 | «El PDF no se actualizó en esta compilación» | el motor no escribió el PDF aunque no dio error; lee `<nombre>.log` |
@@ -131,14 +137,3 @@ sale el extracto de errores. `--log FILE` guarda además una copia de la salida 
 | `-w` no arranca | falta `inotifywait` (paquete `inotify-tools`) o `fswatch` |
 | no hay PDF tras `--draft` | es lo esperado: esa opción solo comprueba que compila |
 | `-a` no abre nada | no hay visor de la lista; el PDF queda donde dice la salida |
-
-## Límite honesto
-
-- **Sin latexmk**: pasadas fijas; si hacen falta más, se piden con `-p`.
-- **`auto` mira solo el comentario mágico**, no lo que el documento carga: un `.tex` heredado que
-  exija pdflatex sin declararlo falla con lualatex y hay que añadirle la línea o pasar `-e`.
-- **El modo watch** no vigila subcarpetas.
-- **`--draft` no produce PDF**: con lualatex el PDF anterior se pierde.
-- **No compila los frameworks** (`03 writing`, `10 Class` para `academic-*`, `11 Book`,
-  `sgdp/marco_documental`): cada uno tiene su build.
-- Sin pruebas automáticas: `bash -n` y un `.tex` mínimo.

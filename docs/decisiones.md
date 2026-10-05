@@ -2,136 +2,123 @@
 tipo: decision
 estado: activo
 titulo: "Decisiones de scripts-latex"
+forma: explicacion
 ---
-# Decisiones
+# Decisiones de scripts-latex
 
-Registro acumulativo y por tema de lo que se decidió en este repo y sigue vigente, con su fecha.
-No es una bitácora: el relato de la reescritura modular está en `historial/`. Lo que falta por
-decidir o hacer, en §Pendientes al final. Una entrada nueva va al final de su tema; una decisión
-superada no se borra: se marca «superada por».
+Solo decisiones vigentes, con su porqué (normativa documental §3.3). Lo pendiente vive en
+`../estado.md` §Por hacer; lo hecho, en el mensaje de commit. Una decisión superada conserva su
+número con una línea «superada por».
 
-## Alcance
+## 1. Alcance
 
-- **2026-06-22 — Una herramienta modular para el `.tex` suelto.** El script monolítico se dividió
-  en `main.sh`, `config.sh` y un módulo por responsabilidad en `lib/` (v3.0.0); el `.tex` puede
-  estar en cualquier ruta y se compila dentro de su carpeta.
-- **2026-09-20 — Los frameworks compilan con su propio build.** `03 writing`, `11 Book`,
-  `sgdp/marco_documental` y los `academic-*` de `10 Class` no pasan por aquí; un cambio en este
-  repo no puede romperlos. El único consumidor por código es `compile_tex` de `10 Class` para los
-  `.tex` que no son del framework (clave `compilador` de `10 Class/config/course.yml`).
-- **2026-09-20 — No trae diseño.** Ni clases, ni plantillas, ni preámbulos: eso es de
-  `sistema-editorial` y de cada framework.
-- **2026-06-22 — Sin latexmk.** Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o
-  glosario: el usuario ve y controla cada pasada.
+### §1.1 Una herramienta modular para el `.tex` suelto (2026-06-22)
 
-## Motor
+El script monolítico se dividió en `main.sh`, `config.sh` y un módulo por responsabilidad en `lib/`
+(v3.0.0). El `.tex` puede estar en cualquier ruta y se compila dentro de su carpeta. Motivo: una
+sola puerta de entrada para lo que no pertenece a un framework (un post con LaTeX, una nota, una
+prueba) sin copiar el script a cada carpeta.
 
-- **2026-09-20 — LuaLaTeX + Biber es el motor normativo** (regla 7 del `CLAUDE.md` raíz); ningún
-  ejemplo ni valor nuevo se escribe para pdflatex o xelatex, que se conservan por compatibilidad
-  con documentos antiguos.
-- *Superada el 2026-10-03 (abajo).* **2026-09-20 — `DEFAULT_ENGINE` sigue en `auto`, y `auto` cae
-  en `pdflatex`.**
-- **2026-10-03 — `auto` es lualatex, salvo el comentario mágico.** La heurística por paquetes se
-  retira: contradecía la regla 7 y no veía `\usepackage[…]{fontspec}`. Ahora `auto` lee
-  `% !TEX program = …` en las 5 primeras líneas (la convención de `10 Class/scripts/lib/common.sh`)
-  y, sin él, elige lualatex. Comprobado: el andamio de los decks de `10 Class` ya declara
-  `lualatex`.
+### §1.2 Los frameworks compilan con su propio build (2026-09-20)
 
-## Robustez del ciclo de compilación (2026-10-03)
+`03 writing`, `11 Book`, `sgdp/marco_documental` y los `academic-*` de `10 Class` no pasan por
+aquí; un cambio en este repo no puede romperlos. El único consumidor por código es `compile_tex` de
+`10 Class` para los `.tex` que no son del framework (contrato en `arquitectura.md` §Consumidores).
 
-Corrige los pendientes 1–3, 5–8 y 10 (y el 9 en parte) de la revisión del mismo día, verificados con un `.tex` mínimo
-fuera de los repos (error con PDF anterior en modo normal, `-s` y `-v`; `\include` en subcarpeta
-con un `.aux` ajeno; `--draft`; comentario mágico):
+### §1.3 No trae diseño (2026-09-20)
 
-- **El estado del motor se lee con `set +e` y `PIPESTATUS`** justo después del pipeline, en los tres
-  modos: un error sale con 1 y con el extracto del `.log` del motor.
-- **Un fallo devuelve 1, no hace `exit`**: `compilar` se detiene en la primera pasada que falla y el
-  modo watch sigue vigilando. `mostrar_info_pdf` rechaza un PDF anterior a la compilación o vacío.
-- **La salida de la corrida va a `SALIDA_LOG`** (el `--log` o un temporal), no a `LOG_FILE`, que es
-  del logger de `core/`; ni al `.log` del motor, que este reescribe en cada pasada.
-- **La limpieza borra solo los auxiliares del documento** y los `.aux` que su `.aux` declara con
-  `\@input`; ningún otro de la carpeta.
-- **`--draft` dice que no hay PDF** y borra el de 0 bytes que deja lualatex.
-- Ayuda sin el nombre del monolito ni ejemplos con xelatex; sin ruta de máquina en `resolver.sh`
-  ni alias de fish en `main.sh`.
+Ni clases, ni plantillas, ni preámbulos: eso es de `sistema-editorial` y de cada framework.
 
-## Relación con `core/`
+### §1.4 Sin latexmk (2026-06-22)
 
-- **2026-09-07 — El logger es el de `core/shell-lib/logger.sh`.** El `logger.sh` de la suite es
-  un envoltorio que solo añade sus nombres cortos.
-- **2026-09-15 — Manifiesto `suite.yml`** según `core/suite.schema.yml`; los bloques de los
-  README los genera `core/suites.py`.
+Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o glosario: quien compila ve y controla
+cada pasada.
 
-## Código
+### §1.5 La carpeta se llama `scripts-latex`; el remoto sigue siendo `scripts_for_latex` (2026-10-05)
 
-- **2026-06-22 — `set -euo pipefail` global**, con los códigos de salida capturados en línea
-  aparte de `local` y `set +e` local en `compilar_segura()` (bitácora en
-  `historial/bugs-corregidos.md`). Las dos correcciones resultaron incompletas (§Pendientes 1–3) y
-  se completaron el 2026-10-03 (§Robustez del ciclo de compilación).
-- **2026-10-03 — Nombres en español.** El manual anterior pedía «nombres en inglés técnico»; el
-  código nunca lo siguió y el ecosistema escribe en español (NORMATIVA §9.7). Rige el español.
+Renombre aprobado en la Puerta P3 (P3-1: carpeta = `id`, kebab) y aplicado como piloto 1 del
+programa con `core/renombrar.py`; el manifiesto guarda `id_anterior: scripts_for_latex`. El remoto
+de GitHub no cambia (plan de conversión, C7). Los consumidores leen la carpeta por `SCRIPTS_LATEX`
+(`core/env.sh`), salvo el alias de `~/.dotfiles`, que no carga `core/`.
 
-## Documentación
+## 2. Motor
 
-- **2026-10-03 — Un lector por documento.** El manual de `script_compilar_latex/` es para quien
-  usa; `arquitectura.md`, para quien amplía; las afirmaciones sobre qué framework usa qué build se
-  comprobaron en el código de cada repo y el README raíz las recoge en una tabla.
-- **2026-10-04 — El contrato con `10 Class` vive en `arquitectura.md` §Consumidores.** El README y
-  `CLAUDE.md` remiten a esa sección en lugar de describir la invocación cada uno a su manera.
+### §2.1 LuaLaTeX + Biber es el motor normativo (2026-09-20)
 
-## Pendientes
+Regla 7 del `CLAUDE.md` raíz. Ningún ejemplo ni valor nuevo se escribe para pdflatex o xelatex, que
+se conservan para material heredado que los declare.
 
-Hallados al revisar el código el 2026-10-03. Dueño: el autor, o quien mantenga la suite por encargo
-suyo. Los demás de esa revisión se corrigieron (§Robustez del ciclo de compilación); conservan su
-número para no romper citas.
+### §2.2 `DEFAULT_ENGINE` en `auto`, y `auto` cae en `pdflatex` (2026-09-20)
 
-1. *Resuelto el 2026-10-03.* **El modo normal no detecta el error del motor.** En `ejecutar_latex()` (`compiler.sh`) la
-   tubería `motor | tee | grep … || true` hace que `${PIPESTATUS[0]}` lea el estado de `true`
-   (0): la pasada que falla sigue, y si queda un PDF anterior el script anuncia «¡Compilación
-   completada!» y sale con 0. Reproducido con lualatex.
-2. *Resuelto el 2026-10-03.* **Con `-s` y `-v` el error corta sin explicación.** `set -e` (y `pipefail` en `-v`) termina el
-   proceso en la línea del motor, antes de `status=$?`: nunca se llega a `mostrar_errores_log`.
-3. *Resuelto el 2026-10-03.* **El modo watch termina al primer fallo.** `compilar_segura()` desactiva `set -e`, pero
-   `ejecutar_latex()` y `mostrar_info_pdf()` llaman a `exit 1`, que cierra el proceso entero. La
-   corrección del Bug #1 de `historial/bugs-corregidos.md` no lo cubre.
-4. **El watch no vigila subcarpetas**: `inotifywait` va sin `-r` (el manual anterior decía lo
-   contrario).
-5. *Resuelto el 2026-10-03.* **Colisión de `LOG_FILE`.** La suite usa ese nombre para el log del motor y
-   `core/shell-lib/logger.sh` copia en `LOG_FILE` cada mensaje: los mensajes se mezclan con el log
-   de LaTeX y, tras la limpieza, el `ok` final vuelve a crear `<nombre>.log` con una línea.
-6. *Resuelto el 2026-10-03.* **La limpieza borra todos los `*.aux` del árbol** de la carpeta del `.tex`
-   (`find . -name '*.aux' -delete`), también los de otros documentos.
-7. *Resuelto el 2026-10-03.* **`--draft` no produce PDF**: aplica `-draftmode` a todas las pasadas; con lualatex deja un PDF
-   de 0 bytes en lugar del anterior y el script lo anuncia como generado.
-8. *Resuelto el 2026-10-03.* **La detección de `auto` es estrecha**: solo mira el `.tex` principal, no reconoce
-   `\usepackage[…]{fontspec}` ni lo que cargue una clase, y nunca elige lualatex por `fontspec`.
-9. **Textos de ayuda desfasados**: `mostrar_ayuda()` y `sugerir_tex_cercanos()` enseñaban
-   `compilar_latex.sh` (el nombre del monolito) y `mostrar_ayuda()` recomendaba xelatex en sus
-   ejemplos: corregido el 2026-10-03. **Reabierto el 2026-10-04:** el banner sigue saliendo con
-   `--help` y `--version`, porque `main()` llama a `banner` antes de `parsear_args` (`main.sh`);
-   comprobado ejecutando `main.sh --version`.
-10. *Resuelto el 2026-10-03.* **Ruta de máquina en un comentario**: la cabecera de `resolver.sh` cita la ruta absoluta
-    del home (regla 5 del `CLAUDE.md` raíz). La cabecera de `main.sh` aún enseña a instalar un
-    alias de fish que `~/.dotfiles` no tiene.
-11. *Resuelto el 2026-10-04 (manifiesto y bloques regenerados).* **`suite.yml` dice que compila «para los frameworks de escritura, clases y libros»**, lo que
-    no es cierto (§Alcance). Corregir el `resumen` obliga a regenerar los bloques
-    (`core/suites.py generar --aplicar`, que escribe también `meta/INDICE_SCRIPTS.md`).
-12. *Resuelto el 2026-10-04 por decisión del autor.* **Repo público sin `LICENSE`**: MIT (`LICENSE`).
-13. *Resuelto el 2026-10-03.* **¿`DEFAULT_ENGINE=lualatex`?** Alinearía la herramienta con la regla 7; antes hay que ver qué
-    `.tex` de `10 Class` compila hoy con pdflatex por la detección.
+Superada por §2.3 (2026-10-03).
 
-Anotados el 2026-10-04 al revisar la documentación contra el código. Dueño: el autor.
+### §2.3 `auto` es lualatex, salvo el comentario mágico (2026-10-03)
 
-14. **`--log` con ruta relativa se escribe en dos sitios**: `compilar` la vacía desde el directorio de
-    invocación (`main.sh`) y `ejecutar_latex` le añade la salida dentro de `pushd "$TEX_DIR"`
-    (`script_compilar_latex/lib/compiler.sh`). Hasta corregirlo, `--log` con ruta absoluta.
-15. **La ayuda de `--log` dice «default: ARCHIVO.log»** (`script_compilar_latex/lib/cli.sh`), y sin `--log` no se guarda
-    copia; los ejemplos de la ayuda y de la cabecera de `main.sh` usan rutas que no existen
-    (`pub_dialectica`, `slides_unsch`).
-16. **`VERSION` en `config.sh` no se mantiene**: sigue en 3.0.0 tras los cambios de comportamiento del
-    2026-10-03 y nadie la consume. Decidir si se mantiene a mano o se quita (`--version` la imprime).
-17. **`sugerir_tex_cercanos` no llega a listar** (`script_compilar_latex/lib/resolver.sh`): con
-    `set -e` y `pipefail`, un `find` que falla (carpeta inexistente o sin permiso en un subdirectorio)
-    corta el script antes de imprimir la lista y los ejemplos de uso; y con una ruta absoluta busca
-    en `<cwd>/<ruta absoluta>`, que no existe. Comprobado el 2026-10-04 ejecutando `main.sh` con una
-    ruta inexistente (sale con 1 tras el encabezado de la lista).
+La heurística por paquetes contradecía la regla 7 y no veía `\usepackage[…]{fontspec}`. `auto` lee
+`% !TEX program = …` en las 5 primeras líneas (la convención de `10 Class/scripts/lib/common.sh`)
+y, sin él, elige lualatex. El andamio de los decks de `10 Class` ya declara `lualatex`.
+
+## 3. Robustez del ciclo de compilación (2026-10-03)
+
+### §3.1 El estado del motor se lee con `set +e` y `PIPESTATUS`
+
+Justo después del pipeline, en los tres modos: un error sale con 1 y con el extracto del `.log` del
+motor. Antes, `|| true` y `set -e` hacían que un fallo con un PDF anterior se anunciara como éxito.
+
+### §3.2 Un fallo devuelve 1, no hace `exit`
+
+`compilar` se detiene en la primera pasada que falla y el modo watch sigue vigilando;
+`mostrar_info_pdf` rechaza un PDF anterior a la compilación o vacío.
+
+### §3.3 La salida de la corrida va a `SALIDA_LOG`
+
+El `--log` o un temporal; nunca `LOG_FILE`, que es del logger de `core/`, ni el `.log` del motor,
+que este reescribe en cada pasada.
+
+### §3.4 La limpieza borra solo los auxiliares del documento
+
+Y los `.aux` que su `.aux` declara con `\@input`; ningún otro de la carpeta. `--draft` dice que no
+hay PDF y borra el de 0 bytes que deja lualatex.
+
+### §3.5 `--dry-run` simula sin escribir (2026-10-05)
+
+`-n`/`--dry-run` imprime las órdenes que ejecutaría (o, con `-c`, los auxiliares que borraría) y
+sale antes de crear el temporal, sin llamar al motor. Es el `--dry-run` real que exige RQ-COD-02;
+`simula_por_defecto` sigue en `false` porque compilar es lo que se le pide a la herramienta. Lo
+prueba `script_compilar_latex/tests/dry-run.sh`.
+
+## 4. Código y relación con `core/`
+
+### §4.1 El logger es el de `core/shell-lib/logger.sh` (2026-09-07)
+
+El `logger.sh` de la suite es un envoltorio que solo añade sus nombres cortos.
+
+### §4.2 Manifiesto `suite.yml` (2026-09-15)
+
+Según `core/suite.schema.yml`; los bloques de los README los genera `core/suites.py`.
+
+### §4.3 `set -euo pipefail` en `main.sh` (2026-06-22)
+
+Con los códigos de salida capturados en línea aparte de `local` y `set +e` local donde hace falta
+leer un estado (§3.1). Los módulos de `lib/` se cargan con `source` y heredan la opción. La bitácora
+de la reescritura modular quedó en git: `git show 2a833c3:docs/historial/bugs-corregidos.md`.
+
+### §4.4 Nombres en español (2026-10-03)
+
+El manual anterior pedía nombres en inglés técnico; el código nunca lo siguió y el ecosistema
+escribe en español.
+
+## 5. Documentación
+
+### §5.1 Un lector por documento (2026-10-03)
+
+El manual de `script_compilar_latex/` es para quien usa; `arquitectura.md`, para quien amplía; el
+README, la puerta. El contrato con `10 Class` vive solo en `arquitectura.md` §Consumidores.
+
+### §5.2 `docs/` se conserva con un README corto: apartamiento de la matriz (2026-10-05)
+
+La normativa documental (2.3, fila 13) prohíbe `docs/` en una suite cuyo README tiene menos de 200
+líneas, pero recomienda `docs/decisiones.md` (D) y pide la sección «Consumidores» (N) en el documento
+dueño del contrato. Se conservan `decisiones.md` y `arquitectura.md` (dueño de §Consumidores) y se
+retiran la carpeta de historial de `docs/` (prohibida, 5.3: git la conserva) y su índice
+(obligatorio solo desde cinco documentos, 3.5). Apartamiento asentado según 0.5 y 2.5.
