@@ -1,7 +1,7 @@
 ---
 tipo: decision
 estado: activo
-titulo: "Decisiones de scripts_for_latex"
+titulo: "Decisiones de scripts-latex"
 ---
 # Decisiones
 

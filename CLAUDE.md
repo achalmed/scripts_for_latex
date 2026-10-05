@@ -2,7 +2,7 @@
 tipo: guia_ia
 estado: activo
 ---
-# CLAUDE.md — scripts_for_latex
+# CLAUDE.md — scripts-latex
 
 Guía para el asistente. En español, como todo el ecosistema. `AGENTS.md` es un enlace a este
 archivo. Léase antes: `README.md` (qué compila cada framework y qué pasa por aquí),
@@ -32,12 +32,12 @@ archivo. Léase antes: `README.md` (qué compila cada framework y qué pasa por 
 ## Cómo se verifica un cambio
 
 ```bash
-cd scripts_for_latex/script_compilar_latex && for f in *.sh lib/*.sh; do bash -n "$f"; done; cd -
-scripts_for_latex/script_compilar_latex/main.sh --help                 # carga todos los módulos
+cd scripts-latex/script_compilar_latex && for f in *.sh lib/*.sh; do bash -n "$f"; done; cd -
+scripts-latex/script_compilar_latex/main.sh --help                 # carga todos los módulos
 # compilar un .tex mínimo en una carpeta temporal: docs/arquitectura.md §Cómo se verifica
-python3 core/archivos.py validar scripts_for_latex                     # desde ~/Documents
+python3 core/archivos.py validar scripts-latex                     # desde ~/Documents
 python3 core/suites.py validar && python3 core/suites.py generar   # suite.yml y bloques; simula
-python3 core/docs.py verificar scripts_for_latex                       # índice de docs/ al día
+python3 core/docs.py verificar scripts-latex                       # índice de docs/ al día
 ```
 
 Un cambio en la detección de errores se prueba en los tres modos (normal, `-s`, `-v`), con y sin un

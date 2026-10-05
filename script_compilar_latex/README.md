@@ -53,7 +53,7 @@ dice qué falta.
 ## Alias
 
 El alias `compilar` está en `~/.dotfiles/shell/.zshrc` y apunta a `main.sh`. Sin alias, se invoca
-la ruta completa: `~/Documents/scripts_for_latex/script_compilar_latex/main.sh`.
+la ruta completa: `~/Documents/scripts-latex/script_compilar_latex/main.sh`.
 
 ## Cómo se indica el archivo
 

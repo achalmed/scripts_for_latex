@@ -100,7 +100,7 @@ No se define otro logger. El manifiesto `suite.yml` sigue `core/suite.schema.yml
 ## Cómo se verifica
 
 ```bash
-cd scripts_for_latex/script_compilar_latex
+cd scripts-latex/script_compilar_latex
 for f in *.sh lib/*.sh; do bash -n "$f"; done      # bash -n comprueba un archivo por llamada
 ./main.sh --help
 # un .tex mínimo fuera de los repos (nunca uno con PDF versionado):

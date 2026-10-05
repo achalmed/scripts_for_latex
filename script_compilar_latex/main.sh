@@ -8,12 +8,12 @@
 #  INSTALACIÓN (una sola vez)
 #  --------------------------
 #  El script vive siempre en:
-#    ~/Documents/scripts_for_latex/script_compilar_latex/
+#    ~/Documents/scripts-latex/script_compilar_latex/
 #
 #  Para usarlo desde cualquier directorio, crea un alias en tu ~/.zshrc:
 #
 #    # zsh
-#    alias compilar='~/Documents/scripts_for_latex/script_compilar_latex/main.sh'
+#    alias compilar='~/Documents/scripts-latex/script_compilar_latex/main.sh'
 #
 #  Luego recargas: source ~/.zshrc  (o abre una nueva terminal)
 #

@@ -2,16 +2,16 @@
 tipo: readme
 estado: activo
 ---
-# scripts_for_latex/ — el compilador LaTeX del workspace para el .tex suelto, desde cualquier ruta
+# scripts-latex/ — el compilador LaTeX del workspace para el .tex suelto, desde cualquier ruta
 
 <!-- suites:inicio -->
 Suites de esta carpeta (1); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
 
 | Suite | Carpeta | Objetivo | Escribe en | Simula | Timer | Estado | Patrón |
 |---|---|---|---|---|---|---|---|
-| `compilar_latex` | [scripts_for_latex/script_compilar_latex](script_compilar_latex/) | latex | archivos | no |  | activo | `MCL` |
+| `compilar_latex` | [scripts-latex/script_compilar_latex](script_compilar_latex/) | latex | archivos | no |  | activo | `MCL` |
 
-<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-09-20); no se edita a mano.</sub>
+<sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-05); no se edita a mano.</sub>
 <!-- suites:fin -->
 
 ## Qué es

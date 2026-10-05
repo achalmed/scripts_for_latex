@@ -3,7 +3,7 @@
 # lib/resolver.sh — Resolución de rutas del archivo .tex de entrada
 # ==============================================================================
 # El script siempre vive en:
-#   ~/Documents/scripts_for_latex/script_compilar_latex/
+#   ~/Documents/scripts-latex/script_compilar_latex/
 #
 # Los archivos .tex pueden estar en cualquier ruta bajo ~/Documents:
 #   pub_dialectica-y-mercado/capitulo1.tex
