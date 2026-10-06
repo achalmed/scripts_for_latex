@@ -108,7 +108,7 @@ Sin `-s` ni `-v`, de la salida del motor solo se ven las líneas con `!`, `Warni
 | nada de eso | `lualatex`, el motor del ecosistema |
 
 El comentario mágico es la vía del material heredado que necesita otro motor (la misma convención
-que usa `10 Class`). `auto` no mira lo que el documento carga: un `.tex` heredado que exija pdflatex
+que usa `docencia`). `auto` no mira lo que el documento carga: un `.tex` heredado que exija pdflatex
 sin declararlo falla con lualatex; se le añade la línea o se pasa `-e`. Los límites generales de la
 herramienta están en `../README.md` §Límite honesto.
 

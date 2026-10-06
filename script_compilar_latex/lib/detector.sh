@@ -5,7 +5,7 @@
 # La regla del ecosistema es LuaLaTeX + Biber (~/Documents/CLAUDE.md, regla 7). «auto» respeta un
 # comentario mágico en las 5 primeras líneas del .tex («% !TEX program = pdflatex|xelatex|lualatex»),
 # que es como el material heredado pide otro motor, y si no lo hay elige lualatex. Es la misma
-# convención que latex_engine() de 10 Class/scripts/lib/common.sh.
+# convención que latex_engine() de docencia/scripts/lib/common.sh.
 #
 # Antes adivinaba por paquetes (fontspec → xelatex; nada → pdflatex): eso contradecía la regla
 # y fallaba con \usepackage[opciones]{fontspec} (docs/decisiones.md).

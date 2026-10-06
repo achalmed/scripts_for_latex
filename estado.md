@@ -32,7 +32,7 @@ manual los cita.
 - 2026-10-03 · dueño: el autor · **P4** el watch no vigila subcarpetas (`inotifywait` sin `-r`).
 - 2026-10-05 · dueño: el autor · **RQ-COD-09** `pdflatex` y `xelatex` siguen aceptados en `config.sh`, `lib/cli.sh`, `lib/detector.sh` y `lib/validator.sh` para material heredado (decisiones §2.1): retirarlos o declarar la excepción en la normativa.
 - 2026-10-05 · dueño: el programa (normativa 2.1.0) · **RQ-COD-01** los módulos de `lib/` no llevan `set -euo pipefail`: se cargan con `source` y lo heredan de `main.sh` (decisiones §4.3); ponerlo en cada uno cambiaría la shell que los carga. La norma debe exceptuar los módulos cargados con `source`.
-- 2026-10-05 · dueño: el programa · **RQ-IDN-03** la carpeta `script_compilar_latex/` no es kebab: renombrarla mueve la ruta que leen `10 Class/config/course.yml` y el alias de `~/.dotfiles`; va con la ola 4.
+- 2026-10-05 · dueño: el programa · **RQ-IDN-03** la carpeta `script_compilar_latex/` no es kebab: renombrarla mueve la ruta que leen `docencia/config/course.yml` y el alias de `~/.dotfiles`; va con la ola 4.
 - 2026-10-05 · dueño: core · **manual generado** el manual de `script_compilar_latex/README.md` repite `--help` a mano; la normativa (2.4) lo quiere generado y el generador no existe.
 - 2026-10-05 · dueño: meta · **RQ-MAN-03** el doctor ve aristas sin declarar hacia `academic_class_framework` y `academic_writing_framework` en comentarios de `lib/detector.sh` y `lib/resolver.sh`: falsos positivos que la prueba debería ignorar en comentarios.
 

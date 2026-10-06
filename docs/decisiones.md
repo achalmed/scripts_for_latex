@@ -21,9 +21,9 @@ prueba) sin copiar el script a cada carpeta.
 
 ### §1.2 Los frameworks compilan con su propio build (2026-09-20)
 
-`03 writing`, `11 Book`, `sgdp/marco_documental` y los `academic-*` de `10 Class` no pasan por
+`03 writing`, `11 Book`, `sgdp/marco_documental` y los `academic-*` de `docencia` no pasan por
 aquí; un cambio en este repo no puede romperlos. El único consumidor por código es `compile_tex` de
-`10 Class` para los `.tex` que no son del framework (contrato en `arquitectura.md` §Consumidores).
+`docencia` para los `.tex` que no son del framework (contrato en `arquitectura.md` §Consumidores).
 
 ### §1.3 No trae diseño (2026-09-20)
 
@@ -55,8 +55,8 @@ Superada por §2.3 (2026-10-03).
 ### §2.3 `auto` es lualatex, salvo el comentario mágico (2026-10-03)
 
 La heurística por paquetes contradecía la regla 7 y no veía `\usepackage[…]{fontspec}`. `auto` lee
-`% !TEX program = …` en las 5 primeras líneas (la convención de `10 Class/scripts/lib/common.sh`)
-y, sin él, elige lualatex. El andamio de los decks de `10 Class` ya declara `lualatex`.
+`% !TEX program = …` en las 5 primeras líneas (la convención de `docencia/scripts/lib/common.sh`)
+y, sin él, elige lualatex. El andamio de los decks de `docencia` ya declara `lualatex`.
 
 ## 3. Robustez del ciclo de compilación (2026-10-03)
 
@@ -113,7 +113,7 @@ escribe en español.
 ### §5.1 Un lector por documento (2026-10-03)
 
 El manual de `script_compilar_latex/` es para quien usa; `arquitectura.md`, para quien amplía; el
-README, la puerta. El contrato con `10 Class` vive solo en `arquitectura.md` §Consumidores.
+README, la puerta. El contrato con `docencia` vive solo en `arquitectura.md` §Consumidores.
 
 ### §5.2 `docs/` se conserva con un README corto: apartamiento de la matriz (2026-10-05)
 

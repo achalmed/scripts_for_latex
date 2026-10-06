@@ -124,9 +124,9 @@ cambiar la interfaz de estos consumidores: se mira allí antes y se anota en `de
 
 | consumidor | cómo la invoca | de qué depende |
 |---|---|---|
-| `10 Class` · `compile_tex` (`10 Class/scripts/lib/common.sh`) | toma la ruta de la clave `compilador` de `10 Class/config/course.yml` (`$SCRIPTS_LATEX/script_compilar_latex/main.sh`; `common.sh` resuelve la variable con `core/env.sh`) y llama `"$compilador" -s "<carpeta absoluta>/<nombre sin .tex>"` para todo `.tex` que no sea `\documentclass{academic-*}` (esos van a `10 Class/scripts/build.sh`) | la ruta de `script_compilar_latex/main.sh`; `-s`; el argumento sin extensión; salida 0 si hay PDF nuevo y 1 si no, con el PDF anterior y los auxiliares en su sitio; sin `-e`, `auto` elige por `% !TEX program` o lualatex, la misma convención que `latex_engine()` de ese archivo. Si la ruta no es ejecutable, `compile_tex` compila con `latex_engine()` dos pasadas |
-| `10 Class` · `10 Class/scripts/doctor.sh` | comprueba que la ruta de `compilador` es ejecutable | la ruta de `main.sh` |
+| `docencia` · `compile_tex` (`docencia/scripts/lib/common.sh`) | toma la ruta de la clave `compilador` de `docencia/config/course.yml` (`$SCRIPTS_LATEX/script_compilar_latex/main.sh`; `common.sh` resuelve la variable con `core/env.sh`) y llama `"$compilador" -s "<carpeta absoluta>/<nombre sin .tex>"` para todo `.tex` que no sea `\documentclass{academic-*}` (esos van a `docencia/scripts/build.sh`) | la ruta de `script_compilar_latex/main.sh`; `-s`; el argumento sin extensión; salida 0 si hay PDF nuevo y 1 si no, con el PDF anterior y los auxiliares en su sitio; sin `-e`, `auto` elige por `% !TEX program` o lualatex, la misma convención que `latex_engine()` de ese archivo. Si la ruta no es ejecutable, `compile_tex` compila con `latex_engine()` dos pasadas |
+| `docencia` · `docencia/scripts/doctor.sh` | comprueba que la ruta de `compilador` es ejecutable | la ruta de `main.sh` |
 | alias `compilar` (`~/.dotfiles/shell/.zshrc`) | apunta a `main.sh` | la ruta de `main.sh` |
-| `core/env.sh`, `core/env.py` | exportan `SCRIPTS_LATEX` con la raíz del repo | el nombre de la carpeta; la lee `10 Class/scripts/lib/common.sh` |
+| `core/env.sh`, `core/env.py` | exportan `SCRIPTS_LATEX` con la raíz del repo | el nombre de la carpeta; la lee `docencia/scripts/lib/common.sh` |
 
 Ningún otro framework pasa por aquí (`../README.md` §Qué es).

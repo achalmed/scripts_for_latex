@@ -16,7 +16,7 @@ frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de t
   xelatex quedan solo para material heredado que lo declare, y no se amplían.
 - **El logger es el de `core/`**: `script_compilar_latex/lib/logger.sh` lo envuelve y solo añade
   nombres cortos.
-- **La interfaz que usa `10 Class` es contrato** (`docs/arquitectura.md` §Consumidores): ruta de
+- **La interfaz que usa `docencia` es contrato** (`docs/arquitectura.md` §Consumidores): ruta de
   `main.sh`, `-s`, argumento sin extensión, códigos de salida y la elección de `auto`. Se mira allí
   antes de cambiarla.
 - **Se prueba fuera de los repos**: compilar dentro de otro repo reescribe PDFs versionados; un
