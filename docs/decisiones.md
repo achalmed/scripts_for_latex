@@ -21,7 +21,7 @@ prueba) sin copiar el script a cada carpeta.
 
 ### §1.2 Los frameworks compilan con su propio build (2026-09-20)
 
-`03 writing`, `11 Book`, `sgdp/marco_documental` y los `academic-*` de `docencia` no pasan por
+`escritura`, `11 Book`, `sgdp/marco_documental` y los `academic-*` de `docencia` no pasan por
 aquí; un cambio en este repo no puede romperlos. El único consumidor por código es `compile_tex` de
 `docencia` para los `.tex` que no son del framework (contrato en `arquitectura.md` §Consumidores).
 

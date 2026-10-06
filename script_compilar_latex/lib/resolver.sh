@@ -7,7 +7,7 @@
 #
 # Los archivos .tex pueden estar en cualquier ruta bajo ~/Documents:
 #   pub_dialectica-y-mercado/capitulo1.tex
-#   ~/Documents/03 writing/articulo.tex
+#   ~/Documents/escritura/articulo.tex
 #   tesis                                          ← relativo al CWD del usuario
 #
 # Esta función resuelve la ruta y expone tres variables globales:

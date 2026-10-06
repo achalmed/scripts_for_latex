@@ -19,7 +19,7 @@ Suites de esta carpeta (1); índice global en `meta/INDICE_SCRIPTS.md`. Patrón:
 Una herramienta, `script_compilar_latex/` (alias `compilar`), que compila un `.tex` suelto desde
 cualquier carpeta: resuelve la ruta, elige el motor (`auto` = LuaLaTeX salvo `% !TEX program`),
 encadena pasadas fijas con Biber o BibTeX, makeindex y makeglossaries, informa del PDF y borra los
-auxiliares. Es para el `.tex` que no pertenece a un framework: `03 writing`, `11 Book`,
+auxiliares. Es para el `.tex` que no pertenece a un framework: `escritura`, `11 Book`,
 `sgdp/marco_documental` y los `academic-*` de `docencia` compilan con su propio build. No trae
 clases ni plantillas (eso es `sistema-editorial`). Quién la llama por código y qué no se puede
 cambiar sin avisar: `docs/arquitectura.md` §Consumidores.

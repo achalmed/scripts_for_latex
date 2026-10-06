@@ -65,7 +65,7 @@ compilar                                                 # index.tex del directo
 compilar tesis                                           # tesis.tex del directorio actual
 compilar ../otra-carpeta/nota                            # relativa al directorio actual
 compilar ~/Documents/04\ index/_pubs/<pub>/<post>/index  # tilde sin comillas, espacio escapado
-compilar "$HOME/Documents/03 writing/<carpeta>/nota"     # entre comillas: $HOME, no tilde
+compilar "$HOME/Documents/escritura/<carpeta>/nota"     # entre comillas: $HOME, no tilde
 compilar nota.tex                                        # la extensión es opcional
 ```
 
