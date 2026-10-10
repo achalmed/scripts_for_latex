@@ -6,7 +6,7 @@
 #   ~/Documents/scripts-latex/script_compilar_latex/
 #
 # Los archivos .tex pueden estar en cualquier ruta bajo ~/Documents:
-#   pub_dialectica-y-mercado/capitulo1.tex
+#   dialectica-y-mercado/capitulo1.tex
 #   ~/Documents/escritura/articulo.tex
 #   tesis                                          ← relativo al CWD del usuario
 #

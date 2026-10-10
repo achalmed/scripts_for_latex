@@ -21,12 +21,12 @@
 #  ----------------------------------------------------------------------
 #  compilar                                          → compila index.tex en el CWD
 #  compilar tesis                                    → compila tesis.tex en el CWD
-#  compilar ~/Documents/04\ index/_pubs/pub_dialectica/articulo      → ruta con tilde
+#  compilar ~/Documents/04\ index/_pubs/dialectica/articulo      → ruta con tilde
 #  compilar ../pub_axiomata/paper                    → ruta relativa
 #  compilar --biber ~/Documents/03\ writing/nota            → lualatex + biber
-#  compilar --biber -p 3 ~/Documents/04\ index/_pubs/pub_numerus-scriptum/python_intro
+#  compilar --biber -p 3 ~/Documents/04\ index/_pubs/numerus-scriptum/python_intro
 #  compilar -w ~/Documents/02\ analysis/informe      → modo watch
-#  compilar -c ~/Documents/04\ index/_pubs/pub_chaska/slides         → solo limpiar auxiliares
+#  compilar -c ~/Documents/04\ index/_pubs/chaska/slides         → solo limpiar auxiliares
 #
 # ==============================================================================
 

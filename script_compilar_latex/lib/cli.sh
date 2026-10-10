@@ -18,7 +18,7 @@ ${BOLD}ARCHIVO / RUTA${NC}
     index                          → busca index.tex en el directorio actual
     tesis                          → busca tesis.tex en el directorio actual
     ../pub_dialectica/capitulo1    → ruta relativa al directorio actual
-    ~/Documents/04\ index/_pubs/pub_dialectica/articulo
+    ~/Documents/04\ index/_pubs/dialectica/articulo
                                    → ruta absoluta completa
     ~/Documents/03\ writing/nota   → con tilde de home
 
@@ -65,23 +65,23 @@ ${BOLD}EJEMPLOS${NC}
   compilar
 
   # Compilar un archivo en cualquier lugar de tu sistema
-  compilar ~/Documents/04\ index/_pubs/pub_dialectica-y-mercado/articulo
+  compilar ~/Documents/04\ index/_pubs/dialectica-y-mercado/articulo
   compilar ~/Documents/03\ writing/nota_metodologica
 
   # Documento con bibliografía (biblatex + Biber)
-  compilar --biber -p 3 ~/Documents/04\ index/_pubs/pub_axiomata/paper
+  compilar --biber -p 3 ~/Documents/04\ index/_pubs/axiomata/paper
 
   # Presentación Beamer con bibliografía, abrir al terminar
   compilar --biber -a ~/Documents/03\ writing/slides_unsch
 
   # LuaLaTeX con índice y glosario, salida en build/
-  compilar -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/pub_res-publica/libro
+  compilar -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/res-publica/libro
 
   # Modo watch durante la escritura
   compilar -w ~/Documents/02\ analysis/informe
 
   # Solo limpiar auxiliares de un documento
-  compilar -c ~/Documents/04\ index/_pubs/pub_numerus-scriptum/capitulo2
+  compilar -c ~/Documents/04\ index/_pubs/numerus-scriptum/capitulo2
 
   # Compilar silenciosamente (para CI/CD o cron)
   compilar -s ~/Documents/03\ writing/reporte && echo "OK"
