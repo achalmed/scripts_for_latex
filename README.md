@@ -31,7 +31,7 @@ script_compilar_latex/main.sh --help                                # opciones (
 script_compilar_latex/main.sh -e lualatex --biber documento         # el modo normativo: LuaLaTeX + Biber
 script_compilar_latex/main.sh --dry-run -e lualatex --biber documento   # simula: dice qué haría, no escribe
 script_compilar_latex/main.sh -c documento                          # solo borra los auxiliares
-compilar -e lualatex --biber ~/Documents/03\ writing/<carpeta>/nota   # alias de ~/.dotfiles (zsh)
+compilar -e lualatex --biber ~/Documents/escritura/<carpeta>/nota   # alias de ~/.dotfiles (zsh)
 script_compilar_latex/tests/dry-run.sh                              # prueba de suite: --dry-run no escribe
 ```
 
