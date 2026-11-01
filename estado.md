@@ -3,7 +3,7 @@ tipo: estado
 estado: activo
 actualizado: 2026-10-05
 ---
-# estado.md — scripts-latex
+# estado.md — latex-studio
 
 ## Hecho
 
@@ -11,7 +11,7 @@ actualizado: 2026-10-05
 |---|---|---|
 | 2026-10-05 | documentación según la normativa documental: `estado.md`, README de suite, `CLAUDE.md` corto, pendientes fuera de `decisiones.md`, `docs/historial/` e índice retirados | `docs/decisiones.md` §5.2 |
 | 2026-10-05 | `--dry-run` (`-n`) y su prueba de suite | `script_compilar_latex/tests/dry-run.sh` |
-| 2026-10-05 | renombre `scripts_for_latex` → `scripts-latex` (piloto 1); el remoto no cambia | commit `b14f783`; `docs/decisiones.md` §1.5 |
+| 2026-10-05 | renombre `scripts_for_latex` → `latex-studio` (piloto 1); el remoto no cambia | commit `b14f783`; `docs/decisiones.md` §1.5 |
 | 2026-10-04 | licencia MIT; manifiesto y bloques generados al día | commits `d23aee3`, `31cc784` |
 | 2026-10-03 | ciclo de compilación robusto: errores del motor, watch, limpieza, `--draft`, `auto` = lualatex | commit `606e4ee`; `docs/decisiones.md` §3 |
 

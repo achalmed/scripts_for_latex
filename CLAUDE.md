@@ -2,7 +2,7 @@
 tipo: guia_ia
 estado: activo
 ---
-# CLAUDE.md — scripts-latex (repo `scripts_for_latex`)
+# CLAUDE.md — latex-studio (repo `scripts_for_latex`)
 
 El compilador del `.tex` suelto (`script_compilar_latex/`, alias `compilar`); no compila los
 frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de tocar código,
@@ -26,9 +26,9 @@ frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de t
 ## Verificar
 
 ```bash
-cd scripts-latex/script_compilar_latex && for f in *.sh lib/*.sh tests/*.sh; do bash -n "$f"; done; cd -
-scripts-latex/script_compilar_latex/main.sh --help            # carga todos los módulos
-scripts-latex/script_compilar_latex/tests/dry-run.sh          # --dry-run, -c -n y --help no escriben
+cd latex-studio/script_compilar_latex && for f in *.sh lib/*.sh tests/*.sh; do bash -n "$f"; done; cd -
+latex-studio/script_compilar_latex/main.sh --help            # carga todos los módulos
+latex-studio/script_compilar_latex/tests/dry-run.sh          # --dry-run, -c -n y --help no escriben
 python3 core/suites.py validar && python3 core/suites.py generar   # suite.yml y bloques (simula)
 ```
 

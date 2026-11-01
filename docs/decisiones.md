@@ -1,10 +1,10 @@
 ---
 tipo: decision
 estado: activo
-titulo: "Decisiones de scripts-latex"
+titulo: "Decisiones de latex-studio"
 forma: explicacion
 ---
-# Decisiones de scripts-latex
+# Decisiones de latex-studio
 
 Solo decisiones vigentes, con su porqué (normativa documental §3.3). Lo pendiente vive en
 `../estado.md` §Por hacer; lo hecho, en el mensaje de commit. Una decisión superada conserva su
@@ -34,7 +34,7 @@ Ni clases, ni plantillas, ni preámbulos: eso es de `sistema-editorial` y de cad
 Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o glosario: quien compila ve y controla
 cada pasada.
 
-### §1.5 La carpeta se llama `scripts-latex`; el remoto sigue siendo `scripts_for_latex` (2026-10-05)
+### §1.5 La carpeta se llama `latex-studio`; el remoto sigue siendo `scripts_for_latex` (2026-10-05)
 
 Renombre aprobado en la Puerta P3 (P3-1: carpeta = `id`, kebab) y aplicado como piloto 1 del
 programa con `core/renombrar.py`; el manifiesto guarda `id_anterior: scripts_for_latex`. El remoto
