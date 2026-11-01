@@ -23,10 +23,27 @@ import latex_app  # noqa: F401  encuentra gui_comun
 from gui_comun.diseno import preparar_plataforma
 
 
+APP_ID = "latex-studio"
+
+
+def datos_lanzador() -> dict:
+    """El acceso directo en el menú de aplicaciones (gui_comun.lanzador); abre los .tex que se le den."""
+    from latex_app.ventana import ACENTO, LOGO
+    return dict(app_id=APP_ID, nombre="LaTeX Studio", comentario="Compilar documentos LaTeX: errores con su línea y el PDF",
+                orden=[sys.executable, str(_AQUI / "main.py")], logo_svg=LOGO, acento=ACENTO,
+                categorias="Office;Publishing;Development;", palabras="latex;lualatex;biber;pdf;compilar;tex;",
+                archivos=True, mimetypes="text/x-tex;")
+
+
 def main() -> int:
+    from gui_comun import lanzador
+    atendido = lanzador.desde_main(sys.argv[1:], **datos_lanzador())   # --instalar-lanzador / --quitar-lanzador
+    if atendido is not None:
+        return atendido
     preparar_plataforma()                 # sin el plugin de Wayland, XWayland sin aviso
     QApplication.setOrganizationName("EdisonAchalma")
     QApplication.setApplicationName("LatexStudio")
+    QApplication.setDesktopFileName(APP_ID)    # la ventana se agrupa con su acceso directo (Wayland)
     app = QApplication(sys.argv)
     from latex_app.ventana import Ventana
     ventana = Ventana()
