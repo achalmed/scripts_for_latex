@@ -4,8 +4,8 @@ estado: activo
 ---
 # CLAUDE.md — latex-studio (repo `scripts_for_latex`)
 
-El compilador del `.tex` suelto (`script_compilar_latex/`, alias `compilar`); no compila los
-frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de tocar código,
+LaTeX Studio: la ventana (`studio/`, familia de los studios con `gui_comun`) y el compilador del `.tex` suelto
+(`script_compilar_latex/`, alias `compilar`); no compila los frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de tocar código,
 `docs/arquitectura.md`. Lo general rige desde el `CLAUDE.md` raíz.
 
 ## Reglas propias
@@ -22,6 +22,8 @@ frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de t
 - **Se prueba fuera de los repos**: compilar dentro de otro repo reescribe PDFs versionados; un
   `.tex` mínimo en una carpeta temporal, o `--dry-run`.
 - **Repo público**: nada del despacho ni rutas de máquina en código y ejemplos.
+- **La ventana no compila por su cuenta**: arma la orden de `main.sh` (`studio/latex_app/compilador.py`) y lee el
+  `.log`; una opción nueva entra primero en la CLI.
 
 ## Verificar
 
@@ -29,6 +31,7 @@ frameworks ni trae diseño. Léase antes: `README.md`, `estado.md` y, antes de t
 cd latex-studio/script_compilar_latex && for f in *.sh lib/*.sh tests/*.sh; do bash -n "$f"; done; cd -
 latex-studio/script_compilar_latex/main.sh --help            # carga todos los módulos
 latex-studio/script_compilar_latex/tests/dry-run.sh          # --dry-run, -c -n y --help no escriben
+python3 -m pytest -q latex-studio/tests                    # la ventana: lectura del .log, compilación real, humo
 python3 core/suites.py validar && python3 core/suites.py generar   # suite.yml y bloques (simula)
 ```
 

@@ -5,18 +5,20 @@ estado: activo
 # latex-studio/ — el compilador LaTeX del workspace para el .tex suelto, desde cualquier ruta (repo `scripts_for_latex`)
 
 <!-- suites:inicio -->
-Suites de esta carpeta (1); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
+Suites de esta carpeta (2); índice global en `meta/INDICE_SCRIPTS.md`. Patrón: M main · C config · L lib.
 
 | Suite | Carpeta | Objetivo | Escribe en | Simula | Timer | Estado | Patrón |
 |---|---|---|---|---|---|---|---|
 | `compilar_latex` | [latex-studio/script_compilar_latex](script_compilar_latex/) | latex | archivos | no |  | activo | `MCL` |
+| `latex_studio` | [latex-studio/studio](studio/) | latex | archivos | no |  | activo | `M··` |
 
 <sub>Bloque generado desde los `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
 <!-- suites:fin -->
 
 ## Qué es
 
-Una herramienta, `script_compilar_latex/` (alias `compilar`), que compila un `.tex` suelto desde
+**LaTeX Studio**: una ventana (`studio/`, de la familia de los studios del espacio de trabajo) sobre una herramienta,
+`script_compilar_latex/` (alias `compilar`), que compila un `.tex` suelto desde
 cualquier carpeta: resuelve la ruta, elige el motor (`auto` = LuaLaTeX salvo `% !TEX program`),
 encadena pasadas fijas con Biber o BibTeX, makeindex y makeglossaries, informa del PDF y borra los
 auxiliares. Es para el `.tex` que no pertenece a un framework: `escritura`, `11 Book`,
@@ -27,6 +29,7 @@ cambiar sin avisar: `docs/arquitectura.md` §Consumidores.
 ## Uso
 
 ```bash
+python3 studio/main.py [documento.tex]                              # LaTeX Studio: la ventana (F5 compila, Ctrl+K paleta)
 script_compilar_latex/main.sh --help                                # opciones (no compila)
 script_compilar_latex/main.sh -e lualatex --biber documento         # el modo normativo: LuaLaTeX + Biber
 script_compilar_latex/main.sh --dry-run -e lualatex --biber documento   # simula: dice qué haría, no escribe
@@ -34,6 +37,11 @@ script_compilar_latex/main.sh -c documento                          # solo borra
 compilar -e lualatex --biber ~/Documents/escritura/<carpeta>/nota   # alias de ~/.dotfiles (zsh)
 script_compilar_latex/tests/dry-run.sh                              # prueba de suite: --dry-run no escribe
 ```
+
+En la ventana: abrir o soltar un `.tex`, elegir motor, pasadas, bibliografía, índice y glosarios, compilar (F5) o
+simular; el resultado lista cada error y aviso del `.log` con su línea (doble clic: el editor en esa línea),
+«recompilar al guardar» vigila el `.tex`, y el historial guarda cada compilación. Es el marco común de los studios:
+barra lateral plegable, paleta Ctrl+K, avisos, consola (Ctrl+J), tema del sistema, claro u oscuro.
 
 El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas frecuentes) es
 `script_compilar_latex/README.md`; el porqué de cada elección, `docs/decisiones.md`; lo pendiente,
@@ -44,6 +52,8 @@ El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas 
 | carpeta | qué es | dueño / generador |
 |---|---|---|
 | `script_compilar_latex/` | la suite: `main.sh`, `config.sh`, `lib/`, `tests/`, su manual y `suite.yml` | a mano; el bloque `suite:` del manual lo genera `core/suites.py` |
+| `studio/` | LaTeX Studio: `main.py`, `latex_app/` (`compilador.py`: la orden y la lectura del `.log`; `ventana.py`) y su `suite.yml` | a mano |
+| `tests/` | las pruebas de la ventana (`python3 -m pytest -q tests`) | a mano |
 | `docs/` | `arquitectura.md` (flujo, módulos, consumidores) y `decisiones.md` | a mano |
 
 ## Límite honesto

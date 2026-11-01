@@ -34,12 +34,23 @@ Ni clases, ni plantillas, ni preámbulos: eso es de `sistema-editorial` y de cad
 Pasadas fijas (`-p`), 3 en cuanto se pide bibliografía o glosario: quien compila ve y controla
 cada pasada.
 
-### §1.5 La carpeta se llama `latex-studio`; el remoto sigue siendo `scripts_for_latex` (2026-10-05)
+### §1.5 La carpeta se llama `scripts-latex`; el remoto sigue siendo `scripts_for_latex` (2026-10-05; superada por §1.6)
 
 Renombre aprobado en la Puerta P3 (P3-1: carpeta = `id`, kebab) y aplicado como piloto 1 del
 programa con `core/renombrar.py`; el manifiesto guarda `id_anterior: scripts_for_latex`. El remoto
 de GitHub no cambia (plan de conversión, C7). Los consumidores leen la carpeta por `SCRIPTS_LATEX`
 (`core/env.sh`), salvo el alias de `~/.dotfiles`, que no carga `core/`.
+
+### §1.6 LaTeX Studio: la carpeta pasa a `latex-studio` y la herramienta gana ventana (2026-10-31)
+
+Propuesta aprobada por el autor (`meta/programa/08-mantenimiento/familia-studios-2026-10-31.md`): el repo es un
+proyecto independiente de la familia de los studios (Filesystem, Git, Quarto, Raphi). Renombre con
+`core/renombrar.py` (etiqueta, respaldo y `UNDO.sh` en `$RESPALDOS_DIR/renombres/2026-10-31-scripts-latex-a-latex-studio/`);
+el remoto sigue siendo `scripts_for_latex` y `SCRIPTS_LATEX` sigue siendo el nombre de la variable (contrato de
+`core`): solo cambió su valor. La ventana (`studio/`, con el marco común `gui_comun` y acento rosa) no compila por su
+cuenta: arma la orden de `script_compilar_latex` y lee el `.log` para mostrar cada error y aviso con su línea; la CLI
+y su interfaz para `docencia` no cambian. «Recompilar al guardar» lo hace la ventana (con `QFileSystemWatcher`),
+porque el `-w` de la CLI necesita `inotifywait`.
 
 ## 2. Motor
 
