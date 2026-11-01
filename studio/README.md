@@ -23,7 +23,7 @@ main.py --smoke
 
 ## Qué es
 
-La ventana de `../script_compilar_latex` con el marco común de los studios (`core/py-common/gui_comun`, acento rosa):
+La ventana de `../script_compilar_latex` con el marco común de los studios (`gui-comun` (paquete `gui_comun`), acento rosa):
 Inicio (recientes), Compilar (opciones, compilar con F5, simular, limpiar; cada error y aviso del `.log` con su línea,
 doble clic para abrir el editor en ella) e Historial. No compila por su cuenta: arma la orden de la CLI
 (`latex_app/compilador.py`) y lee el `.log`.
