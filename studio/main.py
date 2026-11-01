@@ -31,7 +31,7 @@ def datos_lanzador() -> dict:
     from latex_app.ventana import ACENTO, LOGO
     return dict(app_id=APP_ID, nombre="LaTeX Studio", comentario="Compilar documentos LaTeX: errores con su línea y el PDF",
                 orden=[sys.executable, str(_AQUI / "main.py")], logo_svg=LOGO, acento=ACENTO,
-                categorias="Office;Publishing;Development;", palabras="latex;lualatex;biber;pdf;compilar;tex;",
+                categorias="Office;Publishing;", palabras="latex;lualatex;biber;pdf;compilar;tex;",
                 archivos=True, mimetypes="text/x-tex;")
 
 
