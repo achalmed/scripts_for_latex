@@ -6,19 +6,21 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `latex_studio`** · objetivo *latex* · estado *activo* · python · interfaz gui
 
-Aplicación de escritorio (PySide6) sobre el compilador del .tex suelto: opciones, errores con su línea, recompilar al guardar e historial.
+Ventana del compilador del .tex suelto (QML + Kirigami sobre gui-comun 2.x): los documentos de una carpeta con su estado, LuaLaTeX + Biber por main.sh (F5 compila, Mayús+F5 simula, Ctrl+B con Biber), cada error y aviso con su línea, el registro íntegro, el PDF y los auxiliares, recompilar al guardar y el historial.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: PySide6, script_compilar_latex
+- Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 2.3 (módulo QML GuiComun), script_compilar_latex
+- Nota: No compila por su cuenta: arma la orden de script_compilar_latex/main.sh y lee su registro; la ventana no ofrece pdfLaTeX ni XeLaTeX (regla 6).
 
 Comandos:
 
 ```bash
-main.py [archivo.tex]
+main.py [documento.tex]
 main.py --smoke
+../install.sh
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-10-31); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-02); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 ## Qué es

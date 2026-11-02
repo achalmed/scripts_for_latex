@@ -1,0 +1,25 @@
+% articulo.tex — documento de ejemplo de LaTeX Studio (capturas y pruebas): LuaLaTeX + Biber, con una referencia
+% cruzada sin definir (un aviso) y una línea larga (un aviso tipográfico). Se compila en una carpeta temporal.
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[backend=biber,style=apa]{biblatex}
+\addbibresource{referencias.bib}
+\usepackage{hyperref}
+\title{Un documento de ejemplo}
+\author{LaTeX Studio}
+\date{2026}
+\begin{document}
+\maketitle
+
+\section{Introducción}
+Este documento existe para que la ventana tenga algo que compilar: una cita \parencite{knuth1984},
+una referencia cruzada a una figura que no existe (\ref{fig:modelo}) y una palabra demasiado larga para la
+línea: Supercalifragilisticoespialidosoconunacoladeletrasquenosepuedepartirenningunaparteporqueesunasolapalabra.
+
+\section{Método}
+El compilador es \texttt{script\_compilar\_latex/main.sh}: resuelve la ruta, elige el motor, encadena las pasadas con
+Biber y borra los auxiliares al terminar \parencite{lamport1994}.
+
+\printbibliography
+\end{document}
