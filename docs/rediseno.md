@@ -14,8 +14,8 @@ familia». Filesystem Studio, Dotfiles Studio y Huella Studio mostraron cómo se
 una ventana, una operación que corre en el panel inferior con progreso y cancelación, lo que borra se muestra antes
 y se confirma. Este documento aplica ese diseño a este studio: la auditoría de lo que hay (§1), las ocho preguntas
 de producto (§2), la arquitectura de información (§3), la ventana (§4), lo construido (§5), los componentes (§6), lo
-que el marco necesitó (§7) y las decisiones (§8). Es un **borrador** hasta que el studio esté construido; entonces §5
-documenta lo construido con capturas reales y el documento pasa a `hecho` cuando el autor lo valide en la sesión real.
+que el marco necesitó (§7) y las decisiones (§8). **Está construido** (rama `wip/2026-11-02-qml`, 2026-11-02): las capturas de §5 son reales; pasa a `hecho` cuando el
+autor valide el studio en la sesión real (P3, `../estado.md`).
 
 Dos reglas que condicionan todo lo demás: **el motor es LuaLaTeX + Biber** (regla 6 del workspace; `decisiones.md`
 §2.1): la ventana no ofrece pdfLaTeX ni XeLaTeX; y **la ventana no compila por su cuenta** (`../CLAUDE.md`): arma la
@@ -23,8 +23,8 @@ orden de `script_compilar_latex/main.sh` (la misma de `docencia` y del alias `co
 
 ## 1. Auditoría de la GUI actual (Widgets, `gui-comun` 1.x)
 
-Tres páginas en una barra lateral con la marca «LaTeX Studio · Compilar documentos» (`studio/latex_app/ventana.py`,
-448 líneas, retirado en esta fase), construidas a mano con `gui_comun.widgets`: tarjetas, cifras, mosaicos, listas con
+Tres páginas en una barra lateral con la marca «LaTeX Studio · Compilar documentos» (el módulo `ventana.py` de 1.x,
+retirado en esta fase; `git show main:studio/latex_app/ventana.py`), construidas a mano con `gui_comun.widgets`: tarjetas, cifras, mosaicos, listas con
 vacío, consola como cajón (Ctrl+J), paleta Ctrl+K, avisos. La lógica está separada en un módulo sin Qt,
 `studio/latex_app/compilador.py` (`Opciones.orden()` arma la orden de la CLI; `leer_log()` saca errores, avisos y
 avisos tipográficos del registro con su archivo y su línea; `resumen()` los cuenta), que se conserva intacto: esta
@@ -101,7 +101,7 @@ las órdenes, cada documento de la carpeta («Documento: …» lo selecciona) y 
 
 | entidad | datos | dónde |
 |---|---|---|
-| Documento `.tex` (`compilador.documentos_en(carpeta)`) | ruta, nombre, carpeta, modificado, motor declarado (`% !TEX program` en las 5 primeras líneas; sin él, LuaLaTeX: la misma regla que `lib/detector.sh`), estado, PDF (ruta, fecha, tamaño, páginas si hay `pdfinfo`) | fila de la tabla; Resumen; título del panel de detalles; contexto de la barra de estado |
+| Documento `.tex` (`compilador.documentos_en(carpeta)`) | ruta, nombre, carpeta, modificado, motor declarado (`% !TEX program` en las 5 primeras líneas; sin él, LuaLaTeX: la misma regla que `script_compilar_latex/lib/detector.sh`), estado, PDF (ruta, fecha, tamaño, páginas si hay `pdfinfo`) | fila de la tabla; Resumen; título del panel de detalles; contexto de la barra de estado |
 | Estado de un documento (`compilador.estado_de(tex, registro)`, leído del disco, §8 L5) | `compilado` (PDF más nuevo que el `.tex`, sin problemas), `con avisos`, `con errores` (el registro de la última corrida o el `.log` del motor que dejó un fallo), `desactualizado` (PDF más viejo que el `.tex`), `sin compilar` (sin PDF), `compilando` | columna Estado (positivo · neutro · negativo · activo · inactivo); Resumen; recuento de la barra de estado |
 | Opciones de compilación (`QSettings`, de la sesión, §8 L6) | motor (`auto` · `lualatex`), pasadas (1–5; 3 con bibliografía o glosario), bibliografía (ninguna · Biber · BibTeX heredado), índice, glosarios, borrador, carpeta del PDF, abrir el PDF al terminar, recompilar al guardar | pestaña Opciones; contexto de la barra de estado («LuaLaTeX + Biber · 3 pasadas»); menú Documento (las dos marcables) |
 | Corrida (`main.sh … --log <registro>`; `Opciones.orden()`) | la orden, su salida línea a línea, la pasada en curso («Pasada n/N»), el código de salida, la duración | panel inferior (Salida); barra de estado (progreso por pasadas, Esc cancela); al terminar, la fila y los detalles se releen y la compilación entra al historial |
@@ -173,8 +173,37 @@ alto. Los tres divisores y los paneles se recuerdan en `QSettings`; la ventana s
 
 ## 5. Lo construido
 
-(Se completa al terminar la fase: capturas reales en Lliphi Oscuro y Lliphi Claro y la paleta, sobre el documento de
-ejemplo del repo compilado en una carpeta temporal.)
+Tres capturas reales (`studio/capturar.py`, 1280 × 800, el Qt del sistema con Kirigami 6.24, sin tocar el escritorio
+ni las preferencias) sobre el **documento de ejemplo del repo** (`studio/ejemplo/`: `articulo.tex` con biblatex y una
+referencia sin definir, `con-error.tex` con una orden inexistente, `referencias.bib`) copiado a una carpeta temporal y
+**compilado ahí de verdad** con la CLI antes de capturar (L8): el estado de la tabla («Con avisos», «Con errores»), los
+problemas y el registro son los que dejó LuaLaTeX. En Lliphi Oscuro, la pestaña Problemas del artículo (tres avisos y dos
+avisos tipográficos de la última pasada, con su línea); en Lliphi Claro, el Resumen (estado, PDF, última compilación); y
+la paleta de órdenes filtrando «compilar». El panel inferior muestra el final de la salida de `main.sh` del documento que
+falló; los dos mensajes en línea son el resultado de cada compilación.
+
+| | |
+|---|---|
+| ![Lliphi Oscuro: Problemas](figuras/latex-studio-oscuro.png) | ![Lliphi Claro: Resumen](figuras/latex-studio-claro.png) |
+
+![Paleta de órdenes (Ctrl+Alt+I) filtrando «compilar»](figuras/latex-studio-paleta.png)
+
+Qué hay detrás: `studio/latex_app/aplicacion.py` (el registro de acciones: §3.3 íntegro; Compilar, Simular, Limpiar,
+Abrir el PDF y Abrir en el editor se habilitan con el documento actual y se deshabilitan mientras corre una compilación;
+Cancelar, al revés), seis controladores (`espacio`, `opciones`, `documentos`, `corrida`, `historial`, `ajustes`), un
+módulo de modelos puros (las filas de las tablas y de la lista de problemas, sin Qt), `studio/latex_app/compilador.py`
+intacto en lo que tenía (`Opciones.orden`, `leer_log`, `resumen`) más las consultas nuevas (motor declarado, extensiones
+auxiliares leídas de `config.sh`, auxiliares con la regla de `listar_auxiliares`, salidas, PDF, documentos de una
+carpeta, estado leído del disco, registro por documento, la última pasada y los mensajes de Biber de un registro, el
+progreso por pasadas) y una corrección: el lector del registro sigue la pila de paréntesis del `.log` y atribuye cada
+problema al `.tex` del documento que estaba abierto (antes, al último archivo que apareció, aunque fuera un paquete del
+sistema), y deja fuera las consecuencias («Fatal error occurred», «Emergency stop»). `studio/latex_app/qml/Main.qml` sobre
+`VentanaStudio` y seis componentes propios (Resumen, Opciones, Problemas, Registro, Salidas y el diálogo de ajustes);
+`tests/run.sh` con 30 pruebas: el servicio (el registro, la orden, las consultas, la CLI compilando el ejemplo), los
+modelos, los controladores (simular no escribe; compilar de verdad con lualatex y biber si están; el documento con error
+falla, deja su `.log` y entra al historial; limpiar borra solo los auxiliares del documento actual; recompilar al guardar),
+la ventana entera, cada QML y `--smoke` con `/usr/bin/python3`, y las reglas de la familia (sin colores propios, sin marca
+dentro, sin QtWidgets, sin pdfLaTeX ni XeLaTeX en la ventana). Lo que quedó fuera está en `../estado.md` §Por hacer.
 
 ## 6. Componentes
 
@@ -190,9 +219,18 @@ ejemplo del repo compilado en una carpeta temporal.)
 
 ## 7. Lo que el marco necesitó (`gui-comun` 2.3.0)
 
-(Se completa al terminar la fase. Candidatos: `ListaDiagnosticos`, la lista de errores y avisos con archivo, línea,
-mensaje, color semántico por nivel e «ir a»; y el progreso de un proceso leído de su salida, `Tareas.proceso(…,
-progreso_de=)`, para que la barra de estado diga en qué pasada va la compilación.)
+- **`ListaDiagnosticos`**: la lista de errores y avisos de una herramienta con nivel (icono y color semántico: error,
+  aviso, información, tipografía), mensaje en varias líneas, archivo y línea, `activada(fila)` con Intro o doble clic
+  («ir a»), menú contextual y mensaje de vacío. En un panel de detalles de 26 unidades una `TablaDatos` de cuatro columnas
+  no deja leer el mensaje; esta lista es la pestaña Problemas (y servirá a cualquier studio que lea un registro).
+- **`Tareas.proceso(…, progreso_de=)`**: una función que recibe cada línea de la salida del proceso y devuelve
+  `(porcentaje, elemento)` o `None`; así la barra de estado dice «pasada 2 de 3» leyendo el «Pasada n/N» que la CLI ya
+  imprime, sin que la CLI sepa nada de la ventana.
+- `gui_comun.qt` exporta `QFileSystemWatcher` («Recompilar al guardar»).
+
+Nada de `widgets/` se toca. La versión subió a 2.3.0 con CHANGELOG, la referencia de componentes, la galería (página
+ListaDiagnosticos) y las pruebas (la carga del componente; el progreso leído de la salida); la etiqueta `v2.3.0` queda
+local hasta el visto bueno del autor (rama `wip/2026-11-02-qml-latex`).
 
 ## 8. Decisiones
 

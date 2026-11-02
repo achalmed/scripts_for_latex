@@ -151,7 +151,7 @@ VentanaStudio {
             id: tablaCarpeta
             modelo: docs.modelo
             claveAjustes: "documentos"
-            umbralEstrecho: Kirigami.Units.gridUnit * 32
+            umbralEstrecho: Kirigami.Units.gridUnit * 34
             mensajeVacio: docs.total === 0 ? "No hay ningún .tex en " + espacio.nombreCarpeta + ": elige otra carpeta de trabajo (Ctrl+Mayús+O) o abre un documento (Ctrl+O)"
                                            : "Ningún documento coincide con el filtro"
             iconoVacio: "text-x-tex"
@@ -165,7 +165,7 @@ VentanaStudio {
             id: tablaRecientes
             modelo: docs.modeloRecientes
             claveAjustes: "recientes"
-            umbralEstrecho: Kirigami.Units.gridUnit * 32
+            umbralEstrecho: Kirigami.Units.gridUnit * 34
             mensajeVacio: "Todavía no abriste ni compilaste ningún documento aquí"
             iconoVacio: "document-open-recent"
             columnas: [
@@ -185,7 +185,7 @@ VentanaStudio {
             id: tablaHistorial
             modelo: studio.historial.modelo
             claveAjustes: "historial"
-            umbralEstrecho: Kirigami.Units.gridUnit * 32
+            umbralEstrecho: Kirigami.Units.gridUnit * 34
             mensajeVacio: "Sin compilaciones todavía: cada una queda aquí con su resultado y su duración"
             iconoVacio: "view-history"
             columnas: [

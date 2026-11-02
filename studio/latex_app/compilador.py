@@ -287,6 +287,29 @@ def registro_de(tex: Path, cache: Path) -> Path:
     return cache / "registros" / f"{clave}-{tex.stem}.log"
 
 
+_BANNER_MOTOR = re.compile(r"^This is (?:Lua(?:HB)?TeX|pdfTeX|XeTeX)\b", re.M)
+_BIBER = re.compile(r"^(?:(?:INFO|WARN|ERROR) - )?(?P<nivel>ERROR|WARN) - (?P<msg>.+)$", re.M)
+
+
+def ultima_pasada(texto: str) -> str:
+    """Del registro de una corrida (todas las pasadas seguidas), solo la última pasada del motor: los avisos de las
+    pasadas anteriores («Citation undefined», «Rerun») no son problemas del documento."""
+    posiciones = [m.start() for m in _BANNER_MOTOR.finditer(texto)]
+    return texto[posiciones[-1]:] if posiciones else texto
+
+
+def problemas_de_registro(texto: str) -> list[Problema]:
+    """Los problemas de un registro de la ventana (`--log`): los errores y avisos de Biber o BibTeX de toda la corrida y
+    los del motor en su última pasada, sin repetir."""
+    problemas = [Problema("error" if m["nivel"] == "ERROR" else "aviso", "Biber: " + m["msg"].strip()) for m in _BIBER.finditer(texto)]
+    vistos = {(p.nivel, p.mensaje) for p in problemas}
+    for p in leer_log(ultima_pasada(texto)):
+        if (p.nivel, p.mensaje) not in vistos:
+            problemas.append(p)
+    orden = {"error": 0, "aviso": 1, "tipografia": 2}
+    return sorted(problemas, key=lambda p: orden[p.nivel])
+
+
 def leer_registro(ruta: Path | None) -> str:
     try:
         return ruta.read_text(encoding="utf-8", errors="replace") if ruta and ruta.is_file() else ""
@@ -321,7 +344,9 @@ def estado_de(tex: Path, registro: Path | None = None, salida: str = "", en_curs
     problemas, origen, mtime_log = [], "", 0.0
     if candidatos:
         reciente = max(candidatos, key=lambda p: p.stat().st_mtime)
-        problemas, origen, mtime_log = leer_log(leer_registro(reciente)), str(reciente), reciente.stat().st_mtime
+        texto_log = leer_registro(reciente)
+        problemas = problemas_de_registro(texto_log) if reciente == registro else leer_log(texto_log)
+        origen, mtime_log = str(reciente), reciente.stat().st_mtime
     n = {k: sum(p.nivel == k for p in problemas) for k in ("error", "aviso", "tipografia")}
     pdf = pdf_de(tex, salida)
     hay_pdf = pdf.is_file()

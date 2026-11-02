@@ -45,6 +45,17 @@ def test_atribuye_cada_problema_al_tex_abierto_y_omite_las_consecuencias():
     assert [(p.linea, p.archivo, p.mensaje[:12]) for p in ps] == [(12, "./a.tex", "LaTeX hooks "), (9, "./cap.tex", "Undefined co")]
 
 
+def test_el_registro_de_una_corrida_toma_la_ultima_pasada_y_los_errores_de_biber():
+    """El --log de main.sh lleva las tres pasadas: los «Citation undefined» de la primera no son problemas; los de Biber sí."""
+    pasada = "This is LuaHBTeX, Version 1.18.0\n(./a.tex\nLaTeX Warning: Citation `k' on page 1 undefined on input line 5.\n)\n"
+    ultima = "This is LuaHBTeX, Version 1.18.0\n(./a.tex\nLaTeX Warning: Reference `fig:x' on page 1 undefined on input line 9.\n)\n"
+    biber = "INFO - This is Biber 2.20\nERROR - Cannot find 'referencias.bib'!\nWARN - Duplicate entry key: 'k'\n"
+    ps = svc.problemas_de_registro(pasada + biber + pasada + ultima)
+    assert [(p.nivel, p.mensaje[:22], p.linea) for p in ps] == [("error", "Biber: Cannot find 're", None), ("aviso", "Biber: Duplicate entry", None),
+                                                                 ("aviso", "Reference `fig:x' on p", 9)]
+    assert svc.ultima_pasada("sin banner") == "sin banner"
+
+
 def test_la_orden_es_la_de_la_cli(tmp_path):
     o = Opciones(tmp_path / "a.tex", motor="lualatex", pasadas=3, bibliografia="biber", indice=True,
                  salida=str(tmp_path / "pdf"), log=tmp_path / "a.log")
