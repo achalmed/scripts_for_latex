@@ -144,7 +144,10 @@ def test_estado_del_disco_sin_compilar_y_desactualizado(muestra):
     tesis = ps["principal.tex"]
     pdf = muestra / "tesis-multiarchivo" / "principal.pdf"
     pdf.write_bytes(b"%PDF-1.5\n")
-    viejo = time.time() - 3600
+    # Anterior a la fuente más vieja del proyecto: la muestra se copia con sus fechas, así que «hace una hora» deja de
+    # ser anterior a los capítulos unas horas después de escribirlos (la prueba fallaba según la hora del día).
+    fuentes = [p for p in (muestra / "tesis-multiarchivo").rglob("*") if p.is_file() and p != pdf]
+    viejo = min(p.stat().st_mtime for p in fuentes) - 3600
     os.utime(pdf, (viejo, viejo))
     pr.leer_estado(tesis, pr.Cache())
     assert tesis.estado == "desactualizado"          # un capítulo es más nuevo que el PDF
