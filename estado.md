@@ -9,6 +9,7 @@ actualizado: 2026-11-02
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-02 | **LaTeX Studio en QML + Kirigami sobre `gui-comun` 2.3** (fase 5 de la modernización de la familia; rama `wip/2026-11-02-qml`, sin fusionar): `docs/rediseno.md` (auditoría, ocho preguntas, arquitectura de información, decisiones L1–L10, lo construido con capturas), `studio/` reescrito (tres vistas sobre un documento actual; la tabla de la carpeta con el estado leído del disco; F5 compila, Mayús+F5 simula, Ctrl+B con Biber, Limpiar muestra la lista y confirma; Problemas con «ir a la línea», Registro íntegro, Salidas; recompilar al guardar; solo LuaLaTeX en la ventana; `/usr/bin/python3`), 30 pruebas en `tests/run.sh` sobre `studio/ejemplo/` compilado en un temporal, tres capturas reales, el lanzador del menú reinstalado con `install.sh`. En `gui-comun`, 2.3.0 (`ListaDiagnosticos`; `Tareas.proceso(progreso_de=)`; rama `wip/2026-11-02-qml-latex`, etiqueta local) | `tests/run.sh`; `docs/figuras/latex-studio-*.png`; `/usr/bin/python3 studio/main.py` |
 | 2026-10-31 | **LaTeX Studio**: la carpeta pasa a `latex-studio` (remoto `scripts_for_latex` intacto) y la herramienta gana ventana con el marco común de los studios: opciones, errores del `.log` con su línea, recompilar al guardar, historial | `docs/decisiones.md` §1.6; `python3 -m pytest -q tests` |
 | 2026-10-05 | documentación según la normativa documental: `estado.md`, README de suite, `CLAUDE.md` corto, pendientes fuera de `decisiones.md`, `docs/historial/` e índice retirados | `docs/decisiones.md` §5.2 |
 | 2026-10-05 | `--dry-run` (`-n`) y su prueba de suite | `script_compilar_latex/tests/dry-run.sh` |
@@ -18,10 +19,23 @@ actualizado: 2026-11-02
 
 ## En curso
 
-- 2026-11-02 · director · **Fase 5 de la modernización de la familia: LaTeX Studio a QML + Kirigami sobre `gui-comun` 2.x** (rama `wip/2026-11-02-qml`): el diseño está en `docs/rediseno.md` (borrador); sigue la reescritura de `studio/`, lo que el marco necesite (2.3.0), las pruebas, las capturas y los documentos.
+nada en curso
 
 ## Por hacer
 
+- 2026-11-02 · dueño: **el autor** · usar LaTeX Studio en la sesión real (`/usr/bin/python3 ~/Documents/latex-studio/studio/main.py`:
+  abrir una carpeta de `escritura`, elegir un `.tex`, F5, leer Problemas e ir a una línea con Intro, Mayús+F5, Limpiar
+  auxiliares…, Recientes, Compilaciones, la paleta, claro y oscuro); lo que no convenza se anota aquí y se corrige en
+  `main` o vuelve a `gui-comun`. Después, el director fusiona `wip/2026-11-02-qml` (y `gui-comun` `wip/2026-11-02-qml-latex`
+  con `v2.3.0`) y `docs/rediseno.md` pasa a `hecho`.
+- 2026-11-02 · dueño: director · lo que quedó fuera de la ventana: la tabla no entra en subcarpetas (un documento de otra
+  carpeta se abre con Ctrl+O); «Recompilar al guardar» vigila solo el `.tex` principal (no los `\input` ni el `.bib`);
+  el modo watch de la CLI (`-w`) sigue sin ofrecerse (necesita `inotifywait`); con `--draft` el documento figura «sin
+  compilar» porque el estado se lee del disco y no hay PDF; los errores de Biber se leen solo de sus líneas `ERROR`/`WARN`
+  (no del `.blg`); «Configurar atajos de teclado…» y «Configurar barras…» no existen (como en toda la familia); el
+  registro de cada corrida queda en la caché del studio sin límite de tamaño (uno por documento, se reemplaza).
+- 2026-11-02 · dueño: director · el validador avisa en `docs/rediseno.md` (RQ-DOC-08: la cifra de líneas de la ventana
+  de 1.x en §1) y de siempre en `script_compilar_latex/` (RQ-IDN-03, abajo).
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el
 manual los cita.
 

@@ -29,7 +29,7 @@ cambiar sin avisar: `docs/arquitectura.md` §Consumidores.
 ## Uso
 
 ```bash
-python3 studio/main.py [documento.tex]                              # LaTeX Studio: la ventana (F5 compila, Ctrl+K paleta)
+/usr/bin/python3 studio/main.py [documento.tex]                     # LaTeX Studio: la ventana (F5 compila, Ctrl+K paleta; el Python del sistema)
 script_compilar_latex/main.sh --help                                # opciones (no compila)
 script_compilar_latex/main.sh -e lualatex --biber documento         # el modo normativo: LuaLaTeX + Biber
 script_compilar_latex/main.sh --dry-run -e lualatex --biber documento   # simula: dice qué haría, no escribe
@@ -38,10 +38,12 @@ compilar -e lualatex --biber ~/Documents/escritura/<carpeta>/nota   # alias de ~
 script_compilar_latex/tests/dry-run.sh                              # prueba de suite: --dry-run no escribe
 ```
 
-En la ventana: abrir o soltar un `.tex`, elegir motor, pasadas, bibliografía, índice y glosarios, compilar (F5) o
-simular; el resultado lista cada error y aviso del `.log` con su línea (doble clic: el editor en esa línea),
-«recompilar al guardar» vigila el `.tex`, y el historial guarda cada compilación. Es el marco común de los studios:
-barra lateral plegable, paleta Ctrl+K, avisos, consola (Ctrl+J), tema del sistema, claro u oscuro.
+En la ventana (QML + Kirigami sobre `gui-comun` 2.x, el espacio de trabajo de la familia de studios; `docs/rediseno.md`):
+la tabla de los `.tex` de la carpeta de trabajo con su estado (compilado, con avisos, con errores, sin compilar), el
+documento actual con sus opciones (LuaLaTeX + Biber; pdfLaTeX y XeLaTeX no se ofrecen), cada error y aviso del registro
+con su línea (Intro abre el editor ahí), el registro íntegro, el PDF y los auxiliares; F5 compila, Mayús+F5 simula,
+Ctrl+B compila con Biber, Limpiar auxiliares… muestra la lista y confirma; «recompilar al guardar» vigila el `.tex`; el
+historial guarda cada compilación. Corre con `/usr/bin/python3` (el Qt del sistema, que trae Kirigami).
 
 El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas frecuentes) es
 `script_compilar_latex/README.md`; el porqué de cada elección, `docs/decisiones.md`; lo pendiente,
@@ -52,9 +54,9 @@ El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas 
 | carpeta | qué es | dueño / generador |
 |---|---|---|
 | `script_compilar_latex/` | la suite: `main.sh`, `config.sh`, `lib/`, `tests/`, su manual y `suite.yml` | a mano; el bloque `suite:` del manual lo genera `core/suites.py` |
-| `studio/` | LaTeX Studio: `main.py`, `latex_app/` (`compilador.py`: la orden y la lectura del `.log`; `ventana.py`) y su `suite.yml` | a mano |
-| `tests/` | las pruebas de la ventana (`python3 -m pytest -q tests`) | a mano |
-| `docs/` | `arquitectura.md` (flujo, módulos, consumidores) y `decisiones.md` | a mano |
+| `studio/` | LaTeX Studio: `main.py`, `latex_app/` (`compilador.py`: la orden, la lectura del registro y las consultas; `controladores/`, `modelos/`, `qml/`), `ejemplo/` (el documento de las capturas y las pruebas), `capturar.py` y su `suite.yml` (`studio/README.md`) | a mano |
+| `tests/` | `tests/run.sh`: el servicio, los controladores y la ventana (sin pantalla, con `/usr/bin/python3`), compilando el ejemplo en una carpeta temporal | a mano |
+| `docs/` | `arquitectura.md` (flujo, módulos, consumidores), `decisiones.md` y `rediseno.md` (el diseño de la ventana, con sus capturas) | a mano |
 
 ## Límite honesto
 

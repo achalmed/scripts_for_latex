@@ -9,8 +9,9 @@ estado: activo
 |---|---|---|---|
 | [arquitectura.md](arquitectura.md) | `doc` | `activo` | Arquitectura de compilar_latex: flujo, módulos, estado global, cómo se amplía y quién la usa |
 | [decisiones.md](decisiones.md) | `decision` | `activo` | Decisiones de latex-studio |
+| [rediseno.md](rediseno.md) | `doc` | `borrador` | Rediseño de LaTeX Studio como espacio de trabajo: auditoría de la GUI de Widgets, arquitectura de información, distribución de la ventana, componentes y decisiones |
 
-<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-10-31); no se edita a mano.</sub>
+<sub>Bloque generado por `core/docs.py indice` desde el frontmatter de docs/ (2026-11-02); no se edita a mano.</sub>
 <!-- docs:fin -->
 
 

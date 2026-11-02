@@ -52,6 +52,17 @@ cuenta: arma la orden de `script_compilar_latex` y lee el `.log` para mostrar ca
 y su interfaz para `docencia` no cambian. «Recompilar al guardar» lo hace la ventana (con `QFileSystemWatcher`),
 porque el `-w` de la CLI necesita `inotifywait`.
 
+### §1.7 La ventana en QML + Kirigami sobre gui-comun 2.x (2026-11-02)
+
+Fase 5 de la modernización de la familia de studios: la ventana de Widgets (tres páginas, tarjetas y cifras) se
+reescribe como espacio de trabajo al estilo Dolphin/Kate sobre `gui-comun` 2.3 (`rediseno.md` §8, L1–L10): tres vistas
+(Carpeta de trabajo, Recientes, Historial) sobre un documento actual; la tabla de los `.tex` de la carpeta con su estado
+leído del disco; F5 compila, Mayús+F5 simula, Ctrl+B con Biber y Limpiar auxiliares… muestra la lista exacta y confirma
+(R3); solo LuaLaTeX en la ventana (regla 6; pdfLaTeX y XeLaTeX quedan a la CLI para el material heredado que los
+declare); el registro de cada corrida (`--log`) se guarda por documento en la caché y de él salen Problemas, Registro y
+el estado; el studio corre con `/usr/bin/python3` y la CLI y su contrato con `docencia` no cambian. Lo que el marco
+necesitó (`ListaDiagnosticos`; `Tareas.proceso(progreso_de=)`) subió a `gui-comun` 2.3.0.
+
 ## 2. Motor
 
 ### §2.1 LuaLaTeX + Biber es el motor normativo (2026-09-20)
