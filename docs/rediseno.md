@@ -184,9 +184,9 @@ falló; los dos mensajes en línea son el resultado de cada compilación.
 
 | | |
 |---|---|
-| ![Lliphi Oscuro: Problemas](figuras/latex-studio-oscuro.png) | ![Lliphi Claro: Resumen](figuras/latex-studio-claro.png) |
+| ![Lliphi Oscuro: Problemas](figuras/antes/latex-studio-oscuro.png) | ![Lliphi Claro: Resumen](figuras/antes/latex-studio-claro.png) |
 
-![Paleta de órdenes (Ctrl+Alt+I) filtrando «compilar»](figuras/latex-studio-paleta.png)
+![Paleta de órdenes (Ctrl+Alt+I) filtrando «compilar»](figuras/antes/latex-studio-paleta.png)
 
 Qué hay detrás: `studio/latex_app/aplicacion.py` (el registro de acciones: §3.3 íntegro; Compilar, Simular, Limpiar,
 Abrir el PDF y Abrir en el editor se habilitan con el documento actual y se deshabilitan mientras corre una compilación;

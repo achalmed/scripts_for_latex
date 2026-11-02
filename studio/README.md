@@ -2,7 +2,7 @@
 tipo: readme
 estado: activo
 ---
-# studio/ — LaTeX Studio, la ventana (QML + Kirigami sobre gui-comun 2.x) del compilador del .tex suelto de este repo
+# studio/ — LaTeX Studio, el entorno de escritura científica (QML + Kirigami sobre gui-comun 2.x)
 <!-- suite:inicio -->
 **Suite `latex_studio`** · objetivo *latex* · estado *activo* · python · interfaz gui
 
@@ -25,53 +25,75 @@ main.py --smoke
 
 ## Qué es
 
-La ventana de `../script_compilar_latex` con el espacio de trabajo de la familia de studios (`gui-comun` 2.x; el diseño,
-en [../docs/rediseno.md](../docs/rediseno.md)): menú, barra corta, navegación, centro, detalles, panel inferior, barra de
-estado y paleta de órdenes (Ctrl+Alt+I · Ctrl+K). Tres vistas (Ctrl+1 · Ctrl+2 · Ctrl+3) y en todas la fila elegida es
-el **documento actual**, sobre el que actúan **Compilar (F5)**, **Compilar con Biber (Ctrl+B)**, **Simular (Mayús+F5)**,
-**Limpiar auxiliares… (Ctrl+Mayús+L)**, **Abrir el PDF** y **Abrir en el editor**:
+El entorno donde el autor escribe, compila y revisa sus proyectos LaTeX (reingeniería del 2026-11-02; diagnóstico,
+referencias y decisiones R1–R16 en [../docs/reingenieria.md](../docs/reingenieria.md)). Dos vistas sobre la misma
+ventana; la barra de arriba es la de compilación.
 
-| vista | centro | detalles (del documento actual) |
-|---|---|---|
-| Carpeta de trabajo (el campo de la barra; Ctrl+Mayús+O; Alt+↑ sube) | la tabla de los `.tex` de la carpeta: Estado leído del disco (compilado, con avisos, con errores, PDF anterior al .tex, sin compilar), Motor (el declarado con `% !TEX program` o LuaLaTeX), fecha del PDF, modificado | Resumen (documento, carpeta, motor, estado, el PDF con fecha, tamaño y páginas, la última compilación) · Opciones (motor `auto` o LuaLaTeX, pasadas, bibliografía, índice, glosarios, borrador, carpeta del PDF, abrir al terminar, recompilar al guardar; la orden que correría) · Problemas (cada error, aviso y aviso tipográfico con su archivo y su línea; Intro abre el editor ahí; filtros por nivel) · Registro (la salida íntegra de la última corrida) · Salidas (el PDF y los auxiliares, con tamaño y fecha) |
-| Recientes | la misma tabla sobre los últimos documentos abiertos o compilados | los mismos |
-| Compilaciones (historial) | cada compilación: cuándo, documento, resultado, duración, detalle; elegir una vuelve a ese documento; Supr la quita | los mismos |
+| vista | izquierda | centro | derecha | abajo (F4) |
+|---|---|---|---|---|
+| **Proyectos** (Ctrl+1) | categorías (solo las que tienen proyectos), recientes, carpetas de trabajo | los proyectos detectados: estado, motor, última compilación, problemas, bibliografía, auxiliares, categoría; selección múltiple → cola | la ficha del proyecto: principal, clase, motor y de dónde sale, compilador, categoría y su motivo, archivos, configuración, la orden exacta | Problemas · Registro de LaTeX · Cola · Historial · Salida |
+| **Escritura** (Ctrl+2) | Archivos (principal, `\input`, `.bib`, configuración) · Estructura (secciones, figuras, tablas, etiquetas) · Bibliografía (claves de los `.bib`) | el editor: pestañas, resaltado LaTeX/BibTeX de KSyntaxHighlighting con el tema claro u oscuro, números de línea, buscar y reemplazar (con expresiones regulares), ir a línea, comentar, autocompletado | el PDF integrado (F7): páginas de `pdftoppm`, zoom, ajustar al ancho, miniaturas; Ctrl+clic en el editor → PDF, doble clic en el PDF → código (SyncTeX) | los mismos |
 
-La compilación es siempre `../script_compilar_latex/main.sh` (la orden de `latex_app/compilador.py`): su salida corre en el
-panel inferior (F4), la barra de estado dice en qué pasada va y Esc cancela; el registro de cada corrida (`--log`) queda
-en la caché del studio por documento, y de él salen Problemas, Registro y el estado. Limpiar muestra primero la lista
-exacta de lo que `main.sh -c` borraría y pide confirmación. Un `.tex` se abre con Ctrl+O, por argumento o soltándolo en
-la ventana: su carpeta pasa a ser la de trabajo. **La ventana no ofrece pdfLaTeX ni XeLaTeX** (regla 6 del workspace):
-un `.tex` heredado que los declare con `% !TEX program` lo compila la CLI con ellos y la tabla lo dice en Motor.
+**Un proyecto** es un documento principal con `\documentclass` y lo que incluye (R1). Se detectan en las carpetas de
+trabajo (por omisión `WRITING_DIR` y `DESPACHO_DIR` de `core/env.py`, más las que se añadan con el diálogo de KDE;
+profundidad configurable; caché por fecha y tamaño). **Cada proyecto se compila con su compilador y su motor** (R4, R5):
+el `<marco>/scripts/build.sh` de su marco si la clase es de un marco (como `escritura`), latexmk si tiene `latexmkrc`, o
+`../script_compilar_latex/main.sh -k` con el motor que declare (`% !TEX program`, arara) o LuaLaTeX + Biber. La
+compilación nunca escribe fuentes; el editor escribe solo con Ctrl+S y avisa si el archivo cambió fuera. Los problemas
+llevan causa probable, acción recomendada y el detalle del registro (R9); F8 recorre y salta a la línea.
+
+## Atajos
+
+| atajo | qué hace | atajo | qué hace |
+|---|---|---|---|
+| F5 · Ctrl+B | compilar el proyecto abierto | Ctrl+S · Ctrl+Mayús+S | guardar · guardar todo |
+| F6 | reconstruir todo (limpia y compila) | Ctrl+F · Ctrl+R | buscar · buscar y reemplazar |
+| Mayús+F5 | simular (la orden, sin escribir) | Ctrl+G | ir a la línea |
+| Ctrl+Mayús+F5 | compilar los marcados (cola) | Ctrl+Espacio | completar (`\ref`, `\cite`, órdenes, entornos) |
+| F8 | siguiente problema | Ctrl+T | comentar o descomentar |
+| Ctrl+Alt+J · Ctrl+clic | del código al PDF (SyncTeX) | Ctrl+W | cerrar el archivo |
+| doble clic en el PDF | del PDF al código | Ctrl+1 · Ctrl+2 | Proyectos · Escritura |
+| Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
+| Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+O · Ctrl+Mayús+O | abrir un `.tex` · carpetas de trabajo |
+| Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
+
+La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 
 ## Estructura
 
 | archivo | qué es |
 |---|---|
 | `main.py` | el punto de entrada, sin lógica (`/usr/bin/python3`) |
-| `latex_app/aplicacion.py` | arma la aplicación: controladores, el registro de acciones (menú, barra, menú contextual, paleta, atajos: cada operación una sola vez) y `latex_app/qml/Main.qml` |
-| `latex_app/controladores/` | lo que QML ve: `espacio` (vista, carpeta de trabajo, barra de estado, rutas), `opciones` (las de compilación, en QSettings), `documentos` (las tablas, el documento actual, problemas, registro, salidas, recompilar al guardar), `corrida` (compilar, simular y limpiar por `main.sh`), `historial`, `ajustes` |
-| `latex_app/modelos/` | las filas de las tablas y de la lista de problemas, sin Qt (los modelos de Qt son los de `gui_comun.modelos`) |
-| `latex_app/compilador.py` | el servicio, sin Qt: la orden de la CLI, la lectura del registro y las consultas (motor declarado, auxiliares, salidas, estado del documento, progreso) |
-| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`) |
-| `latex_app/recursos/marca.svg` | el icono del lanzador: la única marca del studio |
-| `ejemplo/` | el documento de ejemplo (`articulo.tex`, `referencias.bib`, `con-error.tex`) de las capturas y las pruebas; se compila siempre en una carpeta temporal |
-| `capturar.py` | las capturas de la documentación sobre el ejemplo compilado en un temporal |
+| `latex_app/aplicacion.py` | arma la aplicación: controladores, acciones (menú, barra de compilación, paleta, atajos: cada operación una sola vez), `Escritorio` y `latex_app/qml/Main.qml` |
+| `latex_app/proyectos.py` | la detección (sin Qt): principal, inclusiones, `.bib`, motor, compilador, categoría, estado del disco; caché |
+| `latex_app/estructura.py` | estructura, etiquetas, claves de los `.bib`, definiciones y autocompletado (sin Qt) |
+| `latex_app/diagnostico.py` | errores presentables (causa y acción) y la revisión de dependencias con `kpsewhich` (sin Qt) |
+| `latex_app/visor.py` | páginas con `pdftoppm` en una caché acotada y SyncTeX (sin Qt) |
+| `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
+| `latex_app/escritorio.py` | abrir con su aplicación, mostrar en Dolphin, abrir carpeta (lo sustituirá `gui-comun` 3.0) |
+| `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
+| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `EditorArchivo`, `BarraBusqueda`, `VisorPdf`, `ListaProblemas`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `ResaltadoEditor`) |
+| `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
+| `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales |
 
 ## Uso
 
 ```bash
-/usr/bin/python3 studio/main.py [documento.tex]       # desde latex-studio/, en la sesión real
+/usr/bin/python3 studio/main.py [documento.tex]       # desde latex-studio/, en la sesión real (un .tex abre su proyecto)
 QT_QPA_PLATFORM=offscreen /usr/bin/python3 studio/main.py --smoke     # construye la interfaz y sale
 ../install.sh                                         # acceso directo en el menú (con -n, simula)
-/usr/bin/python3 studio/capturar.py docs/figuras/latex-studio-oscuro.png --esquema <LliphiOscuro.colors> --pestana 2
-tests/run.sh                                          # desde latex-studio/: el ejemplo compilado en un temporal, cada QML y --smoke
+/usr/bin/python3 studio/capturar.py docs/figuras/latex-studio-oscuro.png --esquema <LliphiOscuro.colors> --vista escritura --archivo capitulos/metodo.tex --linea 4 --synctex
+tests/run.sh                                          # desde latex-studio/: la muestra compilada en un temporal, cada QML y --smoke
 ```
 
 ## Límite honesto
 
-- **El editor en la línea** usa Kate o KWrite (`--line`) o VS Code (`-g`), el que esté (Ajustes); sin ellos abre el `.tex` con la
-  aplicación por omisión.
-- **Recompilar al guardar** vigila solo el `.tex` principal, no los `\input` ni la bibliografía.
-- **La tabla lista los `.tex` de la carpeta, sin subcarpetas**; un documento de otra carpeta se abre con Ctrl+O.
-- **El estado se lee del disco**: con `--draft` no hay PDF y el documento figura «sin compilar» aunque compile.
+- **Visor sin QtPdf**: las páginas son imágenes de `pdftoppm` (sin selección de texto ni enlaces del PDF); con
+  `sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf` se podría pasar a `PdfMultiPageView`.
+- **SyncTeX necesita el `.synctex.gz`**: `main.sh -k` y latexmk lo dejan; el compilador de `escritura`
+  (`<marco>/scripts/build.sh`) no pasa `-synctex=1` y sus proyectos no lo tienen hasta que ese marco lo añada.
+- **El editor es un `TextArea`**: sin plegado, sin multicursor, sin corrector ortográfico; el autocompletado es por
+  contexto (no conoce los argumentos de cada orden).
+- **Los diálogos de archivos y carpetas** son los de KDE cuando la aplicación es una `QApplication` (`gui-comun` 3.0); con
+  2.x se ve el diálogo de Qt Quick.
+- **«Salir» con cambios sin guardar** pregunta (Ctrl+Q y cerrar la ventana); matar el proceso no.

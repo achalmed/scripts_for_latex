@@ -1,4 +1,8 @@
-# Proyectos de muestra de LaTeX Studio
+---
+tipo: readme
+estado: activo
+---
+# proyectos/ — los proyectos LaTeX de muestra de las pruebas y las capturas de LaTeX Studio
 
 Árbol propio para las pruebas de detección y compilación y para las capturas (nunca documentos reales): se copia a una
 carpeta temporal y se compila allí.
@@ -9,4 +13,4 @@ carpeta temporal y se compila allí.
 | `articulo-bibtex/` | `% !TEX program` y `% !BIB program = bibtex`, `\bibliography` |
 | `con-error/` | un documento que no compila (orden no definida) |
 | `con-latexmkrc/` | un `latexmkrc` con `$pdf_mode = 4`: se compila con latexmk |
-| `marco/` | un marco con compilador propio (`scripts/build.sh`, `classes/`): sus documentos se compilan con él; `pruebas/` es «Pruebas y plantillas» |
+| `marco/` | un marco con compilador propio (`marco/scripts/build.sh`, `marco/classes/`): sus documentos se compilan con él; `pruebas/` es «Pruebas y plantillas» |

@@ -9,6 +9,7 @@ actualizado: 2026-11-02
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-02 | **Reingeniería: LaTeX Studio 3.0, entorno de escritura científica** (rama `wip/2026-11-02-reingenieria`, worktree `~/.cache/reingenieria/latex-studio`, sin fusionar ni empujar): proyectos detectados en las carpetas de trabajo (`WRITING_DIR`, `DESPACHO_DIR` y las del usuario; caché; categorías solo con información), cada uno compilado con su compilador y su motor (marco, latexmk, `main.sh -k`), en cola; editor con resaltado, estructura, autocompletado de `\ref`/`\cite`, buscar y reemplazar con regex; PDF integrado con `pdftoppm` y SyncTeX; errores con causa y acción; revisión de dependencias. CLI: `-k` y `CORE_DIR`. 73 pruebas | `docs/reingenieria.md`; `docs/figuras/`; `tests/run.sh` |
 | 2026-11-02 | Fase 5 dada por buena (el autor delegó la decisión al director con las pruebas en verde y las capturas): `wip/2026-11-02-qml` fusionada en `main` y retirada; `docs/rediseno.md` a `hecho`; `gui-comun` 2.3.0 en `main` y en su remoto con `v2.3.0` | `git log` |
 | 2026-11-02 | **LaTeX Studio en QML + Kirigami sobre `gui-comun` 2.3** (fase 5 de la modernización de la familia; rama `wip/2026-11-02-qml`, sin fusionar): `docs/rediseno.md` (auditoría, ocho preguntas, arquitectura de información, decisiones L1–L10, lo construido con capturas), `studio/` reescrito (tres vistas sobre un documento actual; la tabla de la carpeta con el estado leído del disco; F5 compila, Mayús+F5 simula, Ctrl+B con Biber, Limpiar muestra la lista y confirma; Problemas con «ir a la línea», Registro íntegro, Salidas; recompilar al guardar; solo LuaLaTeX en la ventana; `/usr/bin/python3`), 30 pruebas en `tests/run.sh` sobre `studio/ejemplo/` compilado en un temporal, tres capturas reales, el lanzador del menú reinstalado con `install.sh`. En `gui-comun`, 2.3.0 (`ListaDiagnosticos`; `Tareas.proceso(progreso_de=)`; rama `wip/2026-11-02-qml-latex`, etiqueta local) | `tests/run.sh`; `docs/figuras/latex-studio-*.png`; `/usr/bin/python3 studio/main.py` |
 | 2026-10-31 | **LaTeX Studio**: la carpeta pasa a `latex-studio` (remoto `scripts_for_latex` intacto) y la herramienta gana ventana con el marco común de los studios: opciones, errores del `.log` con su línea, recompilar al guardar, historial | `docs/decisiones.md` §1.6; `python3 -m pytest -q tests` |
@@ -24,19 +25,27 @@ nada en curso
 
 ## Por hacer
 
-- 2026-11-02 · dueño: director · **no empujar `main` todavía**: las capturas de `docs/figuras/latex-studio-*.png` muestran la
-  ruta de la caché con la carpeta de inicio de la máquina (regla «repo público» de `CLAUDE.md`); `studio/capturar.py` debe
-  correr con un `HOME` y una `XDG_CACHE_HOME` temporales (o acortar la ruta en la ventana) y regenerarlas antes del `push`.
-- 2026-11-02 · dueño: **el autor** · usar LaTeX Studio en la sesión real (`/usr/bin/python3 ~/Documents/latex-studio/studio/main.py`:
-  abrir una carpeta de `escritura`, elegir un `.tex`, F5, leer Problemas e ir a una línea con Intro, Mayús+F5, Limpiar
-  auxiliares…, Recientes, Compilaciones, la paleta, claro y oscuro); lo que no convenza se anota aquí y se corrige en
-  `main` o vuelve a `gui-comun`.
-- 2026-11-02 · dueño: director · lo que quedó fuera de la ventana: la tabla no entra en subcarpetas (un documento de otra
-  carpeta se abre con Ctrl+O); «Recompilar al guardar» vigila solo el `.tex` principal (no los `\input` ni el `.bib`);
-  el modo watch de la CLI (`-w`) sigue sin ofrecerse (necesita `inotifywait`); con `--draft` el documento figura «sin
-  compilar» porque el estado se lee del disco y no hay PDF; los errores de Biber se leen solo de sus líneas `ERROR`/`WARN`
-  (no del `.blg`); «Configurar atajos de teclado…» y «Configurar barras…» no existen (como en toda la familia); el
-  registro de cada corrida queda en la caché del studio sin límite de tamaño (uno por documento, se reemplaza).
+- 2026-11-02 · dueño: director · fusionar `wip/2026-11-02-reingenieria` en `main` (en local; nada se empuja). Cuando
+  `gui-comun` 3.0 esté en `main`: sustituir `studio/latex_app/escritorio.py` por las funciones de la base (mismos
+  nombres), comprobar en la sesión real (Wayland) que «Abrir un .tex…» y «Añadir una carpeta de trabajo…» muestran el
+  diálogo de KDE, y valorar pasar de `VentanaStudio` a la ventana sin plantilla. Las 31 pruebas de ventana y
+  controladores ya pasan contra la base del worktree.
+- 2026-11-02 · dueño: **el autor** · mejora del visor: `sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`
+  permitiría cambiar las páginas de `pdftoppm` por `PdfMultiPageView` (selección de texto, enlaces, búsqueda en el PDF).
+- 2026-11-02 · dueño: **el autor** (repo `escritura`) · SyncTeX en los proyectos de `escritura`: su `scripts/build.sh`
+  no pasa `-synctex=1` (`CFG_TEX_FLAGS` de `scripts/config.sh`); con esa bandera, LaTeX Studio iría del código al PDF
+  y vuelta también en ellos (el `.synctex.gz` quedaría en `.build/`, que la ventana ya busca).
+- 2026-11-02 · dueño: **el autor** · usar LaTeX Studio 3.0 en la sesión real (`/usr/bin/python3 ~/Documents/latex-studio/studio/main.py`
+  tras la fusión): la página de proyectos sobre `escritura` y el despacho, abrir un proyecto, editar y guardar, F5,
+  SyncTeX en un proyecto de `main.sh` o latexmk, F8, Ctrl+Mayús+D, la cola; lo que no convenza se anota aquí.
+- 2026-11-02 · dueño: director · las capturas de la 2.0 (ahora en `docs/figuras/antes/`) muestran la ruta de la caché
+  con la carpeta de inicio de la máquina; las de la 3.0 (`docs/figuras/latex-studio-*.png`) ya se hacen con `HOME` y
+  `XDG_CACHE_HOME` temporales. Antes de empujar, decidir si las de `antes/` se quedan (historia) o se recortan.
+- 2026-11-02 · dueño: director · lo que quedó fuera de la 3.0 (`docs/reingenieria.md` §6): el editor no pliega ni tiene
+  multicursor ni corrector; el autocompletado no conoce los argumentos de cada orden; el modo watch de la CLI (`-w`)
+  sigue sin ofrecerse (necesita `inotifywait`; la ventana compila al guardar si se marca); los errores de Biber se leen
+  de sus líneas `ERROR`/`WARN` (no del `.blg`); el registro de cada corrida de `main.sh` queda en la caché del studio
+  (uno por proyecto, se reemplaza); la caché de páginas del visor se poda a 200 MB.
 - 2026-11-02 · dueño: director · el validador avisa en `docs/rediseno.md` (RQ-DOC-08: la cifra de líneas de la ventana
   de 1.x en §1) y de siempre en `script_compilar_latex/` (RQ-IDN-03, abajo).
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el

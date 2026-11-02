@@ -11,7 +11,7 @@ Encargo del autor del 2026-11-02 (§3.5 de la instrucción maestra de la reingen
 LaTeX Studio deja de ser «la tabla de los `.tex` de una carpeta» y pasa a ser el entorno predeterminado para escribir,
 compilar y revisar los proyectos LaTeX del autor, con la arquitectura de su disciplina. Este documento es el diagnóstico
 de la ventana 2.0 (la de la fase 5, `docs/rediseno.md`), la justificación de la nueva distribución y las decisiones R1–R16
-que la siguen. Lo construido y lo que quedó fuera está en §6 y en `estado.md`.
+que la siguen. Lo construido está en §5 y lo que quedó fuera en §6 y en `estado.md`.
 
 ## 1. Diagnóstico de la ventana 2.0 (leído en el código, `respaldo/antes-reingenieria-2026-11-02`)
 
@@ -21,8 +21,8 @@ Capturas de antes: `docs/figuras/antes/latex-studio-{oscuro,claro,paleta}.png`.
 
 | función | dónde | qué hace de verdad |
 |---|---|---|
-| Carpeta de trabajo | `controladores/espacio.py` | una sola carpeta (QSettings); la tabla lista sus `.tex` **sin entrar en subcarpetas** (`compilador.documentos_en`) |
-| Tabla de documentos | `controladores/documentos.py`, `Main.qml` | una fila por `.tex` con `\documentclass` o sin él: un capítulo `\input` sale como «documento» aparte; estado leído del disco (PDF frente al `.tex`, el `.log`) |
+| Carpeta de trabajo | `espacio.py` (retirado) | una sola carpeta (QSettings); la tabla lista sus `.tex` **sin entrar en subcarpetas** (`compilador.documentos_en`) |
+| Tabla de documentos | `documentos.py` (retirado), `Main.qml` | una fila por `.tex` con `\documentclass` o sin él: un capítulo `\input` sale como «documento» aparte; estado leído del disco (PDF frente al `.tex`, el `.log`) |
 | Recientes, Compilaciones | `historial.py` | listas en QSettings (12 y 60) |
 | Compilar (F5), con Biber (Ctrl+B), Simular (Mayús+F5) | `corrida.py`, `compilador.Opciones.orden` | `main.sh` con las opciones **de la sesión** (motor `auto`/`lualatex`, pasadas, bibliografía): las mismas para todos los documentos, no las del proyecto |
 | Limpiar auxiliares… | `corrida.limpiar` | `main.sh -c` tras mostrar la lista y confirmar (correcto) |
@@ -36,10 +36,10 @@ Capturas de antes: `docs/figuras/antes/latex-studio-{oscuro,claro,paleta}.png`.
 ### 1.2 Lo incompleto, lo ficticio y lo que no se comporta
 
 - **No hay proyectos**: un `.tex` es una fila. `escritura` tiene 428 `.tex` con `\documentclass` y muchos más
-  capítulos; los capítulos (`content/01-ficha.tex`) aparecerían como documentos que no compilan solos.
+  capítulos; los capítulos (los `content/NN-*.tex` de cada informe) aparecerían como documentos que no compilan solos.
 - **El motor no es el del proyecto**: las opciones de la sesión mandan sobre todos. Un proyecto de `escritura` (clase
-  `informe`, `tesis`…) **no compila** con `main.sh`: su clase vive en `escritura/classes/` y solo `escritura/scripts/build.sh`
-  pone `TEXINPUTS` y deja los auxiliares en `.build/` (decisión §1.2: «los frameworks compilan con su propio build»).
+  `informe`, `tesis`…) **no compila** con `main.sh`: su clase vive en `escritura/classes/` y solo `<marco>/scripts/build.sh` de `escritura`
+  pone `TEXINPUTS` y deja los auxiliares en `<proyecto>/.build/` (decisión §1.2: «los frameworks compilan con su propio build»).
   La ventana 2.0 compila esos maestros con `main.sh` y el resultado es «File `informe.cls' not found».
 - **`latexmkrc`, `% !TEX root`, `% !BIB program`, arara** no se leen; solo `% !TEX program` en las 5 primeras líneas.
 - **No edita**: «Ir a la línea» y «Abrir en el editor» delegan en Kate; no hay resaltado, estructura, autocompletado,
@@ -123,8 +123,8 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   (`$pdf_mode`) → sin declaración, LuaLaTeX. Bibliografía: `% !BIB program` → `backend=` de biblatex → `\bibliography`
   sin biblatex (BibTeX) → biblatex (Biber). La ventana no ofrece pdfLaTeX ni XeLaTeX para un proyecto que no los declare.
 - **R5. El compilador es el del proyecto.** (a) Si una carpeta superior tiene el compilador de su marco
-  (`scripts/build.sh`) y la clase del documento vive en su `classes/`, se compila con él (es `escritura`: decisión
-  §1.2; sus auxiliares van a `.build/`). (b) Con `latexmkrc`, `latexmk` (que lo lee). (c) Si no, `main.sh` con el motor y
+  (`<marco>/scripts/build.sh`) y la clase del documento vive en su `classes/`, se compila con él (es `escritura`: decisión
+  §1.2; sus auxiliares van a `<proyecto>/.build/`). (b) Con `latexmkrc`, `latexmk` (que lo lee). (c) Si no, `main.sh` con el motor y
   la bibliografía detectados. Nunca se elige otro motor que el del proyecto.
 - **R6. Categorías solo con información.** `pruebas`/`plantillas` en la ruta → «Pruebas y plantillas»; `proyecto.yaml`
   (`tipo`, `esquema`, `tema`) → Tesis, Artículos, Documentos legislativos o Escritura académica; la clase (`tesis`,
@@ -140,7 +140,7 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
 - **R9. Errores presentables.** Cada problema lleva descripción, archivo y línea, **causa probable y acción
   recomendada** (paquete o clase que falta → `kpsewhich`/marco; referencia o cita indefinida; Biber sin `.bcf`; orden no
   definida; `$` que falta; entorno sin cerrar; archivo `\input` que no existe; recursión de `\input`), y el detalle
-  técnico (las líneas del registro) desplegable. La regla está en `latex_app/diagnostico.py`, sin Qt, probada.
+  técnico (las líneas del registro) desplegable. La regla está en `studio/latex_app/diagnostico.py`, sin Qt, probada.
 - **R10. Visor PDF propio.** Páginas con `pdftoppm` (PNG a la resolución del zoom, por demanda); miniaturas a baja
   resolución; zoom, ajuste al ancho, recarga al recompilar conservando la página; SyncTeX `view` (código → PDF,
   Ctrl+clic o Ctrl+Alt+J) y `edit` (PDF → código, doble clic). Con QtPdf instalado
@@ -156,7 +156,7 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   Ctrl+T comentar, F8 siguiente problema, Ctrl+1/Ctrl+2 proyectos/escritura, Ctrl+K paleta (no choca).
 - **R14. KDE**: abrir el PDF con su aplicación (`xdg-open`), mostrar en Dolphin señalándolo (`dolphin --select`; sin
   Dolphin, la carpeta con `xdg-open`), abrir carpeta (`xdg-open`); elegir carpetas con `FolderDialog` (con la
-  `QApplication` de `gui-comun` 3.0 es el de KDE). Las tres operaciones viven en `latex_app/escritorio.py` hasta que
+  `QApplication` de `gui-comun` 3.0 es el de KDE). Las tres operaciones viven en `studio/latex_app/escritorio.py` hasta que
   `gui-comun` 3.0 las traiga; entonces se sustituyen.
 - **R15. Cola de compilación.** Varios proyectos marcados en la página de proyectos se compilan uno tras otro, cada uno
   con su compilador; la cola se ve y se cancela.
@@ -167,4 +167,47 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
 ## 4. Lo que queda para `gui-comun` 3.0
 
 `QApplication` (los diálogos de KDE), las tres funciones de escritorio de R14, el componente de errores presentables
-(aquí `componentes/ErrorPresentable.qml`) y una ventana sin plantilla. Se anotan en `registro.md` («Para promover»).
+(aquí `studio/latex_app/qml/componentes/ListaProblemas.qml`) y una ventana sin plantilla. Se anotan en `registro.md` («Para promover»).
+
+## 5. Lo construido
+
+| antes (2.0) | después (3.0) |
+|---|---|
+| ![2.0 oscuro](figuras/antes/latex-studio-oscuro.png) | ![3.0 Escritura, Lliphi Oscuro](figuras/latex-studio-oscuro.png) |
+| ![2.0 claro](figuras/antes/latex-studio-claro.png) | ![3.0 Proyectos, Lliphi Claro](figuras/latex-studio-claro.png) |
+
+Capturas reales (`studio/capturar.py`) sobre `studio/ejemplo/proyectos/` compilado de verdad, con `HOME`,
+`XDG_CACHE_HOME`, `WRITING_DIR` y `DESPACHO_DIR` temporales. Arriba a la derecha, la vista Escritura: el capítulo
+`metodo.tex` del proyecto multiarchivo en el editor, su PDF a la derecha con la marca de SyncTeX sobre la línea 4, el
+aviso de biblatex en Problemas. Abajo, la página de proyectos con la ficha de la tesis y la cola que compiló los cinco
+proyectos de la muestra con su compilador (uno del marco, uno con latexmk, tres con `main.sh`; el que tiene un error,
+fallido). Además: `figuras/latex-studio-problemas.png` (un error explicado: «Orden no definida», causa, acción, el detalle
+técnico desplegable) y `figuras/latex-studio-paleta.png` (la paleta de órdenes).
+
+| pieza | dónde | pruebas |
+|---|---|---|
+| detección (R1–R6), caché | `studio/latex_app/proyectos.py` | `tests/test_proyectos.py` (muestra, profundidad, carpetas saltadas, `% !TEX root`, `subfiles`, caché, cancelación, estado) |
+| estructura, etiquetas, claves, autocompletado (R12) | `studio/latex_app/estructura.py` | ídem |
+| errores presentables y dependencias (R9, R16) | `studio/latex_app/diagnostico.py` | ídem (siete mensajes típicos; uno desconocido no inventa causa; `kpsewhich` real) |
+| recetas por compilador (R5, R8) | `studio/latex_app/compilador.py` (`receta`), CLI `-k` | ídem, compilación real: Biber, BibTeX con comentario mágico, latexmk, el marco de muestra, el que falla |
+| visor y SyncTeX (R10, R11) | `studio/latex_app/visor.py`, `studio/latex_app/controladores/visor.py`, `studio/latex_app/qml/componentes/VisorPdf.qml` | `pdftoppm` y poda de la caché reales; SyncTeX ida y vuelta real sobre la tesis de muestra |
+| controladores | `studio/latex_app/controladores/{ajustes,proyectos,editor,compilacion,visor}.py` | `tests/test_controladores.py` (carpetas de trabajo, detección en tarea, abrir un capítulo, guardar solo con orden y cambio externo, CRLF, compilar y ver, F8, cola, limpiar sin tocar fuentes, dependencias) |
+| ventana | `studio/latex_app/qml/Main.qml`, `studio/latex_app/qml/componentes/*` | `tests/test_studio.py` (la ventana con un proyecto abierto, cada componente, `--smoke`, sin colores propios ni marca ni QtWidgets) |
+
+Rendimiento medido sobre `escritura` (solo lectura, sin compilar): 428 proyectos (de 1668 `.tex`) en 2,2 s la primera
+vez y 0,4 s con la caché; abrir la tesis más grande, con su estructura y su bibliografía, 0,2 s. Las mismas 31
+pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su worktree (`PYTHONPATH` a esa base).
+
+## 6. Lo que quedó fuera
+
+- **SyncTeX en los proyectos de `escritura`**: su `<marco>/scripts/build.sh` no pasa `-synctex=1`; añadirlo es cambio de ese
+  repo (una línea en `CFG_TEX_FLAGS` de su `config.sh`), no de este.
+- **QtPdf** (`sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`): selección de texto y enlaces del PDF.
+- **Los diálogos de KDE y las funciones de escritorio de `gui-comun` 3.0**: cuando la base esté en `main`, `escritorio.py`
+  se sustituye por `gui_comun` (mismos nombres: `abrirConAplicacion`, `mostrarEnDolphin`, `abrirCarpeta`) y la ventana
+  puede pasar de `VentanaStudio` a la ventana sin plantilla; hoy la distribución propia vive dentro de las ranuras.
+- **Editor**: sin plegado, multicursor ni corrector ortográfico; el autocompletado no conoce los argumentos de cada
+  orden. **Problemas de Biber** se leen de sus líneas `ERROR`/`WARN` del registro, no del `.blg`.
+- **Proyectos del despacho**: la detección los encuentra en la máquina del autor; ninguna prueba ni captura los usó.
+  Si sus clases viven en el marco documental y no está instalado en TeX Live, se compilan añadiendo su carpeta en
+  Ajustes › Compilación › Rutas de TeX (o con el build de ese marco, si se declara como el de `escritura`).

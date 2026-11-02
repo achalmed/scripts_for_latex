@@ -63,6 +63,27 @@ declare); el registro de cada corrida (`--log`) se guarda por documento en la ca
 el estado; el studio corre con `/usr/bin/python3` y la CLI y su contrato con `docencia` no cambian. Lo que el marco
 necesitó (`ListaDiagnosticos`; `Tareas.proceso(progreso_de=)`) subió a `gui-comun` 2.3.0.
 
+### §1.8 Reingeniería: entorno de escritura científica sobre proyectos detectados (2026-11-02)
+
+Encargo del autor del 2026-11-02 (la ventana debe reconocerse como un entorno de escritura científica, no como una
+lista de archivos) y decisiones del director de la reingeniería. Diagnóstico, referencias (TeXstudio, TeXmaker, VS Code
+con LaTeX Workshop, Overleaf) y las decisiones R1–R16 en `reingenieria.md`; lo esencial: un proyecto es un documento
+principal con lo que incluye (R1), detectado en carpetas de trabajo configurables (por omisión `WRITING_DIR` y
+`DESPACHO_DIR` de `core/env.py`; la lista del usuario va a sus ajustes, nunca al repo, R2); cada proyecto se compila
+con su compilador (el `<marco>/scripts/build.sh` de su marco, latexmk si tiene `latexmkrc`, o `main.sh`) y con el motor que
+declare o LuaLaTeX + Biber (R4, R5); editor integrado, PDF integrado con `pdftoppm` y SyncTeX (QtPdf no está
+instalado, R10) y errores con causa y acción (R9). Supera §1.7 en la distribución; la ventana 2.0 queda en
+`rediseno.md` y en `docs/figuras/antes/`. §1.2 sigue en pie: la ventana compila un proyecto de un marco **con el build
+del marco**, nunca con `main.sh`. §1.4 vale para la CLI: la ventana usa latexmk solo para el proyecto que lo pide con
+su `latexmkrc`.
+
+### §1.9 La CLI gana `-k` (`--conservar`) y lee `CORE_DIR` (2026-11-02)
+
+`-k` no borra los auxiliares al terminar bien: SyncTeX necesita el `.synctex.gz`, el autocompletado de `\ref` lee el
+`.aux` y las pasadas siguientes van más rápido. Sin `-k` todo sigue igual (contrato con `docencia`). El logger busca
+`core/` subiendo carpetas como siempre y, si no lo encuentra (un worktree fuera de `~/Documents`, una copia de
+pruebas), usa `CORE_DIR` de `core/env.sh` si está exportada.
+
 ## 2. Motor
 
 ### §2.1 LuaLaTeX + Biber es el motor normativo (2026-09-20)

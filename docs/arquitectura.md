@@ -128,5 +128,6 @@ cambiar la interfaz de estos consumidores: se mira allí antes y se anota en `de
 | `docencia` · `docencia/scripts/doctor.sh` | comprueba que la ruta de `compilador` es ejecutable | la ruta de `main.sh` |
 | alias `compilar` (`~/.dotfiles/shell/.zshrc`) | apunta a `main.sh` | la ruta de `main.sh` |
 | `core/env.sh`, `core/env.py` | exportan `SCRIPTS_LATEX` con la raíz del repo | el nombre de la carpeta; la lee `docencia/scripts/lib/common.sh` |
+| LaTeX Studio (`studio/latex_app/compilador.py`, `receta`) | `bash main.sh -k -e <motor del proyecto> [--biber\|-b] [-i] [-g] --log <caché> <ruta.tex>` para los proyectos que no tienen el compilador de un marco ni `latexmkrc`; `-c`, `-n` y `--draft` | `-k` (decisiones §1.9), `--log`, la línea «Pasada n/N» para el progreso, los códigos de salida |
 
 Ningún otro framework pasa por aquí (`../README.md` §Qué es).

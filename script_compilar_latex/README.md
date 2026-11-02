@@ -91,6 +91,7 @@ absoluta o una carpeta inexistente la lista no sale (`../estado.md` §Por hacer,
 | `-a, --abrir` | abre el PDF con el primer visor disponible | — |
 | `--log FILE` | copia de la salida de la corrida en `FILE`; con una ruta relativa, ver `../estado.md` §Por hacer (P14). `FILE` no debe ser `<nombre>.log` en la carpeta del `.tex`: la limpieza lo borraría | sin copia: la salida va a un temporal que se borra al salir, y el `.log` del motor se borra al terminar bien |
 | `-c, --limpiar` | solo borra auxiliares y sale | — |
+| `-k, --conservar` | no borra los auxiliares al terminar bien (SyncTeX, `.aux`); LaTeX Studio lo usa siempre | se borran |
 | `-n, --dry-run` | simula: imprime las órdenes que ejecutaría (con `-c`, los auxiliares que borraría) y sale con 0 sin escribir nada | — |
 | `-w, --watch` | compila y vuelve a compilar al guardar un `.tex`, `.bib`, `.sty` o `.cls` | — |
 | `-h, --help` · `--version` | ayuda · versión | — |
@@ -114,8 +115,7 @@ herramienta están en `../README.md` §Límite honesto.
 
 ## Qué borra la limpieza
 
-Al terminar bien (y con `-c`), en la carpeta del `.tex`; en modo `-w` no se limpia nunca: los auxiliares
-se quedan entre recompilaciones hasta un `-c`:
+Al terminar bien (salvo con `-k`) y con `-c`, en la carpeta del `.tex`; con `-w` no se limpia hasta un `-c`:
 
 - `<nombre>.<ext>` para cada extensión de `EXTENSIONES_AUXILIARES` en `config.sh` (`aux`, `bbl`,
   `bcf`, `blg`, `log`, `toc`, `synctex.gz`, `run.xml`…; la lista completa la da `--help`), y
