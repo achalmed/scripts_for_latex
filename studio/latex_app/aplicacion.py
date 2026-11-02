@@ -143,7 +143,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     sistema = Sistema(ajustes, consola)
     escritorio = app.escritorio                 # gui-comun 3.0: abrir con su aplicación, mostrar en Dolphin, abrir carpeta
     acciones = Acciones()
-    acciones.estandar(NOMBRE)
+    # Ctrl+Q es de «Salir» del menú Archivo (pregunta si hay cambios sin guardar): la estándar app.salir lo cede, porque
+    # un atajo en dos acciones es ambiguo y Qt no ejecuta ninguna (prueba en la sesión real, 2026-11-02)
+    acciones.estandar(NOMBRE, atajos={"app.salir": ""})
     pedir = lambda que, **datos: (lambda *_: interfaz.pedir.emit(que, datos))
 
     def objetivo() -> str:
