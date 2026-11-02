@@ -1,8 +1,10 @@
-// Main.qml — LaTeX Studio: los documentos .tex de una carpeta, su estado y su compilación en un espacio de trabajo al
-// estilo Dolphin/Kate sobre GuiComun.VentanaStudio. Navegación (Carpeta de trabajo · Recientes · Compilaciones · las
-// carpetas recientes) · centro (la tabla de documentos o la del historial) · detalles del documento actual (Resumen ·
-// Opciones · Problemas · Registro · Salidas) · panel inferior (la salida de main.sh; Registro) · barra de estado. Ninguna
-// llamada al disco ni a main.sh aquí: todo lo hacen los controladores de Python (studio.*).
+// Main.qml — LaTeX Studio (reingeniería del 2026-11-02, docs/reingenieria.md): un entorno de escritura científica,
+// no una lista de archivos. Dos vistas sobre la misma ventana:
+// · Proyectos (Ctrl+1): las categorías a la izquierda; los proyectos detectados con su estado y la ficha del actual;
+// · Escritura (Ctrl+2): archivos, estructura y bibliografía del proyecto a la izquierda; el editor en el centro; el PDF
+//   integrado a la derecha (F7); abajo, plegables (F4), Problemas explicados, el Registro, la Cola y la salida.
+// La barra de arriba es la de compilación (F5/Ctrl+B compilar, Detener, F6 reconstruir, guardar, buscar, SyncTeX, PDF).
+// Ninguna llamada al disco ni a un compilador aquí: lo hacen los controladores de Python (studio.*).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -14,256 +16,237 @@ import "componentes"
 VentanaStudio {
     id: ventana
 
-    readonly property var espacio: studio.espacio
     readonly property var registro: studio.acciones
-    readonly property var docs: studio.documentos
-    readonly property string vista: espacio.vista
-    readonly property int indice: espacio.indiceVista
+    readonly property var p: studio.proyectos
+    readonly property string vista: studio.interfaz.vista
+    property bool permitirCierre: false
 
-    title: espacio.nombreCarpeta + " — LaTeX Studio"
+    title: (vista === "escritura" && p.hayAbierto ? p.nombreAbierto : "Proyectos") + " — LaTeX Studio"
     acciones: registro
     tareas: studio.tareas
     consola: studio.consola
     descripcion: descripcionStudio
     autor: "Edison Achalma (@achalmed)"
-    resumen: espacio.resumen
-    contexto: espacio.contexto
-    claveAjustes: "ventana"
+    resumen: p.enDeteccion ? "buscando proyectos…" : p.total + " proyecto" + (p.total === 1 ? "" : "s")
+    contexto: p.hayAbierto ? p.abierto.texto_motor + " · " + p.abierto.estado : ""
+    claveAjustes: "ventana-3"
+    mostrarDetalles: false
 
     function accion(nombre) { return registro.accion(nombre) }
-    function tablaActual() { return centro.children[ventana.indice] }
-    function irAPestana(i) { ventana.mostrarDetalles = true; detalles.pestanaActual = i }
-    function religarNavegacion() { navegacion.actual = Qt.binding(() => ventana.vista) }
-    function seleccionarDocumento(ruta) {
-        const fila = docs.filaDe(ruta)
-        if (fila >= 0 && ventana.vista === "carpeta") tablaCarpeta.seleccionarFila(fila, true)
+    function editor() { return espacio.editorActual }
+    function abrirProyecto(ruta) {
+        if (!ruta) return
+        const e = p.abrir(ruta)
+        if (e) { ventana.mensajes.mostrar(e, "error"); return }
+        studio.interfaz.fijarVista("escritura")
+        espacio.abrir(p.principal, 0)
+    }
+    function irA(archivo, linea) {
+        if (!archivo) return
+        studio.interfaz.fijarVista("escritura")
+        espacio.abrir(archivo, linea)
+    }
+    function insertar(texto) {
+        const e = editor()
+        if (!e) return
+        e.area.insert(e.area.cursorPosition, texto)
+        e.area.forceActiveFocus()
+    }
+    function mostrarPanel(indice) { ventana.mostrarInferior = true; panelInferior.mostrarExtra(indice) }
+
+    onClosing: close => {
+        if (studio.editor.hayModificados && !permitirCierre) { close.accepted = false; dialogoSalir.open() }
     }
 
     // ------------------------------------------------------------------ lo que Python pide a la interfaz
     Connections {
         target: studio.interfaz
         function onPedir(nombre, datos) {
+            const e = ventana.editor()
             switch (nombre) {
-            case "abrir_tex": selectorTex.currentFolder = "file://" + espacio.carpeta; selectorTex.open(); break
-            case "carpeta": selectorCarpeta.currentFolder = "file://" + espacio.carpeta; selectorCarpeta.open(); break
-            case "filtrar": filtro.forceActiveFocus(); filtro.selectAll(); break
-            case "seleccionar_todo": { const t = tablaActual(); if (t && t.seleccionarTodo) t.seleccionarTodo(); break }
-            case "seleccionar_fila": if (datos.fila >= 0) tablaCarpeta.seleccionarFila(datos.fila, true); break
+            case "abrir_tex": selectorTex.open(); break
+            case "carpetas": if (ventana.dialogoAjustes) { ventana.dialogoAjustes.moduloActual = 0; ventana.dialogoAjustes.open() } break
+            case "anadir_carpeta": selectorCarpeta.open(); break
+            case "abrir_proyecto": ventana.abrirProyecto(datos.ruta); break
+            case "ir_a": ventana.irA(datos.archivo, datos.linea || 0); break
+            case "seleccionar_proyecto": studio.interfaz.fijarVista("proyectos"); paginaProyectos.seleccionar(datos.fila); break
+            case "guardar": espacio.guardar(e, false); break
+            case "guardar_todo": espacio.guardarTodo(); break
+            case "cerrar_archivo": espacio.cerrarActual(); break
+            case "cerrar_proyecto": cerrarProyecto(); break
+            case "editor_externo": if (e) studio.escritorio.abrirEnEditorExterno(e.ruta, e.lineaActual); break
+            case "buscar": if (e) espacio.buscar(false); break
+            case "reemplazar": if (e) espacio.buscar(true); break
+            case "ir_linea": if (e) { dialogoLinea.maximo = e.inicios.length; dialogoLinea.open() } break
+            case "completar": if (e) e.completar(true); break
+            case "comentar": if (e && !e.soloLectura) e.comentar(); break
+            case "alternar_pdf": espacio.mostrarPdf = !espacio.mostrarPdf; ventana.registro.marcar("ver.pdf", espacio.mostrarPdf); break
+            case "compilar_marcados": studio.interfaz.fijarVista("proyectos"); paginaProyectos.compilarMarcados(); break
             case "limpiar": dialogoLimpiar.abrir(); break
-            case "ir_a_linea": docs.irA(paginaProblemas.filaActual); break
-            case "historial_quitar": studio.historial.quitar(tablaHistorial.filaActual); break
-            case "historial_vaciar": dialogoVaciar.open(); break
-            case "pestana": irAPestana(datos.indice); break
-            case "paleta": ventana.paleta.abrir(datos.texto || ""); break
+            case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
+            case "atajos": dialogoAtajos.open(); break
+            case "salir": ventana.close(); break
             }
         }
     }
-    Connections { target: espacio; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
-    Connections { target: docs; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
-    Connections {
-        target: studio.corrida
-        function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) }
-        function onTerminada(ruta, ok) {
-            if (studio.corrida.que === "simular") return
-            seleccionarDocumento(ruta)
-            if (docs.actual === ruta) irAPestana(docs.nProblemas > 0 ? 2 : 0)
-        }
+    function cerrarProyecto() {
+        if (studio.editor.hayModificados) { ventana.mensajes.mostrar("Hay archivos con cambios sin guardar: guárdalos (Ctrl+Mayús+S) o ciérralos antes.", "aviso"); return }
+        studio.editor.cerrarTodos()
+        p.cerrar()
+        studio.interfaz.fijarVista("proyectos")
     }
-    Connections { target: espacio; function onVistaCambiada() { filtro.text = ""; religarNavegacion() } function onCarpetaCambiada() { religarNavegacion() } }
-    Connections { target: docs; function onActualCambiado() { if (docs.hayActual) seleccionarDocumento(docs.actual) } }
 
-    // soltar un .tex en la ventana lo abre (como Ctrl+O)
+    Connections { target: studio.compilacion; function onIrA(archivo, linea) { ventana.irA(archivo, linea) } }
+    Connections { target: studio.visor; function onIrACodigo(archivo, linea) { ventana.irA(archivo, linea) } }
+    Connections {
+        target: studio.compilacion
+        function onTerminada(ruta, ok) { if (ruta === p.principal && !ok) ventana.mostrarPanel(0) }
+        function onProblemasCambiados() { if (studio.compilacion.origenRegistro === "revisión de dependencias") ventana.mostrarPanel(0) }
+    }
+    Connections { target: p; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    Connections { target: studio.editor; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    Connections { target: studio.compilacion; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    Connections { target: studio.visor; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    Connections { target: studio.escritorio; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+
+    Shortcut { sequence: "Ctrl+B"; onActivated: if (ventana.accion("compilar.compilar").habilitada) studio.compilacion.compilar() }
+
+    // soltar un .tex en la ventana abre su proyecto
     DropArea {
         anchors.fill: parent
         keys: ["text/uri-list"]
         onDropped: drop => {
             const tex = drop.urls.map(u => u.toString()).filter(u => u.startsWith("file://") && u.toLowerCase().endsWith(".tex"))
-            if (tex.length === 0) { ventana.mensajes.mostrar("Eso no es un .tex: LaTeX Studio compila archivos .tex.", "aviso"); return }
-            const e = docs.abrir(decodeURIComponent(tex[0].substring(7)))
-            if (e) ventana.mensajes.mostrar(e, "error"); else drop.acceptProposedAction()
+            if (tex.length === 0) { ventana.mensajes.mostrar("Eso no es un .tex.", "aviso"); return }
+            ventana.abrirProyecto(decodeURIComponent(tex[0].substring(7)))
+            drop.acceptProposedAction()
         }
     }
 
-    // ------------------------------------------------------------------ barra: la carpeta de trabajo y el filtro
+    // ------------------------------------------------------------------ la barra de compilación: el proyecto abierto
     herramientasExtra: [
-        CampoRuta {
-            id: campoCarpeta
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-            texto: espacio.carpeta
-            titulo: "Carpeta de trabajo"
-            nombreAccesible: "Carpeta de trabajo"
-            onAceptada: t => { const e = espacio.fijarCarpeta(t); if (e) ventana.mensajes.mostrar(e, "error"); else campoTexto.text = espacio.carpeta }
-            Connections { target: espacio; function onCarpetaCambiada() { campoCarpeta.texto = espacio.carpeta } }
-        },
-        BotonAccion { accion: ventana.accion("archivo.subir"); conTexto: false },
-        Kirigami.SearchField {
-            id: filtro
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
-            placeholderText: "Filtrar (Ctrl+F)"
-            onTextChanged: { const t = tablaActual(); if (t && t.modelo && t.modelo.filtrar) t.modelo.filtrar(text) }
-            Keys.onEscapePressed: { text = ""; const t = tablaActual(); if (t) t.forceActiveFocus() }
-            Accessible.name: "Filtrar"
+        RowLayout {
+            spacing: Kirigami.Units.smallSpacing
+            visible: p.hayAbierto
+            Kirigami.Icon { source: p.hayAbierto && p.abierto.icono ? p.abierto.icono.estado : ""; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth }
+            QQC2.Label {
+                text: p.hayAbierto ? p.nombreAbierto : ""
+                elide: Text.ElideMiddle
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+            }
+            QQC2.Label {
+                text: p.hayAbierto ? p.abierto.texto_motor : ""
+                color: Kirigami.Theme.disabledTextColor
+                QQC2.ToolTip.text: p.hayAbierto ? "Motor: " + p.abierto.motor_origen + " · compilador: " + p.abierto.compilador_texto : ""
+                QQC2.ToolTip.visible: zonaMotor.hovered
+                HoverHandler { id: zonaMotor }
+            }
         }
     ]
 
-    // ------------------------------------------------------------------ navegación
-    navegacion: PanelNavegacion {
-        id: navegacion
-        actual: ventana.vista
-        secciones: [
-            { titulo: "Documentos", filas: docs.filasNavegacion },
-            { titulo: "Historial", filas: [{ nombre: "historial", texto: "Compilaciones", icono: "view-history", contador: studio.historial.total }] },
-            { titulo: "Carpetas", filas: espacio.filasCarpetas }
-        ]
-        onElegida: nombre => {
-            if (nombre.startsWith("dir:")) { const e = espacio.fijarCarpeta(nombre.substring(4)); if (e) ventana.mensajes.mostrar(e, "error"); espacio.fijarVista("carpeta") }
-            else espacio.fijarVista(nombre)
-            religarNavegacion()
-        }
+    // ------------------------------------------------------------------ las ranuras
+    navegacion: BarraLateral {
+        onAbrirArchivo: (ruta, linea) => ventana.irA(ruta, linea)
+        onCitar: clave => ventana.insertar("\\cite{" + clave + "}")
     }
 
-    // ------------------------------------------------------------------ centro: documentos o historial
     centro: StackLayout {
-        id: centro
-        currentIndex: ventana.indice
-
-        component MenuDocumento: MenuAcciones {
-            acciones: ventana.registro
-            conAtajos: false
-            elementos: [
-                { tipo: "accion", nombre: "doc.compilar" }, { tipo: "accion", nombre: "doc.compilar_biber" }, { tipo: "accion", nombre: "doc.simular" },
-                { tipo: "separador" },
-                { tipo: "accion", nombre: "doc.pdf" }, { tipo: "accion", nombre: "doc.editor" }, { tipo: "accion", nombre: "doc.limpiar" },
-                { tipo: "separador" },
-                { tipo: "accion", nombre: "archivo.dolphin" }, { tipo: "accion", nombre: "archivo.terminal" }, { tipo: "accion", nombre: "archivo.copiar" }
-            ]
-        }
-        readonly property var columnasDocumentos: [
-            { ancho: 0, minimo: 12, conIcono: true },
-            { ancho: 9, semantica: true, conIcono: true },
-            { ancho: 9, secundaria: true, estrecho: true },
-            { ancho: 8, secundaria: true },
-            { ancho: 8, secundaria: true, estrecho: true },
-            { ancho: 14, secundaria: true, estrecho: true, visible: false }
-        ]
-
-        TablaDatos {                                              // 0 · Carpeta de trabajo
-            id: tablaCarpeta
-            modelo: docs.modelo
-            claveAjustes: "documentos"
-            umbralEstrecho: Kirigami.Units.gridUnit * 34
-            mensajeVacio: docs.total === 0 ? "No hay ningún .tex en " + espacio.nombreCarpeta + ": elige otra carpeta de trabajo (Ctrl+Mayús+O) o abre un documento (Ctrl+O)"
-                                           : "Ningún documento coincide con el filtro"
-            iconoVacio: "text-x-tex"
-            columnas: centro.columnasDocumentos
-            onOrdenar: (columna, descendente) => docs.modelo.ordenar(columna, descendente)
-            onFilaActualCambiada: fila => docs.fijarFila(fila)
-            onActivada: fila => { docs.fijarFila(fila); studio.corrida.compilar() }
-            menuContextual: MenuDocumento {}
-        }
-        TablaDatos {                                              // 1 · Recientes
-            id: tablaRecientes
-            modelo: docs.modeloRecientes
-            claveAjustes: "recientes"
-            umbralEstrecho: Kirigami.Units.gridUnit * 34
-            mensajeVacio: "Todavía no abriste ni compilaste ningún documento aquí"
-            iconoVacio: "document-open-recent"
-            columnas: [
-                { ancho: 0, minimo: 12, conIcono: true },
-                { ancho: 9, semantica: true, conIcono: true },
-                { ancho: 9, secundaria: true, estrecho: true },
-                { ancho: 8, secundaria: true },
-                { ancho: 8, secundaria: true, estrecho: true },
-                { ancho: 16, secundaria: true }
-            ]
-            onOrdenar: (columna, descendente) => docs.modeloRecientes.ordenar(columna, descendente)
-            onFilaActualCambiada: fila => docs.fijarFilaReciente(fila)
-            onActivada: fila => { docs.fijarFilaReciente(fila); studio.corrida.compilar() }
-            menuContextual: MenuDocumento {}
-        }
-        TablaDatos {                                              // 2 · Historial
-            id: tablaHistorial
-            modelo: studio.historial.modelo
-            claveAjustes: "historial"
-            umbralEstrecho: Kirigami.Units.gridUnit * 34
-            mensajeVacio: "Sin compilaciones todavía: cada una queda aquí con su resultado y su duración"
-            iconoVacio: "view-history"
-            columnas: [
-                { ancho: 9, secundaria: true },
-                { ancho: 0, minimo: 10, conIcono: true },
-                { ancho: 6, semantica: true, conIcono: true },
-                { ancho: 5, alinear: "derecha", mono: true },
-                { ancho: 12, secundaria: true, estrecho: true },
-                { ancho: 14, secundaria: true, estrecho: true }
-            ]
-            onOrdenar: (columna, descendente) => studio.historial.modelo.ordenar(columna, descendente)
-            onFilaActualCambiada: fila => studio.historial.fijarFila(fila)
-            onActivada: fila => { studio.historial.fijarFila(fila); espacio.fijarVista("carpeta") }
-            onSuprimir: studio.historial.quitar(filaActual)
-            menuContextual: MenuAcciones {
-                acciones: ventana.registro
-                conAtajos: false
-                elementos: [{ tipo: "accion", nombre: "doc.compilar" }, { tipo: "accion", nombre: "doc.pdf" }, { tipo: "accion", nombre: "doc.editor" },
-                            { tipo: "separador" }, { tipo: "accion", nombre: "historial.quitar" }, { tipo: "accion", nombre: "historial.vaciar" }]
-            }
-        }
+        currentIndex: ventana.vista === "escritura" ? 1 : 0
+        PaginaProyectos { id: paginaProyectos; onAbrir: ruta => ventana.abrirProyecto(ruta) }
+        EspacioEscritura { id: espacio }
     }
 
-    // ------------------------------------------------------------------ detalles del documento actual
-    detalles: PanelDetalles {
-        id: detalles
-        anchoPreferido: Kirigami.Units.gridUnit * 26
-        anchoMinimo: Kirigami.Units.gridUnit * 18
-        titulo: docs.hayActual ? docs.nombre : ""
-        subtitulo: docs.hayActual ? docs.carpetaActual : ""
-        icono: "text-x-tex"
-        mensajeVacio: "Elige un documento en la tabla o ábrelo con Ctrl+O"
-        iconoVacio: "text-x-tex"
-        accionesCabecera: [ventana.accion("doc.pdf"), ventana.accion("doc.editor"), ventana.accion("archivo.dolphin")]
-        pestanas: [{ titulo: "Resumen" }, { titulo: "Opciones" }, { titulo: "Problemas", contador: docs.nProblemas }, { titulo: "Registro" }, { titulo: "Salidas", contador: docs.salidas.filas }]
-        Resumen {}
-        OpcionesCompilacion {}
-        Problemas { id: paginaProblemas }
-        Registro {}
-        Salidas {}
+    inferior: PanelInferior {
+        id: panelInferior
+        consola: studio.consola
+        altoPreferido: Kirigami.Units.gridUnit * 11
+        extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }]
     }
+    Component { id: cProblemas; ListaProblemas {} }
+    Component { id: cRegistro; RegistroCompilacion {} }
+    Component { id: cCola; Cola {} }
 
-    // ------------------------------------------------------------------ panel inferior
-    inferior: PanelInferior { consola: studio.consola }
-
-    // ------------------------------------------------------------------ diálogos
+    // ------------------------------------------------------------------ diálogos (los de archivos y carpetas son los de KDE con QApplication)
     FileDialog {
         id: selectorTex
         title: "Abrir un .tex"
         nameFilters: ["LaTeX (*.tex)", "Todos (*)"]
-        onAccepted: { const e = docs.abrir(decodeURIComponent(selectedFile.toString().replace("file://", ""))); if (e) ventana.mensajes.mostrar(e, "error") }
+        onAccepted: ventana.abrirProyecto(decodeURIComponent(selectedFile.toString().replace("file://", "")))
     }
     FolderDialog {
         id: selectorCarpeta
-        title: "Carpeta de trabajo"
-        onAccepted: { const e = espacio.fijarCarpeta(decodeURIComponent(selectedFolder.toString().replace("file://", ""))); if (e) ventana.mensajes.mostrar(e, "error"); else espacio.fijarVista("carpeta") }
+        title: "Añadir una carpeta de trabajo"
+        onAccepted: { const e = studio.ajustes.anadirCarpeta(decodeURIComponent(selectedFolder.toString().replace("file://", ""))); if (e) ventana.mensajes.mostrar(e, "error") }
     }
     Kirigami.PromptDialog {
         id: dialogoLimpiar
         property var lista: []
         standardButtons: Kirigami.Dialog.Cancel
-        customFooterActions: [Kirigami.Action { text: "Borrar"; icon.name: "run-build-clean"; enabled: dialogoLimpiar.lista.length > 0; onTriggered: { studio.corrida.limpiar(); dialogoLimpiar.close() } }]
+        customFooterActions: [Kirigami.Action { text: "Borrar"; icon.name: "edit-clear"; enabled: dialogoLimpiar.lista.length > 0; onTriggered: { studio.compilacion.limpiar(""); dialogoLimpiar.close() } }]
         function abrir() {
-            if (!docs.hayActual) { ventana.mensajes.mostrar(studio.corrida.motivo, "aviso"); return }
-            lista = studio.corrida.auxiliaresParaLimpiar()
-            title = "Limpiar auxiliares de " + docs.nombre
-            subtitle = lista.length === 0 ? "No hay ningún auxiliar que borrar en " + docs.carpetaActual + "."
-                                          : "main.sh -c borraría " + lista.length + " archivo" + (lista.length === 1 ? "" : "s") + " de " + docs.carpetaActual + ":\n\n" + lista.join("\n")
-                                            + "\n\nEl .tex y el PDF no se tocan."
+            if (!p.hayAbierto) { ventana.mensajes.mostrar("Abre un proyecto.", "aviso"); return }
+            lista = studio.compilacion.auxiliaresParaLimpiar("")
+            title = "Limpiar auxiliares de " + p.abierto.nombre
+            subtitle = lista.length === 0 ? "No hay auxiliares que borrar."
+                     : "Se borrarían " + lista.length + " archivo" + (lista.length === 1 ? "" : "s") + " de " + p.abierto.carpeta + ":\n\n"
+                       + lista.slice(0, 30).join("\n") + (lista.length > 30 ? "\n… y " + (lista.length - 30) + " más" : "")
+                       + "\n\nLas fuentes (.tex, .bib) y el PDF no se tocan. SyncTeX dejará de funcionar hasta la próxima compilación."
             open()
         }
     }
     Kirigami.PromptDialog {
-        id: dialogoVaciar
-        title: "Vaciar el historial"
-        subtitle: "¿Quitar las " + studio.historial.total + " compilaciones del historial? Los documentos no se tocan."
+        id: dialogoSalir
+        title: "Cambios sin guardar"
+        subtitle: "Hay archivos con cambios sin guardar: " + studio.editor.modificados.map(r => r.split("/").pop()).join(", ") + "."
         standardButtons: Kirigami.Dialog.Cancel
-        customFooterActions: [Kirigami.Action { text: "Vaciar"; icon.name: "edit-clear-history"; onTriggered: { studio.historial.vaciar(); dialogoVaciar.close() } }]
+        customFooterActions: [
+            Kirigami.Action { text: "Salir sin guardar"; icon.name: "application-exit"; onTriggered: { ventana.permitirCierre = true; dialogoSalir.close(); ventana.close() } },
+            Kirigami.Action { text: "Guardar todo y salir"; icon.name: "document-save-all"; onTriggered: { espacio.guardarTodo(); dialogoSalir.close(); if (!studio.editor.hayModificados) { ventana.permitirCierre = true; ventana.close() } } }
+        ]
+    }
+    Kirigami.Dialog {
+        id: dialogoLinea
+        property int maximo: 1
+        title: "Ir a la línea"
+        standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
+        padding: Kirigami.Units.largeSpacing
+        onOpened: { campoLinea.value = ventana.editor() ? ventana.editor().lineaActual : 1; campoLinea.contentItem.forceActiveFocus(); campoLinea.contentItem.selectAll() }
+        onAccepted: { const e = ventana.editor(); if (e) e.irALinea(campoLinea.value, 0) }
+        RowLayout {
+            QQC2.Label { text: "Línea (1–" + dialogoLinea.maximo + "):" }
+            QQC2.SpinBox { id: campoLinea; from: 1; to: dialogoLinea.maximo; editable: true; Accessible.name: "Línea"; Keys.onReturnPressed: dialogoLinea.accept() }
+        }
+    }
+    Kirigami.Dialog {
+        id: dialogoAtajos
+        title: "Atajos de teclado"
+        standardButtons: Kirigami.Dialog.Close
+        preferredWidth: Kirigami.Units.gridUnit * 30
+        preferredHeight: Kirigami.Units.gridUnit * 28
+        ListView {
+            id: listaAtajos
+            clip: true
+            model: studio.acciones
+            section.property: "grupo"
+            section.delegate: Kirigami.ListSectionHeader { required property string section; width: listaAtajos.width; text: section }
+            delegate: QQC2.ItemDelegate {
+                required property var model
+                width: listaAtajos.width
+                visible: model.atajo !== ""
+                height: visible ? implicitHeight : 0
+                contentItem: RowLayout {
+                    QQC2.Label { text: model.texto.replace("&", ""); Layout.fillWidth: true; elide: Text.ElideRight }
+                    QQC2.Label { text: model.objeto ? model.objeto.atajoTexto : model.atajo; font.family: Kirigami.Theme.fixedWidthFont.family; color: Kirigami.Theme.disabledTextColor }
+                }
+            }
+            footer: QQC2.Label {
+                width: listaAtajos.width
+                padding: Kirigami.Units.largeSpacing
+                wrapMode: Text.WordWrap
+                color: Kirigami.Theme.disabledTextColor
+                text: "Además: Ctrl+B compila (como F5); Ctrl+clic en el editor va al PDF (SyncTeX); doble clic en el PDF vuelve al código; Ctrl+rueda en el PDF cambia el zoom; Intro en la búsqueda va a la siguiente, Mayús+Intro a la anterior; Ctrl+K abre la paleta de órdenes."
+            }
+        }
     }
     dialogoAjustes: DialogoAjustesStudio {}
 }

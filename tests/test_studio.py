@@ -1,7 +1,9 @@
-"""test_studio.py — LaTeX Studio (QML + Kirigami sobre gui-comun 2.x) abre su ventana sin pantalla con el Python del
-sistema sobre el ejemplo copiado a una carpeta temporal: la ventana entera (acciones, menús, barra, resumen), cada
-componente QML, `--smoke` con un .tex por argumento, y las reglas de la familia (sin colores propios, sin marca dentro,
-sin QtWidgets, sin pdfLaTeX ni XeLaTeX en la ventana).
+"""test_studio.py — LaTeX Studio (reingeniería del 2026-11-02, QML + Kirigami sobre gui-comun 2.x) abre su ventana sin
+pantalla con el Python del sistema sobre los proyectos de muestra copiados a una carpeta temporal (WRITING_DIR y
+DESPACHO_DIR temporales: nunca las carpetas del autor): la ventana entera (acciones, menús, barra de compilación,
+disponibilidad sin y con proyecto, las dos vistas, el editor y el visor con un proyecto abierto), cada componente QML,
+`--smoke` con un .tex por argumento, y las reglas de la familia (sin colores propios, sin marca dentro, sin QtWidgets,
+sin pdfLaTeX ni XeLaTeX ofrecidos).
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ import subprocess
 
 import pytest
 
-from conftest import PYTHON_SISTEMA, REPO, STUDIO, copiar_ejemplo, correr_python, entorno_gui, requiere_sistema
+from conftest import PYTHON_SISTEMA, REPO, STUDIO, copiar_muestra, correr_python, entorno_gui, requiere_sistema
 
 QML = STUDIO / "latex_app" / "qml"
 
@@ -25,18 +27,28 @@ app = Aplicacion("latex-studio", "LaTeX Studio", version="prueba", nombre_ajuste
 piezas = aplicacion.construir(app)
 errores = []
 app.motor.warnings.connect(lambda avisos: errores.extend(a.toString() for a in avisos))
-piezas["espacio"].fijarCarpeta(sys.argv[2])
+piezas["proyectos"].detectar_ya()
 ok = app.cargar(aplicacion.QML_DIR / "Main.qml")
 raiz = app.motor.rootObjects()[0] if ok else None
-titulo = raiz.property("title") if raiz else ""
-a, d = piezas["acciones"], piezas["documentos"]
-sin_doc = (a.accion("doc.compilar").habilitada, a.accion("doc.pdf").habilitada)
-d.fijarFila(0)
-con_doc = (a.accion("doc.compilar").habilitada, a.accion("doc.simular").habilitada, a.accion("doc.limpiar").habilitada, a.accion("doc.editor").habilitada, a.accion("doc.pdf").habilitada)
-QTimer.singleShot(600, app.app.quit); app.app.exec(); app.cerrar()
-print(json.dumps({"ok": ok, "titulo": titulo, "errores": errores, "acciones": a.nombres(), "menus": [m["titulo"] for m in a.menus],
-                  "barra": a.barra, "sin_doc": sin_doc, "con_doc": con_doc, "resumen": piezas["espacio"].resumen, "contexto": piezas["espacio"].contexto,
-                  "motores": [m["valor"] for m in piezas["opciones"].motores]}))
+a, p, i = piezas["acciones"], piezas["proyectos"], piezas["interfaz"]
+hab = lambda *ns: [a.accion(n).habilitada for n in ns]
+sin = hab("compilar.compilar", "compilar.limpiar", "archivo.guardar", "escritorio.pdf", "compilar.seleccion")
+titulo_sin = raiz.property("title") if raiz else ""
+resultado = {}
+def abrir():
+    i.pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]})
+    QTimer.singleShot(700, despues)
+def despues():
+    resultado.update(vista=i.vista, titulo=raiz.property("title"), abiertos=[f["nombre"] for f in piezas["editor"].abiertos.todas()],
+                     con=hab("compilar.compilar", "compilar.limpiar", "archivo.guardar", "editar.buscar", "editar.ir_linea", "escritorio.dolphin"),
+                     archivos=p.archivos.filas, esquema=p.esquema.filas)
+    i.pedir.emit("buscar", {}); i.pedir.emit("ir_linea", {}); i.pedir.emit("atajos", {}); i.pedir.emit("alternar_pdf", {}); i.pedir.emit("alternar_pdf", {})
+    i.fijarVista("proyectos"); i.fijarVista("escritura")
+    QTimer.singleShot(500, app.app.quit)
+QTimer.singleShot(400, abrir)
+app.app.exec(); app.cerrar()
+print(json.dumps({"ok": ok, "titulo_sin": titulo_sin, "errores": errores, "acciones": a.nombres(), "menus": [m["titulo"] for m in a.menus],
+                  "barra": a.barra, "sin": sin, "total": p.total, **resultado}))
 """
 
 COMPONENTE = """
@@ -63,34 +75,42 @@ def _graves(errores):
     return [e for e in errores if "TypeError" in e or "ReferenceError" in e or "is not a type" in e or "Cannot assign" in e or "No se puede asignar" in e]
 
 
+def _entorno(tmp_path):
+    muestra = copiar_muestra(tmp_path / "escritura")
+    (tmp_path / "despacho").mkdir(exist_ok=True)
+    return muestra, entorno_gui(tmp_path, WRITING_DIR=str(muestra), DESPACHO_DIR=str(tmp_path / "despacho"))
+
+
 @requiere_sistema
-def test_abre_y_cierra_su_ventana(tmp_path):
-    carpeta = copiar_ejemplo(tmp_path / "doc")
-    r = correr_python(ABRIR, entorno_gui(tmp_path), str(carpeta))
+def test_abre_la_ventana_y_un_proyecto(tmp_path):
+    muestra, env = _entorno(tmp_path)
+    r = correr_python(ABRIR, env, str(muestra / "tesis-multiarchivo" / "capitulos" / "metodo.tex"))
     assert r.returncode == 0, f"código {r.returncode}\n{r.stderr[-3000:]}"
     datos = json.loads(r.stdout.strip().splitlines()[-1])
     assert datos["ok"], r.stderr[-3000:]
-    assert datos["titulo"] == "doc — LaTeX Studio"
     assert not _graves(datos["errores"]), "\n".join(_graves(datos["errores"]))
-    for n in ("archivo.abrir", "archivo.carpeta", "archivo.subir", "archivo.dolphin", "archivo.terminal", "archivo.copiar",
-              "editar.filtrar", "editar.todo", "historial.quitar", "historial.vaciar",
-              "ver.vista.carpeta", "ver.vista.recientes", "ver.vista.historial", "ver.recargar",
-              "doc.compilar", "doc.compilar_biber", "doc.simular", "doc.cancelar", "doc.limpiar", "doc.pdf", "doc.editor", "doc.vigilar", "doc.abrir_al_terminar",
-              "prob.ir", "ayuda.manual", "ventana.navegacion", "ventana.detalles", "ventana.inferior", "ventana.paleta", "app.ajustes", "app.acerca", "app.salir"):
+    assert datos["total"] == 6 and datos["titulo_sin"] == "Proyectos — LaTeX Studio"
+    for n in ("archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "archivo.guardar", "archivo.guardar_todo",
+              "archivo.cerrar", "proyecto.cerrar", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
+              "escritorio.copiar", "escritorio.editor", "archivo.salir", "editar.buscar", "editar.reemplazar", "editar.ir_linea",
+              "editar.completar", "editar.comentar", "ver.proyectos", "ver.escritura", "ver.pdf", "compilar.compilar",
+              "compilar.reconstruir", "compilar.simular", "compilar.cancelar", "compilar.seleccion", "compilar.limpiar",
+              "compilar.dependencias", "compilar.siguiente", "compilar.al_guardar", "synctex.pdf", "ayuda.atajos", "ayuda.manual",
+              "ventana.paleta", "app.ajustes", "app.acerca"):
         assert n in datos["acciones"], n
-    assert datos["menus"] == ["&Archivo", "&Editar", "&Ver", "&Documento", "&Herramientas", "A&justes", "Ay&uda"]
-    assert datos["barra"] == ["doc.compilar", "doc.simular", "|", "doc.pdf", "doc.editor", "|", "doc.limpiar"]
-    assert datos["sin_doc"] == [False, False]
-    assert datos["con_doc"] == [True, True, True, True, False]          # sin PDF todavía: Abrir el PDF deshabilitada
-    assert datos["resumen"] == "2 documentos · 2 sin compilar"
-    assert datos["contexto"].startswith("articulo.tex · LuaLaTeX")
-    assert datos["motores"] == ["auto", "lualatex"]
+    assert datos["menus"] == ["&Archivo", "&Editar", "&Ver", "&Compilar", "&Herramientas", "A&justes", "Ay&uda"]
+    assert datos["barra"][:3] == ["compilar.compilar", "compilar.cancelar", "compilar.reconstruir"]
+    assert datos["sin"] == [False, False, False, False, True]          # sin proyecto: nada que compilar, guardar ni ver
+    assert datos["vista"] == "escritura" and datos["titulo"] == "tesis-multiarchivo · principal.tex — LaTeX Studio"
+    assert datos["abiertos"] == ["principal.tex"]                       # un capítulo abre el proyecto y su principal
+    assert datos["con"] == [True, True, True, True, True, True]
+    assert datos["archivos"] == 5 and datos["esquema"] >= 7
 
 
 @requiere_sistema
 def test_main_smoke_con_un_tex(tmp_path):
-    carpeta = copiar_ejemplo(tmp_path / "doc")
-    r = subprocess.run([PYTHON_SISTEMA, str(STUDIO / "main.py"), "--smoke", str(carpeta / "con-error.tex")], env=entorno_gui(tmp_path),
+    muestra, env = _entorno(tmp_path)
+    r = subprocess.run([PYTHON_SISTEMA, str(STUDIO / "main.py"), "--smoke", str(muestra / "con-error" / "roto.tex")], env=env,
                        capture_output=True, text=True, timeout=120, cwd=tmp_path)
     assert r.returncode == 0, f"código {r.returncode}\n{r.stderr[-3000:]}"
     ruido = [l for l in r.stderr.splitlines() if "TypeError" in l or "ReferenceError" in l or "polish() loop" in l]
@@ -103,7 +123,8 @@ COMPONENTES = sorted((p.parent.name, p.stem) for p in QML.glob("*/*.qml"))
 @requiere_sistema
 @pytest.mark.parametrize("carpeta,nombre", COMPONENTES, ids=[f"{c}/{n}" for c, n in COMPONENTES])
 def test_cada_componente_qml(carpeta, nombre, tmp_path):
-    r = correr_python(COMPONENTE, entorno_gui(tmp_path), nombre, carpeta)
+    _muestra, env = _entorno(tmp_path)
+    r = correr_python(COMPONENTE, env, nombre, carpeta)
     assert r.returncode == 0, r.stderr[-3000:]
     datos = json.loads(r.stdout.strip().splitlines()[-1])
     assert datos["ok"], r.stderr[-3000:]
