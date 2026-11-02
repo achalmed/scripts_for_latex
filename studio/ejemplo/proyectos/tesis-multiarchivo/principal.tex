@@ -1,0 +1,17 @@
+% principal.tex — proyecto de muestra de LaTeX Studio: varios archivos, LuaLaTeX + Biber.
+\documentclass[11pt,a4paper]{report}
+\usepackage{fontspec}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{referencias.bib}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\title{Una tesis de muestra}
+\author{LaTeX Studio}
+\begin{document}
+\maketitle
+\tableofcontents
+\input{capitulos/introduccion}
+\include{capitulos/metodo}
+\printbibliography
+\end{document}

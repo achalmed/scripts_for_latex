@@ -76,6 +76,7 @@ ENGINE="$DEFAULT_ENGINE"
 PASADAS="$DEFAULT_PASADAS"
 MODO_SILENCIOSO=false
 SOLO_LIMPIAR=false
+CONSERVAR_AUXILIARES=false   # -k: no limpiar al terminar bien (SyncTeX, .aux; la ventana lo usa siempre)
 MODO_WATCH=false
 MODO_DRAFT=false
 MODO_SIMULAR=false   # --dry-run: dice qué haría y sale sin escribir nada (RQ-COD-02)
@@ -215,7 +216,11 @@ main() {
     if $MODO_WATCH; then
         modo_watch
     elif compilar; then
-        limpiar_auxiliares
+        if $CONSERVAR_AUXILIARES; then
+            dim "Auxiliares conservados (-k): .synctex.gz, .aux y demás junto al .tex"
+        else
+            limpiar_auxiliares
+        fi
     else
         exit 1
     fi

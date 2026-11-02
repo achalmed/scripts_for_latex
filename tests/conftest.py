@@ -38,7 +38,7 @@ requiere_binding = pytest.mark.skipif(not HAY_BINDING, reason="sin PySide6 ni Py
 requiere_lualatex = pytest.mark.skipif(not shutil.which("lualatex"), reason="falta lualatex")
 requiere_biber = pytest.mark.skipif(not (shutil.which("lualatex") and shutil.which("biber")), reason="faltan lualatex o biber")
 
-_VARIABLES_CORE = ("DOCS_ROOT", "INDEX_DIR", "CORE_DIR", "META_DIR", "RESPALDOS_DIR", "GIT_DIR", "GIT_WORK_TREE")
+_VARIABLES_CORE = ("DOCS_ROOT", "INDEX_DIR", "META_DIR", "RESPALDOS_DIR", "GIT_DIR", "GIT_WORK_TREE")
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -64,12 +64,37 @@ PYTHON_SISTEMA = _python_del_sistema()
 requiere_sistema = pytest.mark.skipif(PYTHON_SISTEMA is None, reason="sin binding de Qt en /usr/bin/python3 (Kirigami)")
 
 
+def _core_para_la_cli() -> None:
+    """La CLI busca `core/` subiendo desde su carpeta; fuera del espacio de trabajo (un worktree en la caché) vale
+    `CORE_DIR`, que se toma de gui_comun (encuentra core/env.py desde su propio repo)."""
+    d = REPO
+    while d != d.parent and not (d / "core" / "shell-lib" / "logger.sh").is_file():
+        d = d.parent
+    if (d / "core" / "shell-lib" / "logger.sh").is_file() or os.environ.get("CORE_DIR"):
+        return
+    try:
+        from gui_comun import rutas
+        if rutas.CORE_DIR is not None:
+            os.environ["CORE_DIR"] = str(rutas.CORE_DIR)
+    except ImportError:
+        pass
+
+
+_core_para_la_cli()
+
+
 def copiar_ejemplo(destino: Path) -> Path:
     """El documento de ejemplo del repo (articulo.tex, referencias.bib, con-error.tex) copiado a una carpeta temporal."""
     destino.mkdir(parents=True, exist_ok=True)
     for p in EJEMPLO.iterdir():
         if p.is_file():
             shutil.copy2(p, destino / p.name)
+    return destino
+
+
+def copiar_muestra(destino: Path) -> Path:
+    """El árbol de proyectos de muestra (studio/ejemplo/proyectos/) copiado a una carpeta temporal: nunca documentos reales."""
+    shutil.copytree(EJEMPLO / "proyectos", destino, dirs_exist_ok=True)
     return destino
 
 

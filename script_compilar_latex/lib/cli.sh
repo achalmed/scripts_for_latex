@@ -55,6 +55,8 @@ ${BOLD}SALIDA${NC}
 
 ${BOLD}UTILIDADES${NC}
   -c, --limpiar           Elimina archivos auxiliares y sale.
+  -k, --conservar         Conserva los auxiliares al terminar bien (SyncTeX, .aux);
+                          sin -k se borran, como siempre.
   -n, --dry-run           Simula: dice qué ejecutaría (y, con -c, qué borraría) sin escribir nada.
   -w, --watch             Modo vigilancia: recompila al detectar cambios.
   -h, --help              Muestra esta ayuda.
@@ -130,6 +132,7 @@ parsear_args() {
             -s|--silencioso)    MODO_SILENCIOSO=true;      shift ;;
             -v|--verbose)       VERBOSE=true;               shift ;;
             -c|--limpiar)       SOLO_LIMPIAR=true;          shift ;;
+            -k|--conservar)     CONSERVAR_AUXILIARES=true;  shift ;;
             -n|--dry-run)       MODO_SIMULAR=true;          shift ;;
             -w|--watch)         MODO_WATCH=true;            shift ;;
             --draft)            MODO_DRAFT=true;            shift ;;

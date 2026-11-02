@@ -375,3 +375,81 @@ def progreso_de_linea(texto: str):
         return None
     n, total = int(m.group(1)), int(m.group(2))
     return (int((n - 1) * 100 / total), f"pasada {n} de {total}")
+
+
+# ======================================================================================================================
+# Recetas por proyecto (reingeniería 2026-11-02, R5 y R8): cada proyecto se compila con su compilador y su motor. La
+# ventana no elige otro motor que el del proyecto, nunca escribe fuentes y conserva los auxiliares con `-k` (SyncTeX).
+
+@dataclass
+class Paso:
+    descripcion: str
+    argv: list[str]
+    cwd: str
+    entorno: dict = field(default_factory=dict)
+
+
+def _entorno_rutas(rutas_tex: list[str]) -> dict:
+    """TEXINPUTS con las rutas de TeX que el usuario añadió en Ajustes (las de un marco, p. ej.); vacío si no hay."""
+    rutas = [r for r in rutas_tex if r and os.path.isdir(r)]
+    if not rutas:
+        return {}
+    return {"TEXINPUTS": ".:" + ":".join(r.rstrip("/") + "//" for r in rutas) + ":" + os.environ.get("TEXINPUTS", "")}
+
+
+def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_tex: list[str] = ()) -> list[Paso]:
+    """Los pasos de `que` (compilar · reconstruir · limpiar · simular) para un `proyectos.Proyecto`:
+    - marco: `<marco>/scripts/build.sh <principal>` (limpiar: `--clean`; reconstruir: limpiar y compilar);
+    - latexmk: `latexmk` con SyncTeX, sin parar en el primer error (lee su `latexmkrc`; limpiar: `-c`; reconstruir: `-g`);
+    - main.sh: `main.sh -k -e <motor> [--biber|-b] --log <registro>` (limpiar: `-c`; simular: `-n`; reconstruir: `-c` y compilar).
+    """
+    tex = Path(proyecto.principal)
+    cwd = str(tex.parent)
+    entorno = _entorno_rutas(list(rutas_tex))
+    if proyecto.compilador == "marco":
+        build = str(Path(proyecto.marco) / "scripts" / "build.sh")
+        limpiar = Paso("Limpiar auxiliares (marco)", ["bash", build, "--clean", str(tex)], cwd)
+        compilar = Paso("Compilar con el compilador del marco", ["bash", build, str(tex)], cwd)
+        if que == "limpiar":
+            return [limpiar]
+        if que == "reconstruir":
+            return [limpiar, compilar]
+        if que == "simular":
+            return [Paso("Simular (orden del marco)", ["echo", "bash", build, str(tex)], cwd)]
+        return [compilar]
+    if proyecto.compilador == "latexmk":
+        base = ["latexmk", "-synctex=1", "-interaction=nonstopmode", "-file-line-error"]
+        if que == "limpiar":
+            return [Paso("Limpiar auxiliares (latexmk -c)", ["latexmk", "-c", tex.name], cwd, entorno)]
+        if que == "simular":
+            return [Paso("Simular (la orden de latexmk)", ["echo", *base, tex.name], cwd, entorno)]
+        return [Paso("Compilar con latexmk" + (" (todo de nuevo)" if que == "reconstruir" else ""),
+                     base + (["-g"] if que == "reconstruir" else []) + [tex.name], cwd, entorno)]
+    argv = ["bash", str(CLI), "-k", "-e", proyecto.motor]
+    if proyecto.bibliografia == "biber":
+        argv.append("--biber")
+    elif proyecto.bibliografia == "bibtex":
+        argv.append("-b")
+    limpiar = Paso("Limpiar auxiliares (main.sh -c)", ["bash", str(CLI), "-c", str(tex)], cwd, entorno)
+    if que == "limpiar":
+        return [limpiar]
+    if que == "simular":
+        return [Paso("Simular (main.sh -n)", argv + ["-n", str(tex)], cwd, entorno)]
+    if registro is not None:
+        argv += ["--log", str(registro)]
+    compilar = Paso("Compilar con " + NOMBRES_MOTOR.get(proyecto.motor, proyecto.motor), argv + [str(tex)], cwd, entorno)
+    return [limpiar, compilar] if que == "reconstruir" else [compilar]
+
+
+def orden_legible(pasos: list[Paso]) -> str:
+    """Las órdenes de una receta como se escribirían en la terminal (la página Compilación las muestra)."""
+    def cita(a: str) -> str:
+        return a if re.fullmatch(r"[\w@%+=:,./-]+", a) else "'" + a.replace("'", "'\\''") + "'"
+    return "\n".join(" ".join(cita(a) for a in p.argv) for p in pasos)
+
+
+def registro_motor(proyecto) -> Path:
+    """El `.log` del motor de un proyecto (en la carpeta de auxiliares del marco o de latexmk, o junto al principal)."""
+    tex = Path(proyecto.principal)
+    carpeta = tex.parent / proyecto.carpeta_aux if proyecto.carpeta_aux else tex.parent
+    return carpeta / f"{tex.stem}.log"

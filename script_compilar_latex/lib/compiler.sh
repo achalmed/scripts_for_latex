@@ -267,6 +267,7 @@ plan_de_compilacion() {
         info "PDF        : ${TEX_DIR}/${TEX_BASE}.pdf"
     fi
     $MODO_WATCH && info "Watch      : no se arranca en simulación"
-    $MODO_WATCH || info "Después, la limpieza borraría los auxiliares de ${TEX_BASE} (los que existan entonces)."
+    if ! $MODO_WATCH && ! $CONSERVAR_AUXILIARES; then info "Después, la limpieza borraría los auxiliares de ${TEX_BASE} (los que existan entonces)."; fi
+    $CONSERVAR_AUXILIARES && info "Con -k, los auxiliares se conservan (SyncTeX, .aux)."
     return 0
 }
