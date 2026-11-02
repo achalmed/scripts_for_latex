@@ -6,11 +6,11 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `latex_studio`** · objetivo *latex* · estado *activo* · python · interfaz gui
 
-Ventana del compilador del .tex suelto (QML + Kirigami sobre gui-comun 2.x): los documentos de una carpeta con su estado, LuaLaTeX + Biber por main.sh (F5 compila, Mayús+F5 simula, Ctrl+B con Biber), cada error y aviso con su línea, el registro íntegro, el PDF y los auxiliares, recompilar al guardar y el historial.
+Entorno de escritura científica (QML + Kirigami sobre gui-comun 2.x): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 2.3 (módulo QML GuiComun), script_compilar_latex
-- Nota: No compila por su cuenta: arma la orden de script_compilar_latex/main.sh y lee su registro; la ventana no ofrece pdfLaTeX ni XeLaTeX (regla 6).
+- Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 2.3 (módulo QML GuiComun), script_compilar_latex, poppler-utils (pdftoppm, pdfinfo) y synctex para el visor; latexmk para los proyectos con latexmkrc
+- Nota: No compila por su cuenta: cada proyecto con su compilador (el scripts/build.sh de su marco, latexmk si tiene latexmkrc, o script_compilar_latex/main.sh -k); nunca escribe fuentes salvo Ctrl+S en el editor; no ofrece pdfLaTeX ni XeLaTeX a un proyecto que no los declare (regla 6). Las carpetas de trabajo del usuario van a sus ajustes, nunca al repo.
 
 Comandos:
 
