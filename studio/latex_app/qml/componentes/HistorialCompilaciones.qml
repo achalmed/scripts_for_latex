@@ -15,7 +15,7 @@ ColumnLayout {
         Layout.margins: Kirigami.Units.smallSpacing
         Kirigami.SearchField { Layout.preferredWidth: Kirigami.Units.gridUnit * 12; placeholderText: "Filtrar"; onTextChanged: h.modelo.filtrar(text) }
         QQC2.Label { Layout.fillWidth: true; text: h.total + " compilación" + (h.total === 1 ? "" : "es"); color: Kirigami.Theme.disabledTextColor }
-        QQC2.Button { text: "Vaciar…"; icon.name: "edit-clear-history"; flat: true; enabled: h.total > 0; onClicked: studio.interfaz.pedir("historial_vaciar", {}) }
+        QQC2.Button { text: "Vaciar…"; icon.name: "edit-clear-history"; flat: true; enabled: h.total > 0; onClicked: studio.acciones.accion("historial.vaciar").disparar() }
     }
     TablaDatos {
         id: tabla

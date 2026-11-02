@@ -61,7 +61,7 @@ El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas 
 | carpeta | qué es | dueño / generador |
 |---|---|---|
 | `script_compilar_latex/` | la suite: `main.sh`, `config.sh`, `lib/`, `tests/`, su manual y `suite.yml` | a mano; el bloque `suite:` del manual lo genera `core/suites.py` |
-| `studio/` | LaTeX Studio: `main.py`, `latex_app/` (servicios sin Qt: `proyectos.py`, `estructura.py`, `diagnostico.py`, `visor.py`, `compilador.py`, `escritorio.py`; `controladores/`; `qml/`), `studio/ejemplo/proyectos/` (la muestra de las pruebas y las capturas), `capturar.py` y su `suite.yml` (`studio/README.md`) | a mano |
+| `studio/` | LaTeX Studio: `main.py`, `latex_app/` (servicios sin Qt: `proyectos.py`, `estructura.py`, `diagnostico.py`, `visor.py`, `compilador.py`; `controladores/`; `qml/`), `studio/ejemplo/proyectos/` (la muestra de las pruebas y las capturas), `capturar.py` y su `suite.yml` (`studio/README.md`) | a mano |
 | `tests/` | `tests/run.sh`: la detección, la estructura, los diagnósticos, el visor y SyncTeX, los controladores y la ventana (sin pantalla, con `/usr/bin/python3`), compilando la muestra en una carpeta temporal | a mano |
 | `docs/` | `reingenieria.md` (el entorno de escritura: diagnóstico, referencias, R1–R16), `arquitectura.md` (la CLI: flujo, módulos, consumidores), `decisiones.md`, `rediseno.md` (la ventana 2.0, superada) y `figuras/` (`antes/`: la 2.0) | a mano |
 

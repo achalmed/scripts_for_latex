@@ -120,7 +120,7 @@ QQC2.SplitView {
                 QQC2.MenuSeparator {}
                 QQC2.MenuItem { text: "Abrir el PDF con su aplicación"; icon.name: "application-pdf"; enabled: raiz.datos.pdf !== undefined && raiz.datos.pdf !== ""; onTriggered: studio.escritorio.abrirConAplicacion(raiz.datos.pdf) }
                 QQC2.MenuItem { text: "Mostrar en Dolphin"; icon.name: "system-file-manager"; onTriggered: studio.escritorio.mostrarEnDolphin(raiz.actual) }
-                QQC2.MenuItem { text: "Copiar la ruta"; icon.name: "edit-copy"; onTriggered: studio.escritorio.copiarRuta(raiz.actual) }
+                QQC2.MenuItem { text: "Copiar la ruta"; icon.name: "edit-copy"; onTriggered: studio.sistema.copiarRuta(raiz.actual) }
             }
         }
     }

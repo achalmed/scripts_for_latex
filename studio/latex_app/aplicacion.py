@@ -22,7 +22,6 @@ from gui_comun.qt import QGuiApplication, QObject, Property, Signal, Slot
 from gui_comun.tareas import Tareas
 
 from latex_app import compilador as svc
-from latex_app import escritorio
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
 from latex_app.controladores.editor import Editor
@@ -80,32 +79,15 @@ class Interfaz(QObject):
         self.pedir.emit(nombre, {})
 
 
-class Escritorio(QObject):
-    """R14: abrir con su aplicación, mostrar en Dolphin, abrir carpeta, terminal, portapapeles, editor externo."""
+class Sistema(QObject):
+    """Lo del sistema que no es de `gui_comun.escritorio`: la terminal en una carpeta, el portapapeles y el editor externo.
+    Abrir con su aplicación, mostrar en Dolphin y abrir carpeta son de la base (`app.escritorio`, gui-comun 3.0)."""
 
     aviso = Signal(str, str)
 
     def __init__(self, ajustes, consola, parent=None):
         super().__init__(parent)
         self.ajustes, self.consola = ajustes, consola
-
-    def _lanzar(self, argv: list[str], que: str, ruta: str) -> None:
-        if escritorio.lanzar(argv):
-            self.consola.registrar("info", f"{que}: " + " ".join(argv))
-        else:
-            self.aviso.emit(f"No se pudo {que.lower()}: {ruta or '(nada)'}", "aviso")
-
-    @Slot(str)
-    def abrirConAplicacion(self, ruta: str) -> None:
-        self._lanzar(escritorio.orden_abrir(ruta), "Abrir con su aplicación", ruta)
-
-    @Slot(str)
-    def mostrarEnDolphin(self, ruta: str) -> None:
-        self._lanzar(escritorio.orden_mostrar(ruta), "Mostrar en Dolphin", ruta)
-
-    @Slot(str)
-    def abrirCarpeta(self, ruta: str) -> None:
-        self._lanzar(escritorio.orden_carpeta(ruta), "Abrir la carpeta", ruta)
 
     @Slot(str)
     def abrirTerminal(self, ruta: str) -> None:
@@ -136,8 +118,14 @@ class Escritorio(QObject):
 
     @Slot(str, int)
     def abrirEnEditorExterno(self, ruta: str, linea: int = 0) -> None:
-        if Path(ruta).is_file():
-            self._lanzar(self.orden_editor(ruta, linea), "Editor externo", ruta)
+        if not Path(ruta).is_file():
+            return
+        orden = self.orden_editor(ruta, linea)
+        try:
+            subprocess.Popen(orden, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            self.consola.registrar("info", "Editor externo: " + " ".join(orden))
+        except OSError as e:
+            self.aviso.emit(f"No se pudo abrir el editor externo ({orden[0]}): {e.strerror}", "error")
 
 
 def construir(app: Aplicacion, cache: Path | None = None) -> dict:
@@ -152,7 +140,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     editor = Editor(consola)
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
     visor = Visor(cache=cache)
-    sistema = Escritorio(ajustes, consola)
+    sistema = Sistema(ajustes, consola)
+    escritorio = app.escritorio                 # gui-comun 3.0: abrir con su aplicación, mostrar en Dolphin, abrir carpeta
     acciones = Acciones()
     acciones.estandar(NOMBRE)
     pedir = lambda que, **datos: (lambda *_: interfaz.pedir.emit(que, datos))
@@ -171,18 +160,23 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("archivo.carpetas", "Carpetas de &trabajo…", "folder-open", "Ctrl+Shift+O", "Archivo", al_disparar=pedir("carpetas"),
                        descripcion="Las carpetas donde se buscan proyectos y su profundidad")
     acciones.registrar("archivo.anadir_carpeta", "Añadir una carpeta de trabajo…", "folder-new", None, "Archivo", al_disparar=pedir("anadir_carpeta"))
-    acciones.registrar("proyectos.detectar", "&Buscar proyectos de nuevo", "view-refresh", "Ctrl+Shift+R", "Archivo", al_disparar=proyectos.detectar,
+    acciones.registrar("proyectos.detectar", "&Buscar proyectos de nuevo", "view-refresh", "Ctrl+Shift+R", "Archivo", al_disparar=proyectos.detectar, operacion="lectura",
                        descripcion="Vuelve a recorrer las carpetas de trabajo (solo se relee lo que cambió)")
-    acciones.registrar("archivo.guardar", "&Guardar", "document-save", StandardKey.Save, "Archivo", habilitada=False, al_disparar=pedir("guardar"))
-    acciones.registrar("archivo.guardar_todo", "Guardar &todo", "document-save-all", "Ctrl+Shift+S", "Archivo", habilitada=False, al_disparar=pedir("guardar_todo"))
+    acciones.registrar("archivo.guardar", "&Guardar", "document-save", StandardKey.Save, "Archivo", habilitada=False, al_disparar=pedir("guardar"),
+                       operacion="escritura")
+    acciones.registrar("archivo.guardar_como", "Guardar &como…", "document-save-as", "Ctrl+Shift+S", "Archivo", habilitada=False,
+                       al_disparar=pedir("guardar_como"), operacion="escritura",
+                       descripcion="El archivo actual con otro nombre (diálogo de KDE, que pregunta antes de sobrescribir); el original no se toca")
+    acciones.registrar("archivo.guardar_todo", "Guardar &todo", "document-save-all", "Ctrl+L", "Archivo", habilitada=False, al_disparar=pedir("guardar_todo"),
+                       operacion="escritura")
     acciones.registrar("archivo.cerrar", "&Cerrar el archivo", "document-close", StandardKey.Close, "Archivo", habilitada=False, al_disparar=pedir("cerrar_archivo"))
     acciones.registrar("proyecto.cerrar", "Cerrar el &proyecto", "project-development-close", None, "Archivo", habilitada=False, al_disparar=pedir("cerrar_proyecto"))
     acciones.registrar("escritorio.pdf", "Abrir el PDF con su &aplicación", "application-pdf", "Ctrl+Shift+P", "Archivo", habilitada=False,
-                       al_disparar=lambda *_: sistema.abrirConAplicacion(pdf_abierto()), descripcion="El PDF en Okular (o la aplicación de KDE para PDF)")
+                       al_disparar=lambda *_: escritorio.abrirConAplicacion(pdf_abierto()), descripcion="El PDF en Okular (o la aplicación de KDE para PDF)")
     acciones.registrar("escritorio.dolphin", "&Mostrar en Dolphin", "system-file-manager", None, "Archivo", habilitada=False,
-                       al_disparar=lambda *_: sistema.mostrarEnDolphin(objetivo()), descripcion="Dolphin en la carpeta, con el archivo señalado")
+                       al_disparar=lambda *_: escritorio.mostrarEnDolphin(objetivo()), descripcion="Dolphin en la carpeta, con el archivo señalado")
     acciones.registrar("escritorio.carpeta", "Abrir la &carpeta", "folder", None, "Archivo", habilitada=False,
-                       al_disparar=lambda *_: sistema.abrirCarpeta(objetivo()))
+                       al_disparar=lambda *_: escritorio.abrirCarpeta(objetivo()))
     acciones.registrar("escritorio.terminal", "Abrir t&erminal aquí", "utilities-terminal", "Shift+F4", "Archivo", habilitada=False,
                        al_disparar=lambda *_: sistema.abrirTerminal(objetivo()))
     acciones.registrar("escritorio.copiar", "Copiar la &ruta", "edit-copy", "Ctrl+Shift+C", "Archivo", habilitada=False,
@@ -209,36 +203,47 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("ver.ajustar", "Ajustar el PDF al &ancho", "zoom-fit-width", None, "Ver", marcable=True, marcada=True,
                        al_disparar=lambda marcada: setattr(visor, "ajustarAncho", bool(marcada)))
     # --- Compilar
-    acciones.registrar("compilar.compilar", "&Compilar", "run-build", "F5", "Compilar", habilitada=False, al_disparar=compilacion.compilar,
+    acciones.registrar("compilar.compilar", "&Compilar", "run-build", "F5", "Compilar", habilitada=False, al_disparar=compilacion.compilar, operacion="escritura",
                        descripcion="El proyecto abierto con su compilador y su motor (también Ctrl+B)")
-    acciones.registrar("compilar.reconstruir", "&Reconstruir todo", "run-build-clean", "F6", "Compilar", habilitada=False, al_disparar=compilacion.reconstruir,
+    acciones.registrar("compilar.reconstruir", "&Reconstruir todo", "run-build-clean", "F6", "Compilar", habilitada=False, al_disparar=compilacion.reconstruir, operacion="escritura",
                        descripcion="Limpia los auxiliares y compila de nuevo (bibliografía incluida)")
     acciones.registrar("compilar.borrador", "Comprobar sin PDF (&borrador)", "document-preview", None, "Compilar", habilitada=False,
-                       al_disparar=compilacion.borrador, descripcion="main.sh --draft: comprueba que compila sin escribir el PDF")
-    acciones.registrar("compilar.simular", "&Simular", "system-run", "Shift+F5", "Compilar", habilitada=False, al_disparar=compilacion.simular,
+                       al_disparar=compilacion.borrador, operacion="escritura", descripcion="main.sh --draft: comprueba que compila sin escribir el PDF")
+    acciones.registrar("compilar.simular", "&Simular", "system-run", "Shift+F5", "Compilar", habilitada=False, al_disparar=compilacion.simular, operacion="simulacion",
                        descripcion="Las órdenes que correría, sin escribir nada")
     acciones.registrar("compilar.cancelar", "&Detener", "process-stop", None, "Compilar", habilitada=False, al_disparar=compilacion.cancelar,
                        descripcion="Detiene la compilación en curso y vacía la cola (también Esc en la barra de estado)")
     acciones.registrar("compilar.seleccion", "Compilar los &marcados", "run-build-configure", "Ctrl+Shift+F5", "Compilar", habilitada=False,
                        al_disparar=pedir("compilar_marcados"), descripcion="Los proyectos marcados en la página de proyectos, en cola")
-    acciones.registrar("compilar.limpiar", "&Limpiar auxiliares…", "edit-clear", "Ctrl+Shift+L", "Compilar", habilitada=False, al_disparar=pedir("limpiar"),
+    def consecuencias_limpiar() -> str:
+        lista = compilacion.auxiliaresParaLimpiar("")
+        if not lista:
+            return "No hay auxiliares que borrar."
+        carpeta = proyectos.proyecto_abierto().carpeta if proyectos.hayAbierto else ""
+        return (f"Se borrarán {len(lista)} archivo" + ("" if len(lista) == 1 else "s") + f" de {carpeta}:\n\n" + "\n".join(lista[:30])
+                + (f"\n… y {len(lista) - 30} más" if len(lista) > 30 else "")
+                + "\n\nLas fuentes (.tex, .bib) y el PDF no se tocan. SyncTeX deja de funcionar hasta la próxima compilación.")
+    acciones.registrar("compilar.limpiar", "&Limpiar auxiliares…", "edit-clear", "Ctrl+Shift+L", "Compilar", habilitada=False,
+                       al_disparar=lambda *_: compilacion.limpiar(""), operacion="eliminacion", consecuencias=consecuencias_limpiar,
                        descripcion="Muestra lo que se borraría y, si confirmas, lo borra; las fuentes y el PDF no se tocan")
     acciones.registrar("compilar.dependencias", "Revisar &dependencias", "tools-check-spelling", "Ctrl+Shift+D", "Compilar", habilitada=False,
-                       al_disparar=lambda *_: compilacion.revisarDependencias(""), descripcion="Clase, paquetes, archivos y programas que faltan (solo lee)")
+                       al_disparar=lambda *_: compilacion.revisarDependencias(""), operacion="lectura", descripcion="Clase, paquetes, archivos y programas que faltan (solo lee)")
     acciones.registrar("compilar.siguiente", "Siguiente &problema", "go-next", "F8", "Compilar", habilitada=False, al_disparar=compilacion.siguiente)
     acciones.registrar("compilar.al_guardar", "Compilar al &guardar", "view-refresh", None, "Compilar", marcable=True, marcada=ajustes.compilarAlGuardar,
                        al_disparar=lambda marcada: setattr(ajustes, "compilarAlGuardar", bool(marcada)))
     acciones.registrar("synctex.pdf", "Ir al &PDF (SyncTeX)", "go-next-view", "Ctrl+Alt+J", "Compilar", habilitada=False, al_disparar=pedir("synctex"),
                        descripcion="La línea del cursor en el PDF (también Ctrl+clic en el editor); doble clic en el PDF vuelve al código")
     acciones.registrar("historial.vaciar", "&Vaciar el historial de compilaciones", "edit-clear-history", None, "Compilar",
-                       al_disparar=pedir("historial_vaciar"), descripcion="Solo la lista; los proyectos no se tocan")
+                       al_disparar=lambda *_: historial.vaciar(), operacion="eliminacion",
+                       consecuencias=lambda: f"Se quitarán las {historial.total} compilaciones del historial. Los proyectos y sus PDF no se tocan.",
+                       descripcion="Solo la lista; los proyectos no se tocan")
     # --- Ayuda
     acciones.registrar("ayuda.atajos", "&Atajos de teclado", "input-keyboard", None, "Ayuda", al_disparar=pedir("atajos"))
     acciones.registrar("ayuda.manual", "&Manual del compilador", "help-contents", StandardKey.HelpContents, "Ayuda",
-                       al_disparar=lambda *_: sistema.abrirConAplicacion(str(REPO / "script_compilar_latex" / "README.md")))
+                       al_disparar=lambda *_: escritorio.abrirConAplicacion(str(REPO / "script_compilar_latex" / "README.md")))
 
     acciones.definir_menus([
-        ("&Archivo", ["archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "|", "archivo.guardar", "archivo.guardar_todo",
+        ("&Archivo", ["archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "|", "archivo.guardar", "archivo.guardar_como", "archivo.guardar_todo",
                       "archivo.cerrar", "proyecto.cerrar", "|", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
                       "escritorio.copiar", "escritorio.editor", "|", "archivo.salir"]),
         ("&Editar", ["editar.buscar", "editar.reemplazar", "editar.ir_linea", "|", "editar.completar", "editar.comentar"]),
@@ -285,6 +290,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         for nombre in ("archivo.cerrar", "editar.buscar", "editar.reemplazar", "editar.ir_linea", "editar.completar", "editar.comentar"):
             acciones.habilitar(nombre, hay_archivo)
         acciones.habilitar("archivo.guardar", hay_archivo)
+        acciones.habilitar("archivo.guardar_como", hay_archivo)
         acciones.habilitar("archivo.guardar_todo", editor.hayModificados)
         acciones.habilitar("proyecto.cerrar", hay_proyecto)
         acciones.habilitar("proyectos.detectar", not proyectos.enDeteccion)
@@ -324,7 +330,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     disponibilidad()
 
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
-                  editor=editor, compilacion=compilacion, visor=visor, escritorio=sistema, acciones=acciones)
+                  editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)

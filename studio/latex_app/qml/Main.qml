@@ -8,7 +8,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
-import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import GuiComun
 import "componentes"
@@ -64,17 +63,18 @@ VentanaStudio {
         function onPedir(nombre, datos) {
             const e = ventana.editor()
             switch (nombre) {
-            case "abrir_tex": selectorTex.open(); break
+            case "abrir_tex": selectorTex.abrir(p.hayAbierto ? p.abierto.carpeta : ""); break
             case "carpetas": if (ventana.dialogoAjustes) { ventana.dialogoAjustes.moduloActual = 0; ventana.dialogoAjustes.open() } break
-            case "anadir_carpeta": selectorCarpeta.open(); break
+            case "anadir_carpeta": selectorCarpeta.abrir(""); break
             case "abrir_proyecto": ventana.abrirProyecto(datos.ruta); break
             case "ir_a": ventana.irA(datos.archivo, datos.linea || 0); break
             case "seleccionar_proyecto": studio.interfaz.fijarVista("proyectos"); paginaProyectos.seleccionar(datos.fila); break
             case "guardar": espacio.guardar(e, false); break
             case "guardar_todo": espacio.guardarTodo(); break
+            case "guardar_como": if (e) { guardarComo.editor = e; guardarComo.abrir(e.ruta.substring(0, e.ruta.lastIndexOf("/")), e.ruta.split("/").pop()) } break
             case "cerrar_archivo": espacio.cerrarActual(); break
             case "cerrar_proyecto": cerrarProyecto(); break
-            case "editor_externo": if (e) studio.escritorio.abrirEnEditorExterno(e.ruta, e.lineaActual); break
+            case "editor_externo": if (e) studio.sistema.abrirEnEditorExterno(e.ruta, e.lineaActual); break
             case "buscar": if (e) espacio.buscar(false); break
             case "reemplazar": if (e) espacio.buscar(true); break
             case "ir_linea": if (e) { dialogoLinea.maximo = e.inicios.length; dialogoLinea.open() } break
@@ -82,10 +82,8 @@ VentanaStudio {
             case "comentar": if (e && !e.soloLectura) e.comentar(); break
             case "alternar_pdf": espacio.mostrarPdf = !espacio.mostrarPdf; ventana.registro.marcar("ver.pdf", espacio.mostrarPdf); break
             case "compilar_marcados": studio.interfaz.fijarVista("proyectos"); paginaProyectos.compilarMarcados(); break
-            case "limpiar": dialogoLimpiar.abrir(); break
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
             case "atajos": dialogoAtajos.open(); break
-            case "historial_vaciar": dialogoVaciar.open(); break
             case "salir": ventana.close(); break
             }
         }
@@ -108,7 +106,7 @@ VentanaStudio {
     Connections { target: studio.editor; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
     Connections { target: studio.compilacion; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
     Connections { target: studio.visor; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
-    Connections { target: studio.escritorio; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    Connections { target: studio.sistema; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
 
     Shortcut { sequence: "Ctrl+B"; onActivated: if (ventana.accion("compilar.compilar").habilitada) studio.compilacion.compilar() }
 
@@ -168,32 +166,29 @@ VentanaStudio {
     Component { id: cCola; Cola {} }
     Component { id: cHistorial; HistorialCompilaciones {} }
 
-    // ------------------------------------------------------------------ diálogos (los de archivos y carpetas son los de KDE con QApplication)
-    FileDialog {
+    // ------------------------------------------------------------------ diálogos (archivos y carpetas: los de KDE, de gui-comun 3.0)
+    ElegirArchivos {
         id: selectorTex
-        title: "Abrir un .tex"
-        nameFilters: ["LaTeX (*.tex)", "Todos (*)"]
-        onAccepted: ventana.abrirProyecto(decodeURIComponent(selectedFile.toString().replace("file://", "")))
+        titulo: "Abrir un .tex"
+        filtros: ["Documentos LaTeX (*.tex)"]
+        onElegido: ruta => ventana.abrirProyecto(ruta)
     }
-    FolderDialog {
+    ElegirCarpeta {
         id: selectorCarpeta
-        title: "Añadir una carpeta de trabajo"
-        onAccepted: { const e = studio.ajustes.anadirCarpeta(decodeURIComponent(selectedFolder.toString().replace("file://", ""))); if (e) ventana.mensajes.mostrar(e, "error") }
+        titulo: "Añadir una carpeta de trabajo"
+        onElegida: ruta => { const e = studio.ajustes.anadirCarpeta(ruta); if (e) ventana.mensajes.mostrar(e, "error") }
     }
-    Kirigami.PromptDialog {
-        id: dialogoLimpiar
-        property var lista: []
-        standardButtons: Kirigami.Dialog.Cancel
-        customFooterActions: [Kirigami.Action { text: "Borrar"; icon.name: "edit-clear"; enabled: dialogoLimpiar.lista.length > 0; onTriggered: { studio.compilacion.limpiar(""); dialogoLimpiar.close() } }]
-        function abrir() {
-            if (!p.hayAbierto) { ventana.mensajes.mostrar("Abre un proyecto.", "aviso"); return }
-            lista = studio.compilacion.auxiliaresParaLimpiar("")
-            title = "Limpiar auxiliares de " + p.abierto.nombre
-            subtitle = lista.length === 0 ? "No hay auxiliares que borrar."
-                     : "Se borrarían " + lista.length + " archivo" + (lista.length === 1 ? "" : "s") + " de " + p.abierto.carpeta + ":\n\n"
-                       + lista.slice(0, 30).join("\n") + (lista.length > 30 ? "\n… y " + (lista.length - 30) + " más" : "")
-                       + "\n\nLas fuentes (.tex, .bib) y el PDF no se tocan. SyncTeX dejará de funcionar hasta la próxima compilación."
-            open()
+    GuardarComo {
+        id: guardarComo
+        property var editor: null
+        titulo: "Guardar como"
+        filtros: ["Documentos LaTeX (*.tex)", "Bibliografía (*.bib)"]
+        conTodos: true
+        onElegido: ruta => {
+            const e = guardarComo.editor
+            if (!e) return
+            const r = studio.editor.guardarComo(e.ruta, ruta, e.area.text)
+            if (r) ventana.mensajes.mostrar(r, "error"); else e.modificado = false
         }
     }
     Kirigami.PromptDialog {
@@ -205,13 +200,6 @@ VentanaStudio {
             Kirigami.Action { text: "Salir sin guardar"; icon.name: "application-exit"; onTriggered: { ventana.permitirCierre = true; dialogoSalir.close(); ventana.close() } },
             Kirigami.Action { text: "Guardar todo y salir"; icon.name: "document-save-all"; onTriggered: { espacio.guardarTodo(); dialogoSalir.close(); if (!studio.editor.hayModificados) { ventana.permitirCierre = true; ventana.close() } } }
         ]
-    }
-    Kirigami.PromptDialog {
-        id: dialogoVaciar
-        title: "Vaciar el historial"
-        subtitle: "¿Quitar las " + studio.historial.total + " compilaciones del historial? Los proyectos y sus PDF no se tocan."
-        standardButtons: Kirigami.Dialog.Cancel
-        customFooterActions: [Kirigami.Action { text: "Vaciar"; icon.name: "edit-clear-history"; onTriggered: { studio.historial.vaciar(); dialogoVaciar.close() } }]
     }
     Kirigami.Dialog {
         id: dialogoLinea

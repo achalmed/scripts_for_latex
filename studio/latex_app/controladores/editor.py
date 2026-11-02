@@ -215,6 +215,40 @@ class Editor(QObject):
         self.guardadoArchivo.emit(ruta)
         return ""
 
+    @Slot(str, str, str, result=str)
+    def guardarComo(self, ruta: str, nueva: str, texto: str) -> str:
+        """Guardar como: escribe `texto` en `nueva` (el diálogo de KDE ya preguntó si sobrescribir) y la pestaña pasa a
+        ser la de `nueva`; el archivo original no se toca. Devuelve "" o el error."""
+        nueva = str(Path(nueva).expanduser())
+        if not nueva:
+            return "Sin nombre de archivo."
+        try:
+            with open(nueva, "w", encoding="utf-8", newline="") as f:
+                f.write(texto.replace("\n", "\r\n") if self._crlf.get(ruta) else texto)
+        except OSError as e:
+            return f"No se pudo guardar {Path(nueva).name}: {e.strerror}"
+        i = self._indice(ruta)
+        if i >= 0 and nueva != ruta:
+            otra = self._indice(nueva)
+            if otra >= 0:                                    # ya estaba abierta: se cierra la vieja pestaña de ese archivo
+                self._abiertos.quitar(otra)
+                i = self._indice(ruta)
+            self._abiertos.actualizar(i, ruta=nueva, nombre=Path(nueva).name, carpeta=str(Path(nueva).parent), modificado=False,
+                                      definicion=definicion_de(nueva), solo_lectura=False)
+            self._firmas.pop(ruta, None)
+            self._crlf[nueva] = self._crlf.pop(ruta, False)
+            if self._vigia is not None and ruta in self._vigia.files():
+                self._vigia.removePath(ruta)
+        self._firmas[nueva] = self._firma(nueva)
+        self._vigilar(nueva)
+        if self._actual == ruta:
+            self._actual = nueva
+            self.actualCambiado.emit()
+        self.cambiado.emit()
+        self.consola.registrar("info", f"Guardado como: {nueva}")
+        self.guardadoArchivo.emit(nueva)
+        return ""
+
     @Slot(str)
     def aceptarDisco(self, ruta: str) -> None:
         """El usuario recargó el archivo desde el disco: la firma nueva es la buena."""

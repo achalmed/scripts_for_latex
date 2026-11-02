@@ -25,11 +25,9 @@ nada en curso
 
 ## Por hacer
 
-- 2026-11-02 · dueño: director · fusionar `wip/2026-11-02-reingenieria` en `main` (en local; nada se empuja). Cuando
-  `gui-comun` 3.0 esté en `main`: sustituir `studio/latex_app/escritorio.py` por las funciones de la base (mismos
-  nombres), comprobar en la sesión real (Wayland) que «Abrir un .tex…» y «Añadir una carpeta de trabajo…» muestran el
-  diálogo de KDE, y valorar pasar de `VentanaStudio` a la ventana sin plantilla. Las 31 pruebas de ventana y
-  controladores ya pasan contra la base del worktree.
+- 2026-11-02 · dueño: director · fusionar en `main` el último tramo de `wip/2026-11-02-reingenieria` (la base
+  `gui-comun` 3.0: `escritorio` y diálogos de la base, confirmaciones de la base, «Guardar como»; capturas «antes» sin la
+  carpeta de inicio). Valorar después pasar de `VentanaStudio` a `VentanaBase` (no cambia lo que se ve).
 - 2026-11-02 · dueño: **el autor** · mejora del visor: `sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`
   permitiría cambiar las páginas de `pdftoppm` por `PdfMultiPageView` (selección de texto, enlaces, búsqueda en el PDF).
 - 2026-11-02 · dueño: **el autor** (repo `escritura`) · SyncTeX en los proyectos de `escritura`: su `scripts/build.sh`
@@ -38,9 +36,6 @@ nada en curso
 - 2026-11-02 · dueño: **el autor** · usar LaTeX Studio 3.0 en la sesión real (`/usr/bin/python3 ~/Documents/latex-studio/studio/main.py`
   tras la fusión): la página de proyectos sobre `escritura` y el despacho, abrir un proyecto, editar y guardar, F5,
   SyncTeX en un proyecto de `main.sh` o latexmk, F8, Ctrl+Mayús+D, la cola; lo que no convenza se anota aquí.
-- 2026-11-02 · dueño: director · las capturas de la 2.0 (ahora en `docs/figuras/antes/`) muestran la ruta de la caché
-  con la carpeta de inicio de la máquina; las de la 3.0 (`docs/figuras/latex-studio-*.png`) ya se hacen con `HOME` y
-  `XDG_CACHE_HOME` temporales. Antes de empujar, decidir si las de `antes/` se quedan (historia) o se recortan.
 - 2026-11-02 · dueño: director · lo que quedó fuera de la 3.0 (`docs/reingenieria.md` §6): el editor no pliega ni tiene
   multicursor ni corrector; el autocompletado no conoce los argumentos de cada orden; el modo watch de la CLI (`-w`)
   sigue sin ofrecerse (necesita `inotifywait`; la ventana compila al guardar si se marca); los errores de Biber se leen

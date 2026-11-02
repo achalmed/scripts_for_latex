@@ -154,10 +154,12 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
 - **R13. Atajos de editor LaTeX** (TeXstudio): F5 y Ctrl+B compilar, F6 reconstruir, Esc detiene, Ctrl+S guardar,
   Ctrl+F buscar, Ctrl+R reemplazar, Ctrl+G ir a línea, Ctrl+Espacio completar, Ctrl+clic o Ctrl+Alt+J SyncTeX,
   Ctrl+T comentar, F8 siguiente problema, Ctrl+1/Ctrl+2 proyectos/escritura, Ctrl+K paleta (no choca).
-- **R14. KDE**: abrir el PDF con su aplicación (`xdg-open`), mostrar en Dolphin señalándolo (`dolphin --select`; sin
-  Dolphin, la carpeta con `xdg-open`), abrir carpeta (`xdg-open`); elegir carpetas con `FolderDialog` (con la
-  `QApplication` de `gui-comun` 3.0 es el de KDE). Las tres operaciones viven en `studio/latex_app/escritorio.py` hasta que
-  `gui-comun` 3.0 las traiga; entonces se sustituyen.
+- **R14. KDE** (con `gui-comun` 3.0): abrir el PDF con su aplicación, mostrar en Dolphin señalándolo y abrir carpeta son
+  las tres funciones de `escritorio` de la base; elegir un `.tex`, una carpeta de trabajo, una ruta de TeX o «Guardar
+  como» son `ElegirArchivos`, `ElegirCarpeta` y `GuardarComo`, que con su `QApplication` son el diálogo de KDE
+  (comprobado en la sesión real el 2026-11-02, §5). Lo que no es de la base (terminal, portapapeles, editor externo)
+  vive en `Sistema` (`studio/latex_app/aplicacion.py`). Limpiar auxiliares y vaciar el historial son eliminaciones: las
+  confirma la base con la lista de lo que se borrará.
 - **R15. Cola de compilación.** Varios proyectos marcados en la página de proyectos se compilan uno tras otro, cada uno
   con su compilador; la cola se ve y se cancela.
 - **R16. Revisión de dependencias.** Antes de compilar (y con su propia orden): clases y paquetes del principal y sus
@@ -194,6 +196,12 @@ técnico desplegable) y `figuras/latex-studio-paleta.png` (la paleta de órdenes
 | controladores | `studio/latex_app/controladores/{ajustes,proyectos,editor,compilacion,visor}.py` | `tests/test_controladores.py` (carpetas de trabajo, detección en tarea, abrir un capítulo, guardar solo con orden y cambio externo, CRLF, compilar y ver, F8, cola, limpiar sin tocar fuentes, dependencias) |
 | ventana | `studio/latex_app/qml/Main.qml`, `studio/latex_app/qml/componentes/*` | `tests/test_studio.py` (la ventana con un proyecto abierto, cada componente, `--smoke`, sin colores propios ni marca ni QtWidgets) |
 
+**Sesión real (Plasma 6.6, Wayland, `gui-comun` 3.0)**: «Abrir un .tex…», «Añadir una carpeta de trabajo…» y «Guardar
+como…» abren el diálogo de KDE (lugares de Dolphin, en español, «Tipo de archivo» con los filtros, carpeta inicial la
+del proyecto); comprobado con una sonda que abre cada diálogo desde la ventana y lo captura con Spectacle. Las capturas
+muestran rutas de la máquina y quedaron con las notas de la jornada, fuera del repo. Las capturas «antes» se rehicieron
+con la ventana 2.0 y su `gui-comun` 2.7 (worktrees temporales de las ramas de respaldo) con `HOME` y caché temporales.
+
 Rendimiento medido sobre `escritura` (solo lectura, sin compilar): 428 proyectos (de 1668 `.tex`) en 2,2 s la primera
 vez y 0,4 s con la caché; abrir la tesis más grande, con su estructura y su bibliografía, 0,2 s. Las mismas 31
 pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su worktree (`PYTHONPATH` a esa base).
@@ -203,9 +211,9 @@ pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su wo
 - **SyncTeX en los proyectos de `escritura`**: su `<marco>/scripts/build.sh` no pasa `-synctex=1`; añadirlo es cambio de ese
   repo (una línea en `CFG_TEX_FLAGS` de su `config.sh`), no de este.
 - **QtPdf** (`sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`): selección de texto y enlaces del PDF.
-- **Los diálogos de KDE y las funciones de escritorio de `gui-comun` 3.0**: cuando la base esté en `main`, `escritorio.py`
-  se sustituye por `gui_comun` (mismos nombres: `abrirConAplicacion`, `mostrarEnDolphin`, `abrirCarpeta`) y la ventana
-  puede pasar de `VentanaStudio` a la ventana sin plantilla; hoy la distribución propia vive dentro de las ranuras.
+- **La ventana sin plantilla** (`VentanaBase` de `gui-comun` 3.0): la distribución propia vive hoy dentro de las ranuras
+  de `VentanaStudio` (barra lateral, centro, panel inferior; el panel de detalles no se usa); pasar a `VentanaBase` es
+  posible y no cambia lo que se ve.
 - **Editor**: sin plegado, multicursor ni corrector ortográfico; el autocompletado no conoce los argumentos de cada
   orden. **Problemas de Biber** se leen de sus líneas `ERROR`/`WARN` del registro, no del `.blg`.
 - **Proyectos del despacho**: la detección los encuentra en la máquina del autor; ninguna prueba ni captura los usó.

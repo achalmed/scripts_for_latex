@@ -46,7 +46,7 @@ llevan causa probable, acción recomendada y el detalle del registro (R9); F8 re
 
 | atajo | qué hace | atajo | qué hace |
 |---|---|---|---|
-| F5 · Ctrl+B | compilar el proyecto abierto | Ctrl+S · Ctrl+Mayús+S | guardar · guardar todo |
+| F5 · Ctrl+B | compilar el proyecto abierto | Ctrl+S · Ctrl+Mayús+S · Ctrl+L | guardar · guardar como · guardar todo |
 | F6 | reconstruir todo (limpia y compila) | Ctrl+F · Ctrl+R | buscar · buscar y reemplazar |
 | Mayús+F5 | simular (la orden, sin escribir) | Ctrl+G | ir a la línea |
 | Ctrl+Mayús+F5 | compilar los marcados (cola) | Ctrl+Espacio | completar (`\ref`, `\cite`, órdenes, entornos) |
@@ -64,13 +64,12 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | archivo | qué es |
 |---|---|
 | `main.py` | el punto de entrada, sin lógica (`/usr/bin/python3`) |
-| `latex_app/aplicacion.py` | arma la aplicación: controladores, acciones (menú, barra de compilación, paleta, atajos: cada operación una sola vez), `Escritorio` y `latex_app/qml/Main.qml` |
+| `latex_app/aplicacion.py` | arma la aplicación: controladores, acciones (menú, barra de compilación, paleta, atajos: cada operación una sola vez, con su estado de `gui-comun` 3.0), `Sistema` (terminal, portapapeles, editor externo; abrir, mostrar en Dolphin y abrir carpeta son de `escritorio` de la base) y `latex_app/qml/Main.qml` |
 | `latex_app/proyectos.py` | la detección (sin Qt): principal, inclusiones, `.bib`, motor, compilador, categoría, estado del disco; caché |
 | `latex_app/estructura.py` | estructura, etiquetas, claves de los `.bib`, definiciones y autocompletado (sin Qt) |
 | `latex_app/diagnostico.py` | errores presentables (causa y acción) y la revisión de dependencias con `kpsewhich` (sin Qt) |
 | `latex_app/visor.py` | páginas con `pdftoppm` en una caché acotada y SyncTeX (sin Qt) |
 | `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
-| `latex_app/escritorio.py` | abrir con su aplicación, mostrar en Dolphin, abrir carpeta (lo sustituirá `gui-comun` 3.0) |
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
 | `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `EditorArchivo`, `BarraBusqueda`, `VisorPdf`, `ListaProblemas`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `ResaltadoEditor`) |
 | `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
@@ -94,6 +93,4 @@ tests/run.sh                                          # desde latex-studio/: la 
   (`<marco>/scripts/build.sh`) no pasa `-synctex=1` y sus proyectos no lo tienen hasta que ese marco lo añada.
 - **El editor es un `TextArea`**: sin plegado, sin multicursor, sin corrector ortográfico; el autocompletado es por
   contexto (no conoce los argumentos de cada orden).
-- **Los diálogos de archivos y carpetas** son los de KDE cuando la aplicación es una `QApplication` (`gui-comun` 3.0); con
-  2.x se ve el diálogo de Qt Quick.
 - **«Salir» con cambios sin guardar** pregunta (Ctrl+Q y cerrar la ventana); matar el proceso no.

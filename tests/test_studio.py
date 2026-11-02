@@ -47,7 +47,9 @@ def despues():
     QTimer.singleShot(500, app.app.quit)
 QTimer.singleShot(400, abrir)
 app.app.exec(); app.cerrar()
-print(json.dumps({"ok": ok, "titulo_sin": titulo_sin, "errores": errores, "acciones": a.nombres(), "menus": [m["titulo"] for m in a.menus],
+limpiar = a.accion("compilar.limpiar")
+confirmaciones = {"limpiar": [limpiar.operacion, limpiar.requiereConfirmacion], "escritorio": type(app.escritorio).__module__}
+print(json.dumps({"ok": ok, "confirmaciones": confirmaciones, "titulo_sin": titulo_sin, "errores": errores, "acciones": a.nombres(), "menus": [m["titulo"] for m in a.menus],
                   "barra": a.barra, "sin": sin, "total": p.total, **resultado}))
 """
 
@@ -90,7 +92,7 @@ def test_abre_la_ventana_y_un_proyecto(tmp_path):
     assert datos["ok"], r.stderr[-3000:]
     assert not _graves(datos["errores"]), "\n".join(_graves(datos["errores"]))
     assert datos["total"] == 6 and datos["titulo_sin"] == "Proyectos — LaTeX Studio"
-    for n in ("archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "archivo.guardar", "archivo.guardar_todo",
+    for n in ("archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "archivo.guardar", "archivo.guardar_como", "archivo.guardar_todo",
               "archivo.cerrar", "proyecto.cerrar", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
               "escritorio.copiar", "escritorio.editor", "archivo.salir", "editar.buscar", "editar.reemplazar", "editar.ir_linea",
               "editar.completar", "editar.comentar", "ver.proyectos", "ver.escritura", "ver.pdf", "compilar.compilar",
@@ -105,6 +107,8 @@ def test_abre_la_ventana_y_un_proyecto(tmp_path):
     assert datos["abiertos"] == ["principal.tex"]                       # un capítulo abre el proyecto y su principal
     assert datos["con"] == [True, True, True, True, True, True]
     assert datos["archivos"] == 5 and datos["esquema"] >= 7
+    assert datos["confirmaciones"]["limpiar"] == ["eliminacion", True]               # gui-comun 3.0 la confirma con su lista
+    assert datos["confirmaciones"]["escritorio"] == "gui_comun.escritorio"          # las tres operaciones de escritorio, de la base
 
 
 @requiere_sistema

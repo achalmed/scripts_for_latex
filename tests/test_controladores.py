@@ -14,7 +14,6 @@ import pytest
 
 from conftest import copiar_muestra, requiere_binding, requiere_biber, requiere_lualatex
 
-from latex_app import escritorio  # noqa: E402
 from latex_app import modelos as mod  # noqa: E402
 from latex_app.controladores import editor as ed  # noqa: E402
 
@@ -46,18 +45,6 @@ def test_posiciones_en_utf16_como_qml():
 def test_definicion_de_resaltado():
     assert ed.definicion_de("/a/x.tex") == "LaTeX" and ed.definicion_de("/a/r.bib") == "BibTeX"
     assert ed.definicion_de("/a/latexmkrc") == "Perl" and ed.definicion_de("/a/proyecto.yaml") == "YAML"
-
-
-def test_las_tres_operaciones_de_escritorio(tmp_path, monkeypatch):
-    f = tmp_path / "a.pdf"
-    f.write_bytes(b"%PDF")
-    assert escritorio.orden_abrir(str(f)) == ["xdg-open", str(f)]
-    monkeypatch.setattr(escritorio.shutil, "which", lambda n: "/usr/bin/dolphin" if n == "dolphin" else None)
-    assert escritorio.orden_mostrar(str(f)) == ["dolphin", "--select", str(f)]
-    monkeypatch.setattr(escritorio.shutil, "which", lambda n: None)
-    assert escritorio.orden_mostrar(str(f)) == ["xdg-open", str(tmp_path)]
-    assert escritorio.orden_carpeta(str(f)) == ["xdg-open", str(tmp_path)]
-    assert escritorio.orden_abrir(str(tmp_path / "no")) == [] and escritorio.lanzar([]) is False
 
 
 # ---------------------------------------------------------------------------------------------------- con Qt
@@ -179,6 +166,20 @@ def test_editor_guarda_solo_con_orden_y_respeta_cambios_externos(app, piezas):
     assert e.guardar(ruta, "lo mío", True) == "" and Path(ruta).read_text() == "lo mío"
     e.cerrar(ruta)
     assert e.abiertos.filas == 0 and e.actual == ""
+
+
+@requiere_binding
+def test_guardar_como_no_toca_el_original(app, piezas, tmp_path):
+    e = piezas["editor"]
+    original = tmp_path / "a.tex"
+    original.write_text("hola\n")
+    e.abrir(str(original))
+    e.leer(str(original))
+    nueva = tmp_path / "b.tex"
+    assert e.guardarComo(str(original), str(nueva), "hola, otra\n") == ""
+    assert original.read_text() == "hola\n" and nueva.read_text() == "hola, otra\n"
+    assert [f["ruta"] for f in e.abiertos.todas()] == [str(nueva)] and e.actual == str(nueva)
+    assert e.guardar(str(nueva), "tres\n", False) == "" and nueva.read_text() == "tres\n"
 
 
 @requiere_binding

@@ -5,7 +5,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
-import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
 import GuiComun
@@ -22,10 +21,10 @@ DialogoAjustes {
     ]
     onGuardado: { dialogo.a.guardar(); ventana.mensajes.mostrar("Preferencias guardadas.", "positivo") }
 
-    FolderDialog {
+    ElegirCarpeta {
         id: selectorRutaTex
-        title: "Ruta de TeX (clases y paquetes de un marco)"
-        onAccepted: { const e = dialogo.a.anadirRutaTex(decodeURIComponent(selectedFolder.toString().replace("file://", ""))); if (e) ventana.mensajes.mostrar(e, "error") }
+        titulo: "Ruta de TeX (clases y paquetes de un marco)"
+        onElegida: ruta => { const e = dialogo.a.anadirRutaTex(ruta); if (e) ventana.mensajes.mostrar(e, "error") }
     }
 
     Component {
@@ -73,7 +72,7 @@ DialogoAjustes {
                         onClicked: dialogo.a.quitarRutaTex(modelData)
                     }
                 }
-                FormCard.FormButtonDelegate { text: "Añadir una ruta…"; icon.name: "list-add"; onClicked: selectorRutaTex.open() }
+                FormCard.FormButtonDelegate { text: "Añadir una ruta…"; icon.name: "list-add"; onClicked: selectorRutaTex.abrir("") }
                 FormCard.FormTextDelegate { text: "Para compilar con script_compilar_latex o latexmk documentos cuyas clases viven en un marco que no está instalado en TeX Live." }
             }
         }
