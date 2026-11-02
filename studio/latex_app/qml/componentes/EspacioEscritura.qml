@@ -55,25 +55,30 @@ QQC2.SplitView {
         QQC2.SplitView.minimumWidth: Kirigami.Units.gridUnit * 20
         spacing: 0
 
-        QQC2.TabBar {
-            id: pestanas
+        // la barra de pestañas solo existe con archivos abiertos (el estilo de KDE falla con una TabBar vacía)
+        Loader {
             Layout.fillWidth: true
-            visible: studio.editor.abiertos.filas > 0
-            currentIndex: studio.editor.indiceActual
-            Accessible.name: "Archivos abiertos"
-            Repeater {
-                model: studio.editor.abiertos
-                delegate: QQC2.TabButton {
-                    required property var model
-                    required property int index
-                    width: implicitWidth
-                    text: (model.modificado ? "● " : "") + model.nombre
-                    icon.name: model.solo_lectura ? "object-locked" : ""
-                    onClicked: studio.editor.fijarActual(model.ruta)
-                    QQC2.ToolTip.text: model.ruta
-                    QQC2.ToolTip.visible: hovered
-                    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
-                    TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: { studio.editor.fijarActual(model.ruta); raiz.cerrarActual() } }
+            active: studio.editor.abiertos.filas > 0
+            visible: active
+            sourceComponent: Component {
+                QQC2.TabBar {
+                    currentIndex: studio.editor.indiceActual
+                    Accessible.name: "Archivos abiertos"
+                    Repeater {
+                        model: studio.editor.abiertos
+                        delegate: QQC2.TabButton {
+                            required property var model
+                            required property int index
+                            width: implicitWidth
+                            text: (model.modificado ? "● " : "") + model.nombre
+                            icon.name: model.solo_lectura ? "object-locked" : ""
+                            onClicked: studio.editor.fijarActual(model.ruta)
+                            QQC2.ToolTip.text: model.ruta
+                            QQC2.ToolTip.visible: hovered
+                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                            TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: { studio.editor.fijarActual(model.ruta); raiz.cerrarActual() } }
+                        }
+                    }
                 }
             }
         }

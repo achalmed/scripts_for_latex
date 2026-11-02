@@ -107,6 +107,11 @@ class Compilacion(QObject):
         return self.lanzar(self.proyectos.principal, "reconstruir")
 
     @Slot(result=bool)
+    def borrador(self) -> bool:
+        """Comprueba que compila sin producir PDF (`main.sh --draft`; solo con script_compilar_latex)."""
+        return self.lanzar(self.proyectos.principal, "borrador")
+
+    @Slot(result=bool)
     def simular(self) -> bool:
         return self.lanzar(self.proyectos.principal, "simular")
 
@@ -159,7 +164,9 @@ class Compilacion(QObject):
         self._pasos = svc.receta(p, que, registro, self.ajustes.rutasTex)
         self._ruta, self._que, self._inicio = p.principal, que, time.monotonic()
         self._registro = str(registro) if registro else ""
-        if que in ("compilar", "reconstruir"):
+        if que == "borrador" and p.compilador != "main.sh":
+            que = self._que = "compilar"
+        if que in ("compilar", "reconstruir", "borrador"):
             self.proyectos.refrescar(p.principal, en_curso=True)
         self._siguiente_paso()
         return True
@@ -189,7 +196,7 @@ class Compilacion(QObject):
                             f"La limpieza de {Path(ruta).name} terminó con código {codigo}.", "positivo" if codigo == 0 else "error")
         else:
             p = self.proyectos.refrescar(ruta, en_curso=False)
-            ok = codigo == 0 and p is not None and bool(p.pdf) and p.pdf_mtime >= time.time() - segundos - 5
+            ok = codigo == 0 and (que == "borrador" or (p is not None and bool(p.pdf) and p.pdf_mtime >= time.time() - segundos - 5))
             n_err, n_av = (p.errores, p.avisos) if p is not None else (0, 0)
             detalle = svc.resumen([svc.Problema("error", "")] * n_err + [svc.Problema("aviso", "")] * n_av)
             if ruta == self.proyectos.principal or not self.proyectos.hayAbierto:
@@ -200,6 +207,8 @@ class Compilacion(QObject):
                 self._lote["ok"] += 1 if ok else 0
                 if not ok:
                     self._lote["fallos"].append(Path(ruta).name)
+            elif ok and que == "borrador":
+                self.aviso.emit(f"{Path(ruta).name} compila (borrador, sin PDF) en {segundos:.1f} s · {detalle}.", "positivo")
             elif ok:
                 self.aviso.emit(f"{Path(ruta).stem}.pdf en {segundos:.1f} s · {detalle}.", "positivo" if not n_err and not n_av else "informacion")
             else:

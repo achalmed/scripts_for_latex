@@ -228,6 +228,15 @@ def test_la_clase_de_un_marco_se_busca_en_el_marco(muestra):
 
 # ---------------------------------------------------------------------------------------------------- recetas
 
+def test_indice_y_glosarios_se_detectan_del_proyecto(tmp_path):
+    (tmp_path / "i.tex").write_text("\\documentclass{book}\n\\usepackage{makeidx}\n\\makeindex\n\\begin{document}x\\printindex\\end{document}\n")
+    p = pr.detectar([tmp_path])[0]
+    assert p.indice and not p.glosarios
+    argv = svc.receta(p)[0].argv
+    assert "-i" in argv and "-g" not in argv
+    assert svc.receta(p, "borrador")[0].argv[-2] == "--draft"
+
+
 def test_recetas_por_compilador(muestra, tmp_path):
     ps = _por_nombre(pr.detectar([muestra]))
     t = svc.receta(ps["principal.tex"], "compilar", tmp_path / "r.log")

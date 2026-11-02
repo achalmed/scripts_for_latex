@@ -25,7 +25,7 @@ from latex_app import compilador as svc
 PROFUNDIDAD = 6
 CARPETAS_SALTADAS = {"node_modules", "_site", "_freeze", ".quarto", "site_libs", ".build", "build", "__pycache__"}
 LIMITE_LECTURA = 512 * 1024                  # un .tex más grande (tablas generadas) se lee hasta aquí
-VERSION_CACHE = 3
+VERSION_CACHE = 4
 
 CATEGORIAS = ("Escritura académica", "Tesis y trabajos de investigación", "Artículos científicos",
               "Documentos legislativos", "Documentos institucionales", "Pruebas y plantillas", "Otros proyectos")
@@ -122,6 +122,8 @@ def analizar_tex(texto: str) -> dict:
         "biblatex": bool(mb) or "\\printbibliography" in limpio,
         "backend": backend,
         "paquetes": paquetes,
+        "indice": "\\makeindex" in limpio,
+        "glosarios": "\\makeglossaries" in limpio or "\\makenoidxglossaries" in limpio,
         "opcionales": sorted({m2.group(1).strip() for m2 in re.finditer(r"\\IfFileExists\s*\{([^}]+)\}", limpio)}),
         "titulo": re.sub(r"\s+", " ", re.sub(r"\\\\|\\[a-zA-Z]+\*?|[{}]", " ", mt["t"])).strip() if mt else "",
     }
@@ -210,6 +212,8 @@ class Proyecto:
     bibs_no_encontradas: list = field(default_factory=list)
     paquetes: list = field(default_factory=list)
     configuracion: list = field(default_factory=list)  # latexmkrc, proyecto.yaml, fuentes.yml
+    indice: bool = False                  # \makeindex: main.sh -i
+    glosarios: bool = False               # \makeglossaries: main.sh -g
     categoria: str = "Otros proyectos"
     categoria_motivo: str = ""
     # estado (del disco)
@@ -593,6 +597,7 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
                     latexmkrc=str(rc) if rc else "", carpeta_aux=carpeta_aux, archivos=[str(a) for a in archivos],
                     no_encontrados=faltan, bibs=bibs, bibs_no_encontradas=bibs_faltan,
                     paquetes=sorted({q for a in analisis for q in a["paquetes"]}), configuracion=configuracion,
+                    indice=any(a.get("indice") for a in analisis), glosarios=any(a.get("glosarios") for a in analisis),
                     categoria=categoria, categoria_motivo=motivo)
 
 

@@ -213,6 +213,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        descripcion="El proyecto abierto con su compilador y su motor (también Ctrl+B)")
     acciones.registrar("compilar.reconstruir", "&Reconstruir todo", "run-build-clean", "F6", "Compilar", habilitada=False, al_disparar=compilacion.reconstruir,
                        descripcion="Limpia los auxiliares y compila de nuevo (bibliografía incluida)")
+    acciones.registrar("compilar.borrador", "Comprobar sin PDF (&borrador)", "document-preview", None, "Compilar", habilitada=False,
+                       al_disparar=compilacion.borrador, descripcion="main.sh --draft: comprueba que compila sin escribir el PDF")
     acciones.registrar("compilar.simular", "&Simular", "system-run", "Shift+F5", "Compilar", habilitada=False, al_disparar=compilacion.simular,
                        descripcion="Las órdenes que correría, sin escribir nada")
     acciones.registrar("compilar.cancelar", "&Detener", "process-stop", None, "Compilar", habilitada=False, al_disparar=compilacion.cancelar,
@@ -228,6 +230,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        al_disparar=lambda marcada: setattr(ajustes, "compilarAlGuardar", bool(marcada)))
     acciones.registrar("synctex.pdf", "Ir al &PDF (SyncTeX)", "go-next-view", "Ctrl+Alt+J", "Compilar", habilitada=False, al_disparar=pedir("synctex"),
                        descripcion="La línea del cursor en el PDF (también Ctrl+clic en el editor); doble clic en el PDF vuelve al código")
+    acciones.registrar("historial.vaciar", "&Vaciar el historial de compilaciones", "edit-clear-history", None, "Compilar",
+                       al_disparar=pedir("historial_vaciar"), descripcion="Solo la lista; los proyectos no se tocan")
     # --- Ayuda
     acciones.registrar("ayuda.atajos", "&Atajos de teclado", "input-keyboard", None, "Ayuda", al_disparar=pedir("atajos"))
     acciones.registrar("ayuda.manual", "&Manual del compilador", "help-contents", StandardKey.HelpContents, "Ayuda",
@@ -240,8 +244,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         ("&Editar", ["editar.buscar", "editar.reemplazar", "editar.ir_linea", "|", "editar.completar", "editar.comentar"]),
         ("&Ver", ["ver.proyectos", "ver.escritura", "|", "ventana.navegacion", "ver.pdf", "ventana.inferior", "|",
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
-        ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
-                       "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar"]),
+        ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
+                       "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
         ("&Herramientas", ["ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
@@ -268,6 +272,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         for nombre in ("compilar.compilar", "compilar.reconstruir", "compilar.simular", "compilar.dependencias"):
             acciones.habilitar(nombre, hay_proyecto)
         acciones.habilitar("compilar.limpiar", hay_proyecto and not ocupado)
+        acciones.habilitar("compilar.borrador", bool(p and p.compilador == "main.sh"))
+        acciones.habilitar("historial.vaciar", historial.total > 0)
         acciones.habilitar("compilar.cancelar", ocupado or compilacion.enCola > 0)
         acciones.habilitar("compilar.seleccion", proyectos.total > 0)
         acciones.habilitar("compilar.siguiente", compilacion.nProblemas > 0)
@@ -288,7 +294,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
             acciones.marcar(f"ver.{n}", interfaz.vista == n)
 
     for senal in (proyectos.cambiado, proyectos.abiertoCambiado, editor.cambiado, editor.actualCambiado, compilacion.cambiado,
-                  compilacion.problemasCambiados, interfaz.vistaCambiada, ajustes.cambiado, visor.zoomCambiado):
+                  compilacion.problemasCambiados, interfaz.vistaCambiada, ajustes.cambiado, visor.zoomCambiado, historial.cambiado):
         senal.connect(disponibilidad)
 
     # ------------------------------------------------- lo que encadena a los controladores

@@ -85,6 +85,7 @@ VentanaStudio {
             case "limpiar": dialogoLimpiar.abrir(); break
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
             case "atajos": dialogoAtajos.open(); break
+            case "historial_vaciar": dialogoVaciar.open(); break
             case "salir": ventana.close(); break
             }
         }
@@ -160,11 +161,12 @@ VentanaStudio {
         id: panelInferior
         consola: studio.consola
         altoPreferido: Kirigami.Units.gridUnit * 11
-        extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }]
+        extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }, { titulo: "Historial", componente: cHistorial }]
     }
     Component { id: cProblemas; ListaProblemas {} }
     Component { id: cRegistro; RegistroCompilacion {} }
     Component { id: cCola; Cola {} }
+    Component { id: cHistorial; HistorialCompilaciones {} }
 
     // ------------------------------------------------------------------ diálogos (los de archivos y carpetas son los de KDE con QApplication)
     FileDialog {
@@ -203,6 +205,13 @@ VentanaStudio {
             Kirigami.Action { text: "Salir sin guardar"; icon.name: "application-exit"; onTriggered: { ventana.permitirCierre = true; dialogoSalir.close(); ventana.close() } },
             Kirigami.Action { text: "Guardar todo y salir"; icon.name: "document-save-all"; onTriggered: { espacio.guardarTodo(); dialogoSalir.close(); if (!studio.editor.hayModificados) { ventana.permitirCierre = true; ventana.close() } } }
         ]
+    }
+    Kirigami.PromptDialog {
+        id: dialogoVaciar
+        title: "Vaciar el historial"
+        subtitle: "¿Quitar las " + studio.historial.total + " compilaciones del historial? Los proyectos y sus PDF no se tocan."
+        standardButtons: Kirigami.Dialog.Cancel
+        customFooterActions: [Kirigami.Action { text: "Vaciar"; icon.name: "edit-clear-history"; onTriggered: { studio.historial.vaciar(); dialogoVaciar.close() } }]
     }
     Kirigami.Dialog {
         id: dialogoLinea

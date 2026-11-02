@@ -398,10 +398,11 @@ def _entorno_rutas(rutas_tex: list[str]) -> dict:
 
 
 def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_tex: list[str] = ()) -> list[Paso]:
-    """Los pasos de `que` (compilar · reconstruir · limpiar · simular) para un `proyectos.Proyecto`:
+    """Los pasos de `que` (compilar · reconstruir · limpiar · simular · borrador) para un `proyectos.Proyecto`:
     - marco: `<marco>/scripts/build.sh <principal>` (limpiar: `--clean`; reconstruir: limpiar y compilar);
     - latexmk: `latexmk` con SyncTeX, sin parar en el primer error (lee su `latexmkrc`; limpiar: `-c`; reconstruir: `-g`);
-    - main.sh: `main.sh -k -e <motor> [--biber|-b] --log <registro>` (limpiar: `-c`; simular: `-n`; reconstruir: `-c` y compilar).
+    - main.sh: `main.sh -k -e <motor> [--biber|-b] [-i] [-g] --log <registro>` (limpiar: `-c`; simular: `-n`; reconstruir:
+      `-c` y compilar; borrador: `--draft`, comprueba sin PDF). Con otro compilador, borrador es compilar.
     """
     tex = Path(proyecto.principal)
     cwd = str(tex.parent)
@@ -430,6 +431,10 @@ def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_
         argv.append("--biber")
     elif proyecto.bibliografia == "bibtex":
         argv.append("-b")
+    if getattr(proyecto, "indice", False):
+        argv.append("-i")
+    if getattr(proyecto, "glosarios", False):
+        argv.append("-g")
     limpiar = Paso("Limpiar auxiliares (main.sh -c)", ["bash", str(CLI), "-c", str(tex)], cwd, entorno)
     if que == "limpiar":
         return [limpiar]
@@ -437,6 +442,8 @@ def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_
         return [Paso("Simular (main.sh -n)", argv + ["-n", str(tex)], cwd, entorno)]
     if registro is not None:
         argv += ["--log", str(registro)]
+    if que == "borrador":
+        return [Paso("Comprobar sin PDF (borrador)", argv + ["--draft", str(tex)], cwd, entorno)]
     compilar = Paso("Compilar con " + NOMBRES_MOTOR.get(proyecto.motor, proyecto.motor), argv + [str(tex)], cwd, entorno)
     return [limpiar, compilar] if que == "reconstruir" else [compilar]
 
