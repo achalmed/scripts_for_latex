@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-10-31
+actualizado: 2026-11-02
 ---
 # estado.md — latex-studio
 
@@ -18,7 +18,7 @@ actualizado: 2026-10-31
 
 ## En curso
 
-nada en curso
+- 2026-11-02 · director · **Fase 5 de la modernización de la familia: LaTeX Studio a QML + Kirigami sobre `gui-comun` 2.x** (rama `wip/2026-11-02-qml`): el diseño está en `docs/rediseno.md` (borrador); sigue la reescritura de `studio/`, lo que el marco necesite (2.3.0), las pruebas, las capturas y los documentos.
 
 ## Por hacer
 
