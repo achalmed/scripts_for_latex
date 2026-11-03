@@ -15,6 +15,7 @@ Item {
     property bool soloLectura: false
     property bool cargado: false
     property bool modificado: false
+    property string original: ""                     // el texto como está en disco: modificado = el del editor difiere
     property var inicios: [0]                        // la posición de inicio de cada línea lógica
     property var lineasVisibles: []
     readonly property alias area: area
@@ -27,7 +28,8 @@ Item {
 
     // ------------------------------------------------------------------ carga y estado
     function cargar() {
-        area.text = studio.editor.leer(ruta)
+        original = studio.editor.leer(ruta)
+        area.text = original
         area.cursorPosition = 0
         cargado = true
         modificado = false
@@ -42,7 +44,7 @@ Item {
     }
     function guardar(forzar) {
         const r = studio.editor.guardar(ruta, area.text, forzar === true)
-        if (r === "") { modificado = false }
+        if (r === "") { original = area.text; modificado = false }
         return r
     }
     onModificadoChanged: if (cargado) studio.editor.marcarModificado(ruta, modificado)
@@ -143,6 +145,12 @@ Item {
             if (resto !== "}") area.insert(area.cursorPosition, "}")
         }
         sugerencias.close()
+        // una orden con argumentos se inserta con sus llaves y el cursor en la primera; si el argumento se completa
+        // (\usepackage{, \includegraphics{…), se ofrece en el acto
+        if (e.retroceso > 0) {
+            area.cursorPosition = area.cursorPosition - e.retroceso
+            Qt.callLater(raiz.completar, false)
+        }
     }
 
     // ------------------------------------------------------------------ la vista
@@ -195,7 +203,7 @@ Item {
                 Accessible.name: "Editor de " + raiz.ruta.split("/").pop()
                 background: Rectangle { color: Kirigami.Theme.backgroundColor }
 
-                onTextChanged: { if (raiz.cargado) raiz.modificado = true; temporizador.restart() }
+                onTextChanged: { if (raiz.cargado) raiz.modificado = area.text !== raiz.original; temporizador.restart() }
                 onWidthChanged: temporizador.restart()
                 onCursorPositionChanged: if (sugerencias.opened && area.cursorPosition < sugerencias.inicio) sugerencias.close()
 
@@ -208,10 +216,11 @@ Item {
                     }
                 }
                 Keys.onReleased: event => {
-                    if (event.text === "\\" || event.text === "{" || event.text === "," || /^[A-Za-z:]$/.test(event.text)) {
+                    if (event.text === "\\" || event.text === "{" || event.text === "," || event.text === "/" || /^[A-Za-z:]$/.test(event.text)) {
                         const antes = raiz.textoAntes()
                         if (/\\[A-Za-z@]{2,}$/.test(antes) || /\\(begin|end)\s*\{[^{}]*$/.test(antes)
-                            || /\\[A-Za-z]*(ref|cite|Cite)[A-Za-z]*\*?\s*(\[[^\]]*\]\s*){0,2}\{[^{}]*$/.test(antes)) raiz.completar(false)
+                            || /\\[A-Za-z]*(ref|cite|Cite)[A-Za-z]*\*?\s*(\[[^\]]*\]\s*){0,2}\{[^{}]*$/.test(antes)
+                            || /\\(usepackage|RequirePackage|documentclass|includegraphics|input|include|subfile|addbibresource|bibliography|bibliographystyle)\*?\s*(\[[^\]]*\]\s*)?\{[^{}]*$/.test(antes)) raiz.completar(false)
                         else if (sugerencias.opened) sugerencias.close()
                     } else if (event.key === Qt.Key_Backspace && sugerencias.opened) {
                         raiz.completar(false)

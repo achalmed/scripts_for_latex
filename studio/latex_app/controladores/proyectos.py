@@ -86,6 +86,7 @@ class Proyectos(QObject):
         self._etiquetas: list[dict] = []
         self._claves: list[dict] = []
         self._ordenes: list[str] = []
+        self._archivos_proyecto: list[str] = []       # .tex, .bib e imágenes del abierto (para completar argumentos)
         self._entornos: list[str] = []
         self._en_curso = ""
         self._worker = None
@@ -336,6 +337,7 @@ class Proyectos(QObject):
         self._claves = est.claves_bib(p.bibs)
         self._bib.poner(self._claves)
         self._ordenes, self._entornos = est.definiciones([f for f in fuentes if f.endswith(".tex")])
+        self._archivos_proyecto = est.archivos_de(p.carpeta)
         self.abiertoCambiado.emit()
 
     @Slot(str)
@@ -349,7 +351,9 @@ class Proyectos(QObject):
     @Slot(str, result="QVariantMap")
     def completar(self, antes: str) -> dict:
         """El autocompletado en el cursor (órdenes, entornos, `\\ref`, `\\cite`) con lo del proyecto abierto."""
-        return est.completar(antes, self._etiquetas, self._claves, self._ordenes, self._entornos)
+        p = self._abierto
+        return est.completar(antes, self._etiquetas, self._claves, self._ordenes, self._entornos,
+                             archivos=self._archivos_proyecto, paquetes_extra=list(p.paquetes) if p else [])
 
     def _abierto_dict(self) -> dict:
         return self.datos(self._abierto.principal) if self._abierto else {}

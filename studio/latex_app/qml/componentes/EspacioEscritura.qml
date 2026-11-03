@@ -166,6 +166,10 @@ QQC2.SplitView {
     }
 
     function buscar(reemplazar) { busqueda.abrir(reemplazar) }
+    function buscarEnPdf() {
+        if (!raiz.mostrarPdf) { raiz.mostrarPdf = true; ventana.registro.marcar("ver.pdf", true) }
+        visorPdf.buscarEnPdf()
+    }
 
     Kirigami.PromptDialog {
         id: confirmarSobrescribir

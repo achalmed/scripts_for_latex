@@ -80,6 +80,7 @@ VentanaStudio {
             case "ir_linea": if (e) { dialogoLinea.maximo = e.inicios.length; dialogoLinea.open() } break
             case "completar": if (e) e.completar(true); break
             case "comentar": if (e && !e.soloLectura) e.comentar(); break
+            case "buscar_pdf": espacio.buscarEnPdf(); break
             case "alternar_pdf": espacio.mostrarPdf = !espacio.mostrarPdf; ventana.registro.marcar("ver.pdf", espacio.mostrarPdf); break
             case "compilar_marcados": studio.interfaz.fijarVista("proyectos"); paginaProyectos.compilarMarcados(); break
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
@@ -188,7 +189,7 @@ VentanaStudio {
             const e = guardarComo.editor
             if (!e) return
             const r = studio.editor.guardarComo(e.ruta, ruta, e.area.text)
-            if (r) ventana.mensajes.mostrar(r, "error"); else e.modificado = false
+            if (r) ventana.mensajes.mostrar(r, "error"); else { e.original = e.area.text; e.modificado = false }
         }
     }
     Kirigami.PromptDialog {

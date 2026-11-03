@@ -143,6 +143,7 @@ def test_abrir_un_capitulo_abre_su_proyecto_con_estructura_y_autocompletado(app,
     r = p.completar("véase la tabla~\\ref{tab")
     assert r["tipo"] == "etiqueta" and r["elementos"][0]["texto"] == "tab:variables"
     assert [x["texto"] for x in p.completar("\\cite{kn")["elementos"]] == ["knuth1984"]
+    assert [x["insertar"] for x in p.completar("\\input{capitulos/int")["elementos"]] == ["capitulos/introduccion.tex"]
     assert str(muestra / "tesis-multiarchivo" / "principal.tex") in piezas["historial"].recientes()
     assert p.abrir(str(muestra / "no-es-tex.txt")).startswith("No es un documento LaTeX")
 

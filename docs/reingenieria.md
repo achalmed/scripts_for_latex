@@ -208,14 +208,15 @@ pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su wo
 
 ## 6. Lo que quedó fuera
 
-- **SyncTeX en los proyectos de `escritura`**: su `<marco>/scripts/build.sh` no pasa `-synctex=1`; añadirlo es cambio de ese
-  repo (una línea en `CFG_TEX_FLAGS` de su `config.sh`), no de este.
-- **Selección de texto y enlaces del PDF**: QtPdf ya está instalado y pinta las páginas (§1.10); faltan esas dos cosas.
+- **SyncTeX en los proyectos de `escritura`**: resuelto el 2026-11-03 en ese repo (`-synctex=1` en `CFG_TEX_FLAGS` de su
+  `scripts/config.sh`; el `.synctex.gz` queda en `.build/`, que la ventana ya busca).
+- **Selección de texto, enlaces y búsqueda del PDF**: hechos el 2026-11-03 con QtPdf (decisiones §1.11).
 - **La ventana sin plantilla** (`VentanaBase` de `gui-comun` 3.0): la distribución propia vive hoy dentro de las ranuras
   de `VentanaStudio` (barra lateral, centro, panel inferior; el panel de detalles no se usa); pasar a `VentanaBase` es
   posible y no cambia lo que se ve.
-- **Editor**: sin plegado, multicursor ni corrector ortográfico; el autocompletado no conoce los argumentos de cada
-  orden. **Problemas de Biber** se leen de sus líneas `ERROR`/`WARN` del registro, no del `.blg`.
+- **Editor**: sin plegado, multicursor ni corrector ortográfico (no caben en un `TextArea`: decisiones §1.12). El
+  autocompletado conoce desde el 2026-11-03 la firma de las órdenes y los argumentos de paquetes, clases y archivos.
+  **Problemas de Biber**: se leen de su `.blg` desde el 2026-11-03.
 - **Proyectos del despacho**: la detección los encuentra en la máquina del autor; ninguna prueba ni captura los usó.
   Si sus clases viven en el marco documental y no está instalado en TeX Live, se compilan añadiendo su carpeta en
   Ajustes › Compilación › Rutas de TeX (o con el build de ese marco, si se declara como el de `escritura`).

@@ -95,8 +95,40 @@ PDF) y el doble clic (PDF → código), que `PdfMultiPageView` no deja poner con
 aparte para que `VisorPdf` no importe `QtQuick.Pdf`: sin el módulo, o con `LATEX_STUDIO_VISOR=pdftoppm`, el visor sigue
 con `pdftoppm` (§1.8, R10). Dos trampas, anotadas en el componente: asignar `document` devuelve `currentFrame` a 0 y
 rompe el enlace con la página (todas salían como la primera; se fija a mano y lo vigila una prueba), y QtPdf pinta la
-página sin fondo (el papel blanco va debajo, como lo da un PDF impreso). Quedan para después la selección de texto y los
-enlaces del PDF.
+página sin fondo (el papel blanco va debajo, como lo da un PDF impreso). La selección de texto, los enlaces y la
+búsqueda llegaron el 2026-11-03 (§1.11).
+
+### §1.11 Seleccionar, seguir enlaces y buscar en el PDF, sin perder SyncTeX (2026-11-03)
+
+Con QtPdf, cada página lleva encima una capa (`studio/latex_app/qml/componentes/CapaQtPdf.qml`) con `PdfSelection`,
+`PdfLinkModel` y los resultados de un `PdfSearchModel` (`BusquedaQtPdf.qml`, uno para todo el documento); las dos viven
+aparte, como las de §1.10, y sin el módulo el visor sigue igual que antes. Arrastrar con el ratón selecciona (el patrón
+de `PdfMultiPageView`: un `DragHandler` sin destino; la lista de páginas no se desplaza con él, lo vigila una prueba);
+Ctrl+C copia, Ctrl+A toma la página, Esc suelta; clic derecho, un menú (copiar, toda la página, ir al código, buscar).
+Un clic suelto borra la selección y **el doble clic sigue siendo de SyncTeX** (la capa no lo toma). Los enlaces internos
+van a su página y su punto; los externos pasan por `Visor.abrirEnlace`, que **solo abre `http`, `https` y `mailto`**
+(un PDF puede llevar enlaces a `file:` o a órdenes). La búsqueda (Ctrl+Alt+F o el botón de la barra; Ctrl+F sigue
+siendo del editor) resalta todos los resultados, marca el actual y salta con Intro y Mayús+Intro. Todo en puntos de la
+página, escalado con el zoom del visor. Fuera: seleccionar a través de varias páginas (una página por selección, como
+`PdfMultiPageView`).
+
+### §1.12 Problemas de Biber desde su `.blg`; autocompletado de argumentos; plegado descartado con `TextArea` (2026-11-03)
+
+- **Biber**: los errores y avisos salen de su `.blg` (`compilador.problemas_de_blg`, `con_blg`) cuando es de esa
+  corrida, en lugar de las líneas que imprime: el compilador del marco calla a Biber, y un error de sintaxis del `.bib`
+  llega con el archivo y la línea (Biber 2.19 nombra la copia temporal con un hash: el `.bib` es el último «Found BibTeX
+  data source» anterior). Tres explicaciones nuevas: cita sin entrada, error de sintaxis, clave repetida.
+- **Autocompletado**: cada orden con argumentos lleva su firma (`\frac{numerador}{denominador}`) y se inserta con sus
+  llaves y el cursor en la primera (`estructura.FIRMAS`); los argumentos conocidos se completan: paquetes (los del
+  proyecto también), clases, estilos de BibTeX y los archivos del proyecto para `\input`, `\include` (sin extensión),
+  `\includegraphics`, `\addbibresource` y `\bibliography` (`estructura.archivos_de`, sin carpetas ocultas ni de
+  auxiliares, con tope).
+- **Plegado, multicursor y corrector**: el `TextArea` de Qt Quick no respeta los bloques invisibles de `QTextDocument`
+  (probado: la altura del contenido no cambia al ocultar líneas), no tiene varios cursores y admite un solo
+  `QSyntaxHighlighter` por documento (el de KSyntaxHighlighting; el de Sonnet lo sustituiría). Las tres cosas piden otro
+  editor: `KTextEditor` es QtWidgets (fuera de la familia, regla de `gui-comun`) y un editor propio sobre `QQuickPaintedItem`
+  es un proyecto en sí. **Recomendación al autor**: dejarlas fuera mientras el editor sea un `TextArea`; si se echan de
+  menos, «Abrir en el editor externo» (Kate) las da para ese archivo.
 
 ### §2.1 LuaLaTeX + Biber es el motor normativo (2026-09-20)
 

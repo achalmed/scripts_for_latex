@@ -49,13 +49,14 @@ llevan causa probable, acción recomendada y el detalle del registro (R9); F8 re
 | F5 · Ctrl+B | compilar el proyecto abierto | Ctrl+S · Ctrl+Mayús+S · Ctrl+L | guardar · guardar como · guardar todo |
 | F6 | reconstruir todo (limpia y compila) | Ctrl+F · Ctrl+R | buscar · buscar y reemplazar |
 | Mayús+F5 | simular (la orden, sin escribir) | Ctrl+G | ir a la línea |
-| Ctrl+Mayús+F5 | compilar los marcados (cola) | Ctrl+Espacio | completar (`\ref`, `\cite`, órdenes, entornos) |
+| Ctrl+Mayús+F5 | compilar los marcados (cola) | Ctrl+Espacio | completar (`\ref`, `\cite`, órdenes con su firma, entornos, paquetes, clases, archivos) |
 | F8 | siguiente problema | Ctrl+T | comentar o descomentar |
 | Ctrl+Alt+J · Ctrl+clic | del código al PDF (SyncTeX) | Ctrl+W | cerrar el archivo |
 | doble clic en el PDF | del PDF al código | Ctrl+1 · Ctrl+2 | Proyectos · Escritura |
 | Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
 | Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+O · Ctrl+Mayús+O | abrir un `.tex` · carpetas de trabajo |
 | Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
+| Ctrl+Alt+F | buscar en el PDF (Intro · Mayús+Intro: siguiente · anterior) | arrastrar en el PDF · Ctrl+C · Ctrl+A | seleccionar · copiar · toda la página (con QtPdf) |
 
 La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 

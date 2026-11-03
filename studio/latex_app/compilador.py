@@ -310,6 +310,52 @@ def problemas_de_registro(texto: str) -> list[Problema]:
     return sorted(problemas, key=lambda p: orden[p.nivel])
 
 
+# las líneas del `.blg` de Biber: «[123] Biber.pm:131> WARN - mensaje». Un error de sintaxis nombra la copia temporal
+# del `.bib` que Biber pasa a UTF-8 («…/refs.bib_12345.utf8, line 5», o con un hash en lugar del nombre desde la 2.19):
+# el `.bib` es el último «Found BibTeX data source '…'» antes del error
+_BLG = re.compile(r"^\[\d+\]\s+\S+>\s+(?P<nivel>ERROR|WARN|INFO) - (?P<msg>.+)$", re.M)
+_BLG_FUENTE = re.compile(r"Found BibTeX data source '(?P<bib>[^']+)'")
+_BLG_LINEA = re.compile(r"(?:(?P<bib>[^\s/,]+\.bib)_\d+)?(?:\.utf8)?, line (?P<linea>\d+)")
+_BIBER_CORRIO = re.compile(r"This is Biber|Logfile is '[^']+\.blg'")
+
+
+def problemas_de_blg(texto: str) -> list[Problema]:
+    """Los errores y avisos de Biber leídos de su `.blg` (no de las líneas que imprime): un error de sintaxis llega con
+    el `.bib` y la línea; el `.blg` existe también cuando el compilador del proyecto calla a Biber (el del marco)."""
+    problemas, fuente = [], ""
+    for m in _BLG.finditer(texto):
+        mensaje = m["msg"].strip()
+        if m["nivel"] == "INFO":
+            f = _BLG_FUENTE.search(mensaje)
+            fuente = f["bib"] if f else fuente
+            continue
+        p = Problema("error" if m["nivel"] == "ERROR" else "aviso", "Biber: " + mensaje)
+        b = _BLG_LINEA.search(mensaje) if "BibTeX subsystem" in mensaje else None
+        if b:
+            p.archivo, p.linea = b["bib"] or fuente, int(b["linea"])
+        problemas.append(p)
+    return problemas
+
+
+def con_blg(problemas: list[Problema], blg: Path, registro: str = "", mtime_registro: float = 0.0, propio: bool = False) -> list[Problema]:
+    """Los problemas de una corrida con los de Biber tomados de su `.blg`, en lugar de las líneas «Biber: …» del
+    registro, si el `.blg` es de esta corrida: en el registro de la ventana, si Biber corrió en ella; con el `.log` del
+    motor (latexmk, el marco), si el `.blg` es de los cinco minutos anteriores al `.log` (Biber corre entre pasadas)."""
+    try:
+        mtime_blg = blg.stat().st_mtime
+    except OSError:
+        return problemas
+    if propio:
+        if not _BIBER_CORRIO.search(registro):
+            return problemas
+    elif not (mtime_registro - 300 <= mtime_blg <= mtime_registro + 60):
+        return problemas
+    de_biber = problemas_de_blg(leer_registro(blg))
+    resto = [p for p in problemas if not p.mensaje.startswith("Biber: ")]
+    orden = {"error": 0, "aviso": 1, "tipografia": 2}
+    return sorted(de_biber + resto, key=lambda p: orden[p.nivel])
+
+
 def leer_registro(ruta: Path | None) -> str:
     try:
         return ruta.read_text(encoding="utf-8", errors="replace") if ruta and ruta.is_file() else ""

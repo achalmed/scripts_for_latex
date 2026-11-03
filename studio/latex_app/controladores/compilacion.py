@@ -310,12 +310,16 @@ class Compilacion(QObject):
             return
         texto, origen, propio = self._texto_registro(p)
         problemas = svc.problemas_de_registro(texto) if propio else svc.leer_log(texto)
+        if p.bibliografia == "biber" and origen:
+            problemas = svc.con_blg(problemas, svc.registro_motor(p).with_suffix(".blg"), texto, Path(origen).stat().st_mtime, propio)
         carpeta = Path(p.carpeta)
         filas = []
         for x in problemas:
             archivo = x.archivo
             if archivo:
                 ruta_abs = Path(archivo) if os.path.isabs(archivo) else carpeta / archivo
+                if not ruta_abs.is_file() and archivo.endswith(".bib"):          # Biber da solo el nombre del .bib
+                    ruta_abs = next((Path(b) for b in p.bibs if Path(b).name == Path(archivo).name), ruta_abs)
                 archivo = os.path.normpath(ruta_abs) if ruta_abs.is_file() else p.principal
             else:
                 archivo = p.principal

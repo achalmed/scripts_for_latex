@@ -39,7 +39,7 @@ def abrir():
     i.pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]})
     QTimer.singleShot(700, despues)
 def despues():
-    resultado.update(vista=i.vista, titulo=raiz.property("title"), abiertos=[f["nombre"] for f in piezas["editor"].abiertos.todas()],
+    resultado.update(vista=i.vista, titulo=raiz.property("title"), abiertos=[f["nombre"] for f in piezas["editor"].abiertos.todas()], modificados=piezas["editor"].modificados,
                      con=hab("compilar.compilar", "compilar.limpiar", "archivo.guardar", "editar.buscar", "editar.ir_linea", "escritorio.dolphin"),
                      archivos=p.archivos.filas, esquema=p.esquema.filas)
     i.pedir.emit("buscar", {}); i.pedir.emit("ir_linea", {}); i.pedir.emit("atajos", {}); i.pedir.emit("alternar_pdf", {}); i.pedir.emit("alternar_pdf", {})
@@ -105,6 +105,7 @@ def test_abre_la_ventana_y_un_proyecto(tmp_path):
     assert datos["sin"] == [False, False, False, False, True]          # sin proyecto: nada que compilar, guardar ni ver
     assert datos["vista"] == "escritura" and datos["titulo"] == "tesis-multiarchivo · principal.tex — LaTeX Studio"
     assert datos["abiertos"] == ["principal.tex"]                       # un capítulo abre el proyecto y su principal
+    assert datos["modificados"] == []                                   # abrir no marca el archivo como modificado
     assert datos["con"] == [True, True, True, True, True, True]
     assert datos["archivos"] == 5 and datos["esquema"] >= 7
     assert datos["confirmaciones"]["limpiar"] == ["eliminacion", True]               # gui-comun 3.0 la confirma con su lista

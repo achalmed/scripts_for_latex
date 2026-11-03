@@ -204,6 +204,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("ver.alejar", "Ale&jar el PDF", "zoom-out", None, "Ver", al_disparar=visor.alejar)
     acciones.registrar("ver.ajustar", "Ajustar el PDF al &ancho", "zoom-fit-width", None, "Ver", marcable=True, marcada=True,
                        al_disparar=lambda marcada: setattr(visor, "ajustarAncho", bool(marcada)))
+    acciones.registrar("ver.buscar_pdf", "&Buscar en el PDF…", "edit-find", "Ctrl+Alt+F", "Ver", habilitada=False, al_disparar=pedir("buscar_pdf"),
+                       descripcion="Busca un texto en el PDF y salta de un resultado a otro (con QtPdf)")
     # --- Compilar
     acciones.registrar("compilar.compilar", "&Compilar", "run-build", "F5", "Compilar", habilitada=False, al_disparar=compilacion.compilar, operacion="escritura",
                        descripcion="El proyecto abierto con su compilador y su motor (también Ctrl+B)")
@@ -286,6 +288,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("compilar.siguiente", compilacion.nProblemas > 0)
         acciones.habilitar("synctex.pdf", hay_archivo and bool(p and p.pdf))
         acciones.habilitar("escritorio.pdf", bool(p and p.pdf))
+        acciones.habilitar("ver.buscar_pdf", bool(p and p.pdf) and visor.motor == "qtpdf")
         for nombre in ("escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal", "escritorio.copiar"):
             acciones.habilitar(nombre, hay_proyecto or hay_archivo)
         acciones.habilitar("escritorio.editor", hay_archivo)

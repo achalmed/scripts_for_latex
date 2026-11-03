@@ -167,3 +167,57 @@ def test_la_cli_compila_el_ejemplo_y_el_registro_se_lee(tmp_path):
     # la lectura del PDF
     info = svc.info_pdf(carpeta / "articulo.pdf")
     assert info["existe"] and info["bytes"] > 1000 and info["tamano"].endswith("KB")
+
+
+BLG = """[0] Config.pm:311> INFO - This is Biber 2.19
+[40] bibtex.pm:1519> INFO - Found BibTeX data source 'otro.bib'
+[52] Utils.pm:410> ERROR - BibTeX subsystem: /tmp/biber_tmp_XyZ/refs.bib_12345.utf8, line 5, syntax error: found "}", expected one of: ","
+[60] Biber.pm:131> WARN - I didn't find a database entry for 'nadie2020' (section 0)
+[61] Biber.pm:131> WARN - Duplicate entry key 'uno2021' in file 'refs.bib', skipping ...
+"""
+
+
+def test_los_problemas_de_biber_salen_de_su_blg(tmp_path):
+    """Biber escribe en su `.blg` el archivo y la línea de un error de sintaxis del `.bib` (las líneas que imprime no
+    sirven con el marco, que lo calla); el `.blg` sustituye a las líneas «Biber:» del registro si es de esa corrida."""
+    from latex_app import diagnostico as dg
+    problemas = svc.problemas_de_blg(BLG)
+    assert [(p.nivel, p.archivo, p.linea) for p in problemas] == [("error", "refs.bib", 5), ("aviso", "", None), ("aviso", "", None)]
+    assert [dg.explicar(p.nivel, p.mensaje)["titulo"] for p in problemas] == [
+        "Error de sintaxis en el .bib", "Cita sin entrada en el .bib «nadie2020»", "Clave repetida en el .bib «uno2021»"]
+    blg = tmp_path / "doc.blg"
+    blg.write_text(BLG, encoding="utf-8")
+    del_registro = [svc.Problema("aviso", "Biber: lo que imprimió"), svc.Problema("error", "Undefined control sequence.", 4)]
+    # el registro de la ventana: el .blg cuenta si Biber corrió en esa corrida
+    con = svc.con_blg(del_registro, blg, "INFO - Logfile is 'doc.blg'\n", 0, propio=True)
+    assert [p.mensaje for p in con if p.mensaje.startswith("Biber")] == [p.mensaje for p in problemas]
+    assert any(p.mensaje == "Undefined control sequence." for p in con)
+    assert svc.con_blg(del_registro, blg, "sin biber\n", 0, propio=True) == del_registro
+    # el .log del motor: el .blg cuenta si es de los minutos anteriores al .log
+    ahora = blg.stat().st_mtime
+    assert len(svc.con_blg(del_registro, blg, "", ahora + 30)) == 4
+    assert svc.con_blg(del_registro, blg, "", ahora + 3600) == del_registro
+    assert svc.con_blg(del_registro, tmp_path / "no.blg", "", ahora) == del_registro
+
+
+@requiere_lualatex
+def test_un_bib_roto_de_verdad_llega_con_su_linea(tmp_path):
+    """Un `.bib` con una coma de menos y una cita sin entrada, con LuaLaTeX + Biber de verdad (Biber 2.19 o posterior
+    nombra la copia temporal con un hash: el `.bib` sale del «Found BibTeX data source» anterior)."""
+    import shutil
+    if not shutil.which("biber"):
+        import pytest
+        pytest.skip("falta biber")
+    (tmp_path / "refs.bib").write_text("@book{uno2021,\n  author = {Ana Uno},\n  title = {Libro}\n  year = {2021}\n}\n", encoding="utf-8")
+    (tmp_path / "doc.tex").write_text("\\documentclass{article}\\usepackage[backend=biber]{biblatex}\\addbibresource{refs.bib}\n"
+                                      "\\begin{document}\\cite{uno2021} \\cite{nadie2020}\\printbibliography\\end{document}\n", encoding="utf-8")
+    subprocess.run(["lualatex", "-interaction=batchmode", "doc.tex"], cwd=tmp_path, capture_output=True, timeout=180)
+    subprocess.run(["biber", "doc"], cwd=tmp_path, capture_output=True, timeout=180)
+    problemas = svc.problemas_de_blg((tmp_path / "doc.blg").read_text(encoding="utf-8"))
+    errores = [p for p in problemas if p.nivel == "error"]
+    assert errores and errores[0].archivo == "refs.bib" and errores[0].linea in (3, 4, 5)
+    # Biber se detiene en el error de sintaxis; con la coma puesta, avisa de la cita sin entrada
+    (tmp_path / "refs.bib").write_text("@book{uno2021,\n  author = {Ana Uno},\n  title = {Libro},\n  year = {2021}\n}\n", encoding="utf-8")
+    subprocess.run(["biber", "doc"], cwd=tmp_path, capture_output=True, timeout=180)
+    problemas = svc.problemas_de_blg((tmp_path / "doc.blg").read_text(encoding="utf-8"))
+    assert [p.nivel for p in problemas] == ["aviso"] and "nadie2020" in problemas[0].mensaje

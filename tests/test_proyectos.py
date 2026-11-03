@@ -179,8 +179,39 @@ def test_etiquetas_claves_y_autocompletado(muestra):
     r = estructura.completar("\\begin{ali", etiquetas, claves)
     assert r["tipo"] == "entorno" and "align" in [x["texto"] for x in r["elementos"]]
     r = estructura.completar("texto \\textb", etiquetas, claves)
-    assert r["tipo"] == "orden" and r["elementos"][0]["texto"] == "\\textbf"
+    # una orden con argumentos lleva su firma y se inserta con sus llaves y el cursor en la primera
+    assert r["tipo"] == "orden" and r["elementos"][0]["texto"] == "\\textbf{texto}"
+    assert (r["elementos"][0]["insertar"], r["elementos"][0]["retroceso"]) == ("textbf{}", 1)
+    frac = next(x for x in estructura.completar("\\fra", etiquetas, claves)["elementos"] if x["insertar"].startswith("frac"))
+    assert (frac["insertar"], frac["retroceso"]) == ("frac{}{}", 3)
+    assert next(x for x in estructura.completar("\\cent", etiquetas, claves)["elementos"])["retroceso"] == 0
     assert estructura.completar("texto normal", etiquetas, claves)["tipo"] == ""
+
+
+def test_autocompletado_de_argumentos(muestra):
+    """Los argumentos que se conocen: paquetes (los usados en el proyecto también), clases, estilos de BibTeX y los
+    archivos del proyecto (\\input con extensión, \\include sin ella; imágenes; .bib)."""
+    carpeta = muestra / "tesis-multiarchivo"
+    (carpeta / "figuras").mkdir()
+    (carpeta / "figuras" / "esquema.png").write_bytes(b"")
+    (carpeta / ".build").mkdir()
+    (carpeta / ".build" / "oculto.tex").write_text("")
+    archivos = estructura.archivos_de(carpeta)
+    assert "capitulos/metodo.tex" in archivos and "figuras/esquema.png" in archivos and "referencias.bib" in archivos
+    assert not any(a.startswith(".build") for a in archivos)
+    def textos(antes, **k):
+        r = estructura.completar(antes, [], [], archivos=archivos, **k)
+        return r["tipo"], [x["texto"] for x in r["elementos"]], [x["insertar"] for x in r["elementos"]]
+    assert textos("\\usepackage[utf8]{amsm")[1] == ["amsmath"]
+    assert textos("\\usepackage{mipaq", paquetes_extra=["mipaquete"])[1] == ["mipaquete"]
+    assert textos("\\documentclass[12pt]{art")[1] == ["article"]
+    assert textos("\\bibliographystyle{apa")[1] == ["apalike"]
+    assert textos("\\includegraphics[width=\\linewidth]{esq")[1] == ["figuras/esquema.png"]
+    assert textos("\\input{capitulos/met")[2] == ["capitulos/metodo.tex"]
+    assert textos("\\include{capitulos/met")[2] == ["capitulos/metodo"]
+    assert textos("\\addbibresource{")[1] == ["referencias.bib"]
+    assert textos("\\bibliography{ref")[2] == ["referencias"]
+    assert textos("\\usepackage{amsmath,amss")[1] == ["amssymb"]
 
 
 def test_definiciones_del_proyecto_entran_al_autocompletado(tmp_path):

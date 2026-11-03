@@ -5,6 +5,7 @@ etiquetas para `\\ref`, las claves de los `.bib` para `\\cite` y el autocompleta
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -49,6 +50,64 @@ subfigure array matrix pmatrix bmatrix vmatrix tikzpicture axis lstlisting minte
 ORDENES_REF = ("ref", "eqref", "pageref", "autoref", "cref", "Cref", "nameref", "vref", "labelcref")
 ORDENES_CITA = ("cite", "parencite", "textcite", "autocite", "footcite", "citeauthor", "citeyear", "nocite", "citep",
                 "citet", "fullcite", "smartcite", "Cite", "Textcite", "Parencite", "Autocite", "cites", "parencites")
+
+# la firma de las órdenes con argumentos obligatorios: se ofrece como detalle y al aceptar se insertan sus llaves con el
+# cursor en la primera (`\frac` → `\frac{|}{}`); las que no están aquí se insertan solas
+FIRMAS = {
+    "section": "{título}", "subsection": "{título}", "subsubsection": "{título}", "chapter": "{título}", "part": "{título}",
+    "paragraph": "{título}", "subparagraph": "{título}", "section*": "{título}", "subsection*": "{título}", "chapter*": "{título}",
+    "textbf": "{texto}", "textit": "{texto}", "emph": "{texto}", "underline": "{texto}", "texttt": "{texto}", "textsc": "{texto}",
+    "textsf": "{texto}", "textrm": "{texto}", "textsuperscript": "{texto}", "textsubscript": "{texto}", "footnote": "{texto}",
+    "footnotetext": "{texto}", "label": "{etiqueta}", "ref": "{etiqueta}", "eqref": "{etiqueta}", "pageref": "{etiqueta}",
+    "autoref": "{etiqueta}", "cref": "{etiqueta}", "Cref": "{etiqueta}", "nameref": "{etiqueta}", "cite": "[pág.]{clave}",
+    "parencite": "[pág.]{clave}", "textcite": "[pág.]{clave}", "autocite": "[pág.]{clave}", "footcite": "[pág.]{clave}",
+    "citeauthor": "{clave}", "citeyear": "{clave}", "nocite": "{clave}", "includegraphics": "[opciones]{archivo}",
+    "caption": "[corto]{texto}", "input": "{archivo}", "include": "{archivo}", "subfile": "{archivo}", "import": "{carpeta}{archivo}",
+    "subimport": "{carpeta}{archivo}", "addbibresource": "{archivo.bib}", "bibliography": "{archivos}",
+    "bibliographystyle": "{estilo}", "usepackage": "[opciones]{paquete}", "documentclass": "[opciones]{clase}",
+    "newcommand": "{\\orden}[n]{definición}", "renewcommand": "{\\orden}[n]{definición}",
+    "newenvironment": "{nombre}[n]{antes}{después}", "begin": "{entorno}", "end": "{entorno}", "cline": "{i-j}",
+    "multicolumn": "{n}{alineación}{texto}", "multirow": "{n}{ancho}{texto}", "url": "{url}", "href": "{url}{texto}",
+    "hspace": "{longitud}", "vspace": "{longitud}", "frac": "{numerador}{denominador}", "dfrac": "{numerador}{denominador}",
+    "tfrac": "{numerador}{denominador}", "sqrt": "[índice]{radicando}", "mathbb": "{letra}", "mathcal": "{letra}",
+    "mathbf": "{texto}", "mathrm": "{texto}", "mathit": "{texto}", "text": "{texto}", "overline": "{expresión}",
+    "hat": "{x}", "bar": "{x}", "tilde": "{x}", "vec": "{x}", "dot": "{x}", "operatorname": "{nombre}", "title": "{título}",
+    "author": "{autor}", "date": "{fecha}", "thanks": "{texto}", "frametitle": "{título}",
+}
+
+# los argumentos que se completan con algo conocido (`\usepackage{` → paquetes); los archivos, los del proyecto
+ARGUMENTOS = {"usepackage": "paquete", "RequirePackage": "paquete", "documentclass": "clase", "includegraphics": "imagen",
+              "input": "tex", "include": "tex_sin", "subfile": "tex", "addbibresource": "bib", "bibliography": "bib_sin",
+              "bibliographystyle": "estilo"}
+PAQUETES = sorted(set("""
+amsmath amssymb amsthm mathtools bm siunitx physics fontspec unicode-math microtype polyglossia babel csquotes biblatex
+natbib hyperref cleveref url xcolor graphicx float caption subcaption wrapfig booktabs tabularx longtable multirow array
+makecell threeparttable enumitem geometry fancyhdr titlesec tocloft setspace parskip footmisc appendix pdfpages
+listings minted tikz pgfplots pgfplotstable tcolorbox mdframed xparse etoolbox ifthen calc lipsum blindtext comment
+glossaries makeidx imakeidx acronym nomencl subfiles import standalone beamerarticle pdflscape rotating afterpage
+""".split()))
+CLASES = sorted(set("article report book beamer memoir scrartcl scrreprt scrbook standalone letter minimal".split()))
+ESTILOS_BIBTEX = ("plain", "unsrt", "alpha", "abbrv", "apalike", "ieeetr", "siam", "acm")
+EXTENSIONES_IMAGEN = (".png", ".jpg", ".jpeg", ".pdf", ".eps", ".svg")
+
+
+
+def archivos_de(carpeta: str | Path, limite: int = 3000, profundidad: int = 6) -> list[str]:
+    """Los `.tex`, `.bib` e imágenes bajo la carpeta del principal (rutas relativas, con `/`), para completar los
+    argumentos de `\\input`, `\\includegraphics` y `\\addbibresource`. Sin carpetas ocultas ni de auxiliares; con tope."""
+    base = Path(carpeta)
+    extensiones = (".tex", ".bib") + EXTENSIONES_IMAGEN
+    salida: list[str] = []
+    for raiz, carpetas, nombres in os.walk(base):
+        relativa = Path(raiz).relative_to(base)
+        carpetas[:] = sorted(c for c in carpetas if not c.startswith((".", "_minted")) and c not in ("node_modules", "__pycache__")
+                             and len(relativa.parts) < profundidad)
+        for n in sorted(nombres):
+            if n.lower().endswith(extensiones):
+                salida.append((relativa / n).as_posix())
+                if len(salida) >= limite:
+                    return salida
+    return salida
 
 
 def _limpiar_titulo(t: str) -> str:
@@ -183,13 +242,36 @@ def definiciones(archivos: list[str]) -> tuple[list[str], list[str]]:
 _CONTEXTO_REF = re.compile(r"\\(?P<orden>[A-Za-z]+)\*?\s*(?:\[[^\]]*\]\s*){0,2}\{(?P<previas>[^{}]*,)?(?P<prefijo>[^{},]*)$")
 _CONTEXTO_ENTORNO = re.compile(r"\\(?:begin|end)\s*\{(?P<prefijo>[^{}]*)$")
 _CONTEXTO_ORDEN = re.compile(r"\\(?P<prefijo>[A-Za-z@]*)$")
+_CONTEXTO_ARGUMENTO = re.compile(r"\\(?P<orden>[A-Za-z]+)\*?\s*(?:\[[^\]]*\]\s*)?\{(?P<previas>[^{}]*,)?(?P<prefijo>[^{},]*)$")
+
+
+def _argumentos(tipo: str, prefijo: str, archivos: list[str], paquetes_extra: list[str]) -> list[dict]:
+    """Los candidatos de un argumento conocido; los archivos, relativos a la carpeta del principal."""
+    p = prefijo.lower()
+    if tipo == "paquete":
+        return [{"texto": x, "detalle": "paquete" + (" del proyecto" if x in paquetes_extra else ""), "insertar": x}
+                for x in sorted(set(PAQUETES) | set(paquetes_extra)) if x.lower().startswith(p)]
+    if tipo == "clase":
+        return [{"texto": x, "detalle": "clase", "insertar": x} for x in CLASES if x.startswith(p)]
+    if tipo == "estilo":
+        return [{"texto": x, "detalle": "estilo de BibTeX", "insertar": x} for x in ESTILOS_BIBTEX if x.startswith(p)]
+    extensiones = {"imagen": EXTENSIONES_IMAGEN, "tex": (".tex",), "tex_sin": (".tex",), "bib": (".bib",), "bib_sin": (".bib",)}[tipo]
+    elementos = []
+    for a in archivos:
+        if not a.lower().endswith(extensiones) or p not in a.lower():
+            continue
+        insertar = a.rsplit(".", 1)[0] if tipo in ("tex_sin", "bib_sin") else a
+        elementos.append({"texto": a, "detalle": "archivo del proyecto", "insertar": insertar})
+    return elementos
 
 
 def completar(antes: str, etiquetas_: list[dict], claves: list[dict], ordenes_extra: list[str] = (),
-              entornos_extra: list[str] = (), limite: int = 60) -> dict:
+              entornos_extra: list[str] = (), limite: int = 60, archivos: list[str] = (), paquetes_extra: list[str] = ()) -> dict:
     """Qué ofrecer en el cursor, según el texto de la línea antes de él: `\\ref{` → etiquetas, `\\cite{` (o tras una coma
-    dentro de las llaves) → claves de los `.bib`, `\\begin{` → entornos, `\\xx` → órdenes. Devuelve {tipo, prefijo,
-    elementos: [{texto, detalle, insertar}]} o tipo vacío si no hay nada que ofrecer."""
+    dentro de las llaves) → claves de los `.bib`, `\\begin{` → entornos, `\\usepackage{`, `\\documentclass{`,
+    `\\includegraphics{`, `\\input{`, `\\addbibresource{`… → paquetes, clases y archivos del proyecto, `\\xx` → órdenes
+    (con su firma). Devuelve {tipo, prefijo, elementos: [{texto, detalle, insertar, retroceso}]} o tipo vacío si no hay
+    nada que ofrecer; `retroceso` es cuántos caracteres vuelve el cursor tras insertar (para quedar dentro de la llave)."""
     m = _CONTEXTO_ENTORNO.search(antes)
     if m:
         prefijo = m["prefijo"]
@@ -208,11 +290,23 @@ def completar(antes: str, etiquetas_: list[dict], claves: list[dict], ordenes_ex
                       "insertar": c["nombre"]}
                      for c in claves if p in c["nombre"].lower() or p in c.get("autor", "").lower() or p in c.get("titulo", "").lower()]
         return {"tipo": "cita", "prefijo": prefijo, "elementos": elementos[:limite]}
+    m = _CONTEXTO_ARGUMENTO.search(antes)
+    if m and m["orden"] in ARGUMENTOS:
+        prefijo = m["prefijo"].strip()
+        elementos = _argumentos(ARGUMENTOS[m["orden"]], prefijo, list(archivos), list(paquetes_extra))
+        return {"tipo": "argumento", "prefijo": prefijo, "elementos": elementos[:limite]}
     m = _CONTEXTO_ORDEN.search(antes)
     if m:
         prefijo = m["prefijo"]
         candidatos = sorted(set(ORDENES) | set(ordenes_extra))
-        elementos = [{"texto": "\\" + o, "detalle": "definida en el proyecto" if o in ordenes_extra else "", "insertar": o}
-                     for o in candidatos if o.startswith(prefijo) and o != prefijo]
+        elementos = []
+        for o in candidatos:
+            if not o.startswith(prefijo) or o == prefijo:
+                continue
+            firma = FIRMAS.get(o, "")
+            obligatorios = firma.count("{")
+            insertar = o + "{}" * obligatorios
+            elementos.append({"texto": "\\" + o + firma, "detalle": "definida en el proyecto" if o in ordenes_extra else "",
+                              "insertar": insertar, "retroceso": max(0, 2 * obligatorios - 1)})
         return {"tipo": "orden", "prefijo": prefijo, "elementos": elementos[:limite]}
     return {"tipo": "", "prefijo": "", "elementos": []}

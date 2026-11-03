@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-02
+actualizado: 2026-11-03
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,10 @@ actualizado: 2026-11-02
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-03 | **Visor**: con QtPdf se selecciona texto arrastrando (Ctrl+C, Ctrl+A, menú del clic derecho), se siguen los enlaces del PDF (internos a su página; externos solo http, https y mailto) y se busca (Ctrl+Alt+F, resultados resaltados, Intro y Mayús+Intro), sin perder la marca de SyncTeX ni el doble clic | `decisiones.md` §1.11; `tests/test_visor_qtpdf.py` |
+| 2026-11-03 | **Editor y problemas**: el archivo ya no sale modificado al abrirlo (compara con el texto del disco); firma de las órdenes y autocompletado de argumentos (paquetes, clases, estilos, archivos del proyecto); los problemas de Biber se leen de su `.blg` (el `.bib` y la línea de un error de sintaxis; también con el compilador del marco, que calla a Biber); plegado, multicursor y corrector descartados con `TextArea` (recomendación en §1.12) | `decisiones.md` §1.12; `tests/test_proyectos.py`, `tests/test_compilador.py` |
+| 2026-11-03 | **CLI**: P9 (`--help` y `--version` sin banner), P14 (`--log` relativo, una sola copia en el directorio de invocación), P15 (la ayuda de `--log` dice lo que hace; los ejemplos sin carpetas que ya no existen) y P17 (sugerir `.tex` cercanos no se corta y con ruta absoluta busca en su carpeta); `tests/dry-run.sh` 8 casos (los cuatro nuevos fallan con `main`) | `script_compilar_latex/tests/dry-run.sh` |
+| 2026-11-03 | SyncTeX en los proyectos de `escritura` (su `CFG_TEX_FLAGS` con `-synctex=1`, en ese repo) y el aviso RQ-DOC-08 de `docs/rediseno.md`, que el validador ya no da | `escritura/scripts/config.sh` |
 | 2026-11-03 | El visor PDF pinta con QtPdf (`PdfPageImage`) ahora que el autor instaló `qml6-module-qtquick-pdf`; `pdftoppm` queda de respaldo; papel blanco y página correcta en cada recuadro (una prueba vigila el fotograma); 77 pruebas | `decisiones.md` §1.10; `docs/figuras/latex-studio-oscuro.png` |
 | 2026-11-02 | **Reingeniería: LaTeX Studio 3.0, entorno de escritura científica** (rama `wip/2026-11-02-reingenieria`, worktree `~/.cache/reingenieria/latex-studio`, sin fusionar ni empujar): proyectos detectados en las carpetas de trabajo (`WRITING_DIR`, `DESPACHO_DIR` y las del usuario; caché; categorías solo con información), cada uno compilado con su compilador y su motor (marco, latexmk, `main.sh -k`), en cola; editor con resaltado, estructura, autocompletado de `\ref`/`\cite`, buscar y reemplazar con regex; PDF integrado con `pdftoppm` y SyncTeX; errores con causa y acción; revisión de dependencias. CLI: `-k` y `CORE_DIR`. 73 pruebas | `docs/reingenieria.md`; `docs/figuras/`; `tests/run.sh` |
 | 2026-11-02 | Fase 5 dada por buena (el autor delegó la decisión al director con las pruebas en verde y las capturas): `wip/2026-11-02-qml` fusionada en `main` y retirada; `docs/rediseno.md` a `hecho`; `gui-comun` 2.3.0 en `main` y en su remoto con `v2.3.0` | `git log` |
@@ -29,28 +33,20 @@ nada en curso
 - 2026-11-02 · dueño: director · fusionar en `main` el último tramo de `wip/2026-11-02-reingenieria` (la base
   `gui-comun` 3.0: `escritorio` y diálogos de la base, confirmaciones de la base, «Guardar como»; capturas «antes» sin la
   carpeta de inicio). Valorar después pasar de `VentanaStudio` a `VentanaBase` (no cambia lo que se ve).
-- 2026-11-03 · dueño: director · el visor ya pinta con QtPdf (el autor lo instaló; `decisiones.md` §1.10): faltan la
-  selección de texto, los enlaces y la búsqueda dentro del PDF.
-- 2026-11-02 · dueño: **el autor** (repo `escritura`) · SyncTeX en los proyectos de `escritura`: su `scripts/build.sh`
-  no pasa `-synctex=1` (`CFG_TEX_FLAGS` de `scripts/config.sh`); con esa bandera, LaTeX Studio iría del código al PDF
-  y vuelta también en ellos (el `.synctex.gz` quedaría en `.build/`, que la ventana ya busca).
 - 2026-11-02 · dueño: **el autor** · usar LaTeX Studio 3.0 en la sesión real (`/usr/bin/python3 ~/Documents/latex-studio/studio/main.py`
   tras la fusión): la página de proyectos sobre `escritura` y el despacho, abrir un proyecto, editar y guardar, F5,
   SyncTeX en un proyecto de `main.sh` o latexmk, F8, Ctrl+Mayús+D, la cola; lo que no convenza se anota aquí.
-- 2026-11-02 · dueño: director · lo que quedó fuera de la 3.0 (`docs/reingenieria.md` §6): el editor no pliega ni tiene
-  multicursor ni corrector; el autocompletado no conoce los argumentos de cada orden; el modo watch de la CLI (`-w`)
-  sigue sin ofrecerse (necesita `inotifywait`; la ventana compila al guardar si se marca); los errores de Biber se leen
-  de sus líneas `ERROR`/`WARN` (no del `.blg`); el registro de cada corrida de `main.sh` queda en la caché del studio
-  (uno por proyecto, se reemplaza); la caché de páginas del visor se poda a 200 MB.
-- 2026-11-02 · dueño: director · el validador avisa en `docs/rediseno.md` (RQ-DOC-08: la cifra de líneas de la ventana
-  de 1.x en §1) y de siempre en `script_compilar_latex/` (RQ-IDN-03, abajo).
+- 2026-11-03 · dueño: **el autor** · lo que sigue fuera de la 3.0 (`docs/reingenieria.md` §6, decisiones §1.12): plegado,
+  multicursor y corrector no caben en un `TextArea` (recomendación: dejarlos fuera; «Abrir en el editor externo» los da);
+  el modo watch de la CLI (`-w`) sigue sin ofrecerse (necesita `inotifywait`, que no está; la ventana compila al guardar
+  si se marca); el registro de cada corrida de `main.sh` queda en la caché del studio (uno por proyecto, se reemplaza);
+  la caché de páginas del visor se poda a 200 MB; la selección de texto del PDF es de una página a la vez. Ninguno es un
+  defecto: son límites elegidos.
+- 2026-11-03 · dueño: **el autor** · probar en la sesión real la selección, los enlaces y la búsqueda del PDF (Ctrl+Alt+F)
+  y el autocompletado de argumentos; las pruebas los ejercitan con eventos de ratón sin pantalla.
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el
 manual los cita.
 
-- 2026-10-04 · dueño: el autor · **P17** `sugerir_tex_cercanos` no llega a listar: con `set -e` y `pipefail` un `find` que falla corta el script; con ruta absoluta busca en `<cwd>/<ruta>` (`script_compilar_latex/lib/resolver.sh`).
-- 2026-10-04 · dueño: el autor · **P14** `--log` con ruta relativa se escribe en dos sitios: `compilar` la vacía desde el directorio de invocación y `ejecutar_latex` le añade la salida dentro de `pushd "$TEX_DIR"`; hasta corregirlo, ruta absoluta.
-- 2026-10-04 · dueño: el autor · **P9** el banner sale también con `--help` y `--version`: `main()` llama a `banner` antes de `parsear_args`.
-- 2026-10-04 · dueño: el autor · **P15** la ayuda de `--log` dice «default: ARCHIVO.log» y sin `--log` no hay copia; los ejemplos de la ayuda y de la cabecera de `main.sh` usan rutas que no existen.
 - 2026-10-04 · dueño: el autor · **P16** `VERSION` de `config.sh` no se mantiene (sigue en 3.0.0) y nadie la consume: mantenerla a mano o quitarla.
 - 2026-10-03 · dueño: el autor · **P4** el watch no vigila subcarpetas (`inotifywait` sin `-r`).
 - 2026-10-05 · dueño: el autor · **RQ-COD-09** `pdflatex` y `xelatex` siguen aceptados en `config.sh`, `lib/cli.sh`, `lib/detector.sh` y `lib/validator.sh` para material heredado (decisiones §2.1): retirarlos o declarar la excepción en la normativa.

@@ -18,13 +18,14 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from gui_comun.modelos import ModeloLista
-from gui_comun.qt import QObject, Property, Signal, Slot
+from gui_comun.qt import QDesktopServices, QObject, Property, QUrl, Signal, Slot
 
 from latex_app import visor as vs
 
 ROLES = ("pagina", "ancho", "alto", "imagen", "miniatura")
 PPP_MINIATURA = 18
 ZOOM_MIN, ZOOM_MAX = 0.25, 4.0
+ESQUEMAS_ENLACE = ("http", "https", "mailto")
 
 
 def hay_qtpdf() -> bool:
@@ -199,6 +200,20 @@ class Visor(QObject):
 
     def apagar(self) -> None:
         self._hilos.shutdown(wait=False, cancel_futures=True)
+
+    # ---------------------------------------------------------------------------------------------------- enlaces
+    @Slot(str, result=bool)
+    def abrirEnlace(self, url: str) -> bool:
+        """Un enlace externo del PDF (clic en `CapaQtPdf`): solo `http`, `https` y `mailto`, con la aplicación del
+        escritorio. Un PDF puede llevar enlaces a `file:` o a órdenes (`launch`): esos no se siguen desde la ventana."""
+        esquema = url.split(":", 1)[0].lower() if ":" in url else ""
+        if esquema not in ESQUEMAS_ENLACE:
+            self.aviso.emit(f"El enlace no se abre desde la ventana (solo http, https y correo): {url}", "aviso")
+            return False
+        if not QDesktopServices.openUrl(QUrl(url)):
+            self.aviso.emit(f"No se pudo abrir el enlace: {url}", "error")
+            return False
+        return True
 
     # ---------------------------------------------------------------------------------------------------- SyncTeX
     @Property(bool, notify=cambiado)
