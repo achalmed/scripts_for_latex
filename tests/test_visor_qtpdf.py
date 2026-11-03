@@ -69,7 +69,7 @@ Item {
     }
     function buscar(texto) { busqueda.searchString = texto }
     function ir(n) { busqueda.currentResult = n }
-    function cuenta() { return JSON.stringify({texto: capa.texto, desplazada: lista.contentY + 792, enlaces: enlaces, dobles: dobles, total: busqueda.count,
+    function cuenta() { return JSON.stringify({paginasDoc: doc.pageCount, texto: capa.texto, desplazada: lista.contentY + 792, enlaces: enlaces, dobles: dobles, total: busqueda.count,
         resultados: busqueda.boundingPolygonsOnPage(0).length, actual: busqueda.currentResult,
         pagina: busqueda.currentResultLink.page, y: Math.round(busqueda.currentResultLink.location.y)}) }
 }
@@ -100,6 +100,18 @@ pasos = {}
 from PySide6.QtCore import QMetaObject, Q_ARG, Q_RETURN_ARG
 def leer():
     return json.loads(QMetaObject.invokeMethod(raiz, "cuenta", Q_RETURN_ARG("QVariant")))
+# cada paso espera a que se cumpla lo que el anterior debía producir (no un tiempo fijo: bajo carga, cargar el PDF o
+# contar los resultados de la búsqueda tarda más); con un tope amplio, tras el cual el paso sigue y las aserciones dicen
+# qué faltó
+import time
+temporizadores = []
+def cuando(condicion, accion, tope=20.0):
+    inicio = time.monotonic()
+    t = QTimer(); t.setInterval(40)
+    def tic():
+        if condicion() or time.monotonic() - inicio > tope:
+            t.stop(); accion()
+    t.timeout.connect(tic); temporizadores.append(t); t.start()
 # las posiciones (en puntos) salen del propio PDF: el texto empieza en x≈134 y la línea en y≈150; los enlaces, en la
 # misma línea (el 2 de la sección en x≈385, la URL en x≈445) y la URL partida en la línea siguiente
 def arrastrar():
@@ -107,31 +119,31 @@ def arrastrar():
     for x in range(140, 300, 20):
         raton(QEvent.MouseMove, x, 155)
     raton(QEvent.MouseButtonRelease, 300, 155, False)
-    QTimer.singleShot(200, despues_del_arrastre)
+    cuando(lambda: leer()["texto"] != "", despues_del_arrastre)
 def despues_del_arrastre():
     pasos["arrastre"] = leer()
-    clic(388, 154)                           # el \ref interno
-    QTimer.singleShot(600, lambda: clic(460, 154))   # la URL (pasado el intervalo de doble clic)
-    QTimer.singleShot(1200, clic_suelto)
+    clic(388, 154)                           # el \ref interno (las marcas de tiempo, a 1 s: nunca un doble clic)
+    clic(460, 154)                           # la URL
+    cuando(lambda: len(leer()["enlaces"]) >= 2, clic_suelto)
 def clic_suelto():
     pasos["enlaces"] = leer()
     clic(300, 500)                           # un clic fuera: borra la selección
-    QTimer.singleShot(700, doble_clic)
+    cuando(lambda: leer()["texto"] == "", doble_clic)
 def doble_clic():
     pasos["clic"] = leer()
     doble(300, 600)
-    QTimer.singleShot(200, buscar)
+    cuando(lambda: leer()["dobles"] >= 1, buscar)
 def buscar():
     pasos["doble"] = leer()
     QMetaObject.invokeMethod(raiz, "buscar", Q_ARG("QVariant", "cometa"))
-    QTimer.singleShot(1200, siguiente)
+    cuando(lambda: leer()["total"] >= 3, siguiente)        # PdfSearchModel cuenta sin bloquear
 def siguiente():
     QMetaObject.invokeMethod(raiz, "ir", Q_ARG("QVariant", 2))
-    QTimer.singleShot(200, fin)
+    cuando(lambda: leer()["actual"] == 2 and leer()["pagina"] == 1, fin)
 def fin():
     pasos["busqueda"] = leer()
     app.quit()
-QTimer.singleShot(800, arrastrar)
+cuando(lambda: leer()["paginasDoc"] > 0, lambda: QTimer.singleShot(150, arrastrar))   # el PDF abierto (y pintada la capa)
 app.exec()
 print(json.dumps({"ok": True, "errores": errores, **pasos}))
 """

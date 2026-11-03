@@ -35,9 +35,22 @@ hab = lambda *ns: [a.accion(n).habilitada for n in ns]
 sin = hab("compilar.compilar", "compilar.limpiar", "archivo.guardar", "escritorio.pdf", "compilar.seleccion")
 titulo_sin = raiz.property("title") if raiz else ""
 resultado = {}
+import time
+temporizadores = []
+def cuando(condicion, accion, tope=30.0):
+    # espera por condición (bajo carga, abrir un proyecto tarda más que un tiempo fijo), con un tope amplio
+    inicio = time.monotonic()
+    t = QTimer(); t.setInterval(40)
+    def tic():
+        if condicion() or time.monotonic() - inicio > tope:
+            t.stop(); accion()
+    t.timeout.connect(tic); temporizadores.append(t); t.start()
 def abrir():
     i.pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]})
-    QTimer.singleShot(700, despues)
+    # abierto: la vista, el título y el principal en el editor; 300 ms más para que el resaltado se enganche (lo que
+    # marcaba el archivo como modificado al abrir, y que esta prueba vigila)
+    cuando(lambda: i.vista == "escritura" and piezas["editor"].abiertos.filas > 0 and "principal.tex" in raiz.property("title"),
+           lambda: QTimer.singleShot(300, despues))
 def despues():
     resultado.update(vista=i.vista, titulo=raiz.property("title"), abiertos=[f["nombre"] for f in piezas["editor"].abiertos.todas()], modificados=piezas["editor"].modificados,
                      con=hab("compilar.compilar", "compilar.limpiar", "archivo.guardar", "editar.buscar", "editar.ir_linea", "escritorio.dolphin"),
@@ -63,8 +76,20 @@ app = Aplicacion("latex-studio", "LaTeX Studio", version="prueba", nombre_ajuste
 piezas = aplicacion.construir(app); piezas["proyectos"].detectar_ya()
 app.cargar(aplicacion.QML_DIR / "Main.qml"); raiz = app.motor.rootObjects()[0]
 salida = {}
+import time
+temporizadores = []
+def cuando(condicion, accion, tope=30.0):
+    # espera por condición (bajo carga, abrir un proyecto tarda más que un tiempo fijo), con un tope amplio
+    inicio = time.monotonic()
+    t = QTimer(); t.setInterval(40)
+    def tic():
+        if condicion() or time.monotonic() - inicio > tope:
+            t.stop(); accion()
+    t.timeout.connect(tic); temporizadores.append(t); t.start()
 def abrir():
-    piezas["interfaz"].pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]}); QTimer.singleShot(800, probar_todo)
+    piezas["interfaz"].pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]})
+    cuando(lambda: QMetaObject.invokeMethod(raiz, "editor", Q_RETURN_ARG("QVariant")) is not None and piezas["proyectos"].nEtiquetas > 0,
+           lambda: QTimer.singleShot(200, probar_todo))
 def probar_todo():
     e = QMetaObject.invokeMethod(raiz, "editor", Q_RETURN_ARG("QVariant"))
     area = [c for c in e.findChildren(QObject) if c.metaObject().className().startswith("TextArea")][0]
