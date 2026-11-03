@@ -41,4 +41,45 @@ caso "-c --dry-run"          0        -c --dry-run "$d/a"
 caso "--help"                0        --help
 caso "opción desconocida"    distinto --no-existe "$d/a"
 
+# P9: --help y --version salen sin el banner
+casos=$((casos + 1))
+if NO_COLOR=1 "$MAIN" --help 2>&1 | grep -q "Universal LaTeX Builder" || NO_COLOR=1 "$MAIN" --version 2>&1 | grep -q "Universal LaTeX Builder"; then
+    echo "  ✗ --help/--version: imprimen el banner"; fallos=$((fallos + 1))
+else
+    echo "  ✓ --help y --version sin banner"
+fi
+
+# P17: un archivo que no existe, con ruta absoluta: lista los .tex de SU carpeta (y no corta antes de listar)
+casos=$((casos + 1))
+salida="$(TMPDIR="$d/tmp" NO_COLOR=1 "$MAIN" "$d/no-existe" 2>&1)" && rc=0 || rc=$?
+if [ "$rc" -eq 1 ] && grep -q "$d/a.tex" <<<"$salida"; then
+    echo "  ✓ archivo inexistente con ruta absoluta: sugiere $d/a.tex (salida 1)"
+else
+    echo "  ✗ archivo inexistente: salida $rc, sin la sugerencia"; fallos=$((fallos + 1))
+fi
+casos=$((casos + 1))
+salida="$(TMPDIR="$d/tmp" NO_COLOR=1 "$MAIN" "$d/carpeta-que-no-existe/doc" 2>&1)" && rc=0 || rc=$?
+if [ "$rc" -eq 1 ] && grep -q "ninguno en" <<<"$salida"; then
+    echo "  ✓ carpeta inexistente: dice que no hay ninguno (salida 1)"
+else
+    echo "  ✗ carpeta inexistente: salida $rc, sin la línea «ninguno en»"; fallos=$((fallos + 1))
+fi
+
+# P14: --log relativo se escribe respecto del directorio de invocación (una sola copia), no dentro de la del .tex
+if command -v lualatex > /dev/null; then
+    casos=$((casos + 1))
+    otra="$(mktemp -d)"
+    cp -- "$d/a.tex" "$otra/b.tex"
+    mkdir -- "$otra/aqui"
+    (cd "$otra/aqui" && NO_COLOR=1 "$MAIN" -s --log salida.log ../b > /dev/null 2>&1) && rc=0 || rc=$?
+    if [ "$rc" -eq 0 ] && [ -s "$otra/aqui/salida.log" ] && [ ! -e "$otra/salida.log" ]; then
+        echo "  ✓ --log relativo: una sola copia, en el directorio de invocación"
+    else
+        echo "  ✗ --log relativo: salida $rc; aquí $( [ -e "$otra/aqui/salida.log" ] && echo sí || echo no ), junto al .tex $( [ -e "$otra/salida.log" ] && echo sí || echo no )"
+        fallos=$((fallos + 1))
+    fi
+    rm -f -- "$otra"/aqui/salida.log "$otra"/b.* "$otra"/salida.log
+    rmdir -- "$otra/aqui" "$otra" 2>/dev/null || true
+fi
+
 [ "$fallos" -eq 0 ] && echo "[dry-run] $casos casos en verde" || { echo "[dry-run] $fallos caso(s) fallaron"; exit 1; }

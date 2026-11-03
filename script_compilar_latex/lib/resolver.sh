@@ -107,16 +107,19 @@ sugerir_tex_cercanos() {
     echo "  Archivos .tex encontrados en el directorio indicado:"
 
     local dir_busqueda
-    if [[ "$input" == */* ]]; then
+    if [[ "$input" == /* ]]; then
+        dir_busqueda="$(dirname "$input")"            # ruta absoluta: su carpeta, no <cwd>/<ruta> (P17)
+    elif [[ "$input" == */* ]]; then
         dir_busqueda="$(dirname "${user_cwd}/${input}")"
     else
         dir_busqueda="$user_cwd"
     fi
 
+    # con set -e y pipefail, un find que falla (carpeta inexistente) cortaba el script antes de listar (P17)
     local encontrados
     encontrados=$(find "$dir_busqueda" -maxdepth 2 -name '*.tex' 2>/dev/null \
                   | head -10 \
-                  | sed "s|^|    |")
+                  | sed "s|^|    |") || true
 
     if [ -n "$encontrados" ]; then
         echo "$encontrados"

@@ -21,12 +21,12 @@
 #  ----------------------------------------------------------------------
 #  compilar                                          → compila index.tex en el CWD
 #  compilar tesis                                    → compila tesis.tex en el CWD
-#  compilar ~/Documents/04\ index/_pubs/dialectica/articulo      → ruta con tilde
-#  compilar ../pub_axiomata/paper                    → ruta relativa
-#  compilar --biber ~/Documents/03\ writing/nota            → lualatex + biber
-#  compilar --biber -p 3 ~/Documents/04\ index/_pubs/numerus-scriptum/python_intro
-#  compilar -w ~/Documents/02\ analysis/informe      → modo watch
-#  compilar -c ~/Documents/04\ index/_pubs/chaska/slides         → solo limpiar auxiliares
+#  compilar ~/proyectos/dialectica/articulo      → ruta con tilde
+#  compilar ../otro-proyecto/paper                    → ruta relativa
+#  compilar --biber ~/proyectos/nota            → lualatex + biber
+#  compilar --biber -p 3 ~/proyectos/numerus-scriptum/python_intro
+#  compilar -w ~/proyectos/informe      → modo watch
+#  compilar -c ~/proyectos/chaska/slides         → solo limpiar auxiliares
 #
 # ==============================================================================
 
@@ -166,10 +166,9 @@ compilar() {
 
 # --- main() ----------------------------------------------------------------
 main() {
-    banner
-
-    # 1. Parsear argumentos de la CLI
+    # 1. Parsear argumentos de la CLI (antes del banner: --help y --version salen sin él; P9)
     parsear_args "$@"
+    banner
 
     # 2. Resolver la ruta completa del .tex indicado
     #    Se pasa el CWD original del usuario para resolver rutas relativas

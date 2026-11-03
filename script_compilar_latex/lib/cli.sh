@@ -18,9 +18,9 @@ ${BOLD}ARCHIVO / RUTA${NC}
     index                          → busca index.tex en el directorio actual
     tesis                          → busca tesis.tex en el directorio actual
     ../pub_dialectica/capitulo1    → ruta relativa al directorio actual
-    ~/Documents/04\ index/_pubs/dialectica/articulo
+    ~/proyectos/dialectica/articulo
                                    → ruta absoluta completa
-    ~/Documents/03\ writing/nota   → con tilde de home
+    ~/proyectos/nota   → con tilde de home
 
   Si no se indica, el default es: ${BOLD}index${NC}
   La extensión .tex es opcional (se añade automáticamente si falta).
@@ -51,7 +51,8 @@ ${BOLD}SALIDA${NC}
   -s, --silencioso        Suprime la salida del compilador (solo errores).
   -v, --verbose           Muestra la salida completa del compilador.
   -a, --abrir             Abre el PDF automáticamente al terminar.
-  --log FILE              Guarda el log en FILE (default: ARCHIVO.log).
+  --log FILE              Guarda una copia de la salida del compilador en FILE
+                          (relativa al directorio actual; sin --log no hay copia).
 
 ${BOLD}UTILIDADES${NC}
   -c, --limpiar           Elimina archivos auxiliares y sale.
@@ -67,26 +68,26 @@ ${BOLD}EJEMPLOS${NC}
   compilar
 
   # Compilar un archivo en cualquier lugar de tu sistema
-  compilar ~/Documents/04\ index/_pubs/dialectica-y-mercado/articulo
-  compilar ~/Documents/03\ writing/nota_metodologica
+  compilar ~/proyectos/dialectica-y-mercado/articulo
+  compilar ~/proyectos/nota_metodologica
 
   # Documento con bibliografía (biblatex + Biber)
-  compilar --biber -p 3 ~/Documents/04\ index/_pubs/axiomata/paper
+  compilar --biber -p 3 ~/proyectos/axiomata/paper
 
   # Presentación Beamer con bibliografía, abrir al terminar
-  compilar --biber -a ~/Documents/03\ writing/slides_unsch
+  compilar --biber -a ~/proyectos/slides_unsch
 
   # LuaLaTeX con índice y glosario, salida en build/
-  compilar -e lualatex -i -g -o build ~/Documents/04\ index/_pubs/res-publica/libro
+  compilar -e lualatex -i -g -o build ~/proyectos/res-publica/libro
 
   # Modo watch durante la escritura
-  compilar -w ~/Documents/02\ analysis/informe
+  compilar -w ~/proyectos/informe
 
   # Solo limpiar auxiliares de un documento
-  compilar -c ~/Documents/04\ index/_pubs/numerus-scriptum/capitulo2
+  compilar -c ~/proyectos/numerus-scriptum/capitulo2
 
   # Compilar silenciosamente (para CI/CD o cron)
-  compilar -s ~/Documents/03\ writing/reporte && echo "OK"
+  compilar -s ~/proyectos/reporte && echo "OK"
 
 ${BOLD}VARIABLES DE ENTORNO${NC}
   NO_COLOR=1    Desactiva todos los colores en la salida.
@@ -127,6 +128,8 @@ parsear_args() {
                 ;;
             --log)
                 LATEX_LOG="${2:?"--log requiere una ruta de archivo"}"
+                # relativa al directorio de invocación, como -o: la corrida escribe dentro de pushd "$TEX_DIR" (P14)
+                [[ "$LATEX_LOG" == /* ]] || LATEX_LOG="${USER_CWD}/${LATEX_LOG}"
                 shift 2
                 ;;
             -s|--silencioso)    MODO_SILENCIOSO=true;      shift ;;
