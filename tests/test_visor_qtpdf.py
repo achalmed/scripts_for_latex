@@ -35,7 +35,8 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtQuick import QQuickView
 app = QGuiApplication(sys.argv)
 sys.excepthook = lambda *e: (sys.__excepthook__(*e), app.exit(1))     # un fallo en un paso termina, no cuelga
-componentes, pdf, ruta = os.path.join(sys.argv[1], "latex_app", "qml", "componentes"), sys.argv[2], sys.argv[3]
+import gui_comun                                # las piezas del visor son de gui-comun 3.2 (antes, copias de este studio)
+componentes, pdf, ruta = os.path.join(os.path.dirname(gui_comun.__file__), "qml", "GuiComun"), sys.argv[2], sys.argv[3]
 open(ruta, "w").write('''import QtQuick
 import "file://%s"
 Item {
@@ -184,9 +185,10 @@ def test_seleccion_enlaces_y_busqueda_con_el_raton(pdf_con_enlaces, tmp_path):
 
 def test_abrir_enlace_solo_web_y_correo(app, tmp_path, monkeypatch):
     """Un enlace del PDF a `file:` o a una orden no se sigue; http, https y mailto van a la aplicación del escritorio."""
+    from gui_comun import visor_pdf as base
     from latex_app.controladores import visor as cv
     abiertos = []
-    monkeypatch.setattr(cv.QDesktopServices, "openUrl", staticmethod(lambda url: abiertos.append(url.toString()) or True))
+    monkeypatch.setattr(base.QDesktopServices, "openUrl", staticmethod(lambda url: abiertos.append(url.toString()) or True))
     v = cv.Visor(cache=tmp_path)
     avisos = []
     v.aviso.connect(lambda texto, nivel: avisos.append(nivel))

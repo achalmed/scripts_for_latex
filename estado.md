@@ -9,6 +9,7 @@ actualizado: 2026-11-03
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-03 | **gui-comun 3.2 adoptado**: el visor PDF es `VistaPdf` de la base (con la selección, los enlaces y la búsqueda que nacieron aquí); `controladores/visor.py` hereda de `VisorPdf` y solo añade SyncTeX; retiradas las copias del visor; el cursor de una sugerencia queda dentro de la llave (`\frac{|}{}`, con su prueba) | `decisiones.md` §1.13 |
 | 2026-11-03 | **gui-comun 3.1 adoptado**: `EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores` y `ControladorEditor` de la base en lugar de las copias propias (retiradas); el autocompletado, SyncTeX con Ctrl+clic y los filtros de problemas, como ganchos; una prueba nueva acepta sugerencias en la ventana real | `decisiones.md` §1.13; `tests/test_studio.py` |
 | 2026-11-03 | **Visor**: con QtPdf se selecciona texto arrastrando (Ctrl+C, Ctrl+A, menú del clic derecho), se siguen los enlaces del PDF (internos a su página; externos solo http, https y mailto) y se busca (Ctrl+Alt+F, resultados resaltados, Intro y Mayús+Intro), sin perder la marca de SyncTeX ni el doble clic | `decisiones.md` §1.11; `tests/test_visor_qtpdf.py` |
 | 2026-11-03 | **Editor y problemas**: el archivo ya no sale modificado al abrirlo (compara con el texto del disco); firma de las órdenes y autocompletado de argumentos (paquetes, clases, estilos, archivos del proyecto); los problemas de Biber se leen de su `.blg` (el `.bib` y la línea de un error de sintaxis; también con el compilador del marco, que calla a Biber); plegado, multicursor y corrector descartados con `TextArea` (recomendación en §1.12) | `decisiones.md` §1.12; `tests/test_proyectos.py`, `tests/test_compilador.py` |
@@ -43,11 +44,6 @@ nada en curso
   si se marca); el registro de cada corrida de `main.sh` queda en la caché del studio (uno por proyecto, se reemplaza);
   la caché de páginas del visor se poda a 200 MB; la selección de texto del PDF es de una página a la vez. Ninguno es un
   defecto: son límites elegidos.
-- 2026-11-03 · dueño: carril A (`gui-comun`) · `EditorTexto.aceptarSugerencia` deja el cursor tras el `cierre`
-  (`\frac{}{}|`) y no dentro de la llave; arreglado en la base, añadir a `test_autocompletado_en_el_editor_de_la_base`
-  la posición del cursor.
-- 2026-11-03 · dueño: director · el visor PDF pasa a `VistaPdf` de la base cuando la 3.2 traiga la selección, los
-  enlaces y la búsqueda (§1.11); hasta entonces, `VisorPdf`, `CapaQtPdf` y `BusquedaQtPdf` siguen aquí.
 - 2026-11-03 · dueño: **el autor** · probar en la sesión real la selección, los enlaces y la búsqueda del PDF (Ctrl+Alt+F)
   y el autocompletado de argumentos; las pruebas los ejercitan con eventos de ratón sin pantalla.
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el

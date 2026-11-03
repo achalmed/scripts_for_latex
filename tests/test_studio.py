@@ -73,7 +73,8 @@ def probar_todo():
         area.setProperty("cursorPosition", len(antes))
         QMetaObject.invokeMethod(e, "abrirSugerencias", Q_ARG("QVariant", True))
         QMetaObject.invokeMethod(e, "aceptarSugerencia")
-        salida[nombre] = area.property("text").rstrip("\n")
+        t, c = area.property("text"), area.property("cursorPosition")
+        salida[nombre] = (t[:c] + "|" + t[c:]).rstrip("\n")
     probar("\\fra", "orden"); probar("\\begin{ite", "entorno"); probar("\\usepackage{amsm", "paquete")
     probar("\\input{capitulos/met", "archivo"); probar("\\cite{knu", "cita")
     app.app.quit()
@@ -83,14 +84,15 @@ QTimer.singleShot(400, abrir); app.app.exec(); app.cerrar(); print(json.dumps(sa
 
 @requiere_sistema
 def test_autocompletado_en_el_editor_de_la_base(tmp_path):
-    """El autocompletado de LaTeX en el EditorTexto de gui-comun 3.1: una orden con sus llaves (insertar + cierre), un
-    entorno con su llave, un paquete, un archivo del proyecto y una clave del .bib, aceptados en la ventana real."""
+    """El autocompletado de LaTeX en el EditorTexto de gui-comun: una orden con sus llaves (insertar + cierre), un
+    entorno con su llave, un paquete, un archivo del proyecto y una clave del .bib, aceptados en la ventana real; el
+    cursor (|) queda dentro de la primera llave de la orden (`\\frac{|}{}`: el cierre va tras él, gui-comun 3.2)."""
     muestra, env = _entorno(tmp_path)
     r = correr_python(COMPLETAR, env, str(muestra / "tesis-multiarchivo" / "principal.tex"))
     assert r.returncode == 0, r.stderr[-3000:]
     d = json.loads(r.stdout.strip().splitlines()[-1])
-    assert d == {"orden": "\\frac{}{}", "entorno": "\\begin{itemize}", "paquete": "\\usepackage{amsmath",
-                 "archivo": "\\input{capitulos/metodo.tex", "cita": "\\cite{knuth1984"}, d
+    assert d == {"orden": "\\frac{|}{}", "entorno": "\\begin{itemize|}", "paquete": "\\usepackage{amsmath|",
+                 "archivo": "\\input{capitulos/metodo.tex|", "cita": "\\cite{knuth1984|"}, d
 
 
 COMPONENTE = """

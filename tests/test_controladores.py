@@ -311,7 +311,8 @@ def test_qtpdf_pinta_una_pagina_real(app, tmp_path):
     subprocess.run(["lualatex", "-interaction=batchmode", "p.tex"], cwd=tmp_path, capture_output=True, timeout=120)
     pdf = tmp_path / "p.pdf"
     assert pdf.is_file()
-    qml = Path(__file__).resolve().parents[1] / "studio" / "latex_app" / "qml" / "componentes"
+    import gui_comun                                    # DocumentoQtPdf y PaginaQtPdf son de gui-comun 3.2
+    qml = Path(gui_comun.__file__).parent / "qml" / "GuiComun"
     motor = QQmlApplicationEngine()
     from PySide6.QtQml import QQmlEngine
     comp_doc = QQmlComponent(motor, QUrl.fromLocalFile(str(qml / "DocumentoQtPdf.qml")))

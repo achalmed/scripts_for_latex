@@ -93,15 +93,24 @@ de la base como ganchos: el autocompletado (`EspacioEscritura.completarLatex` y 
 antes; las órdenes con argumentos dan `insertar` + `cierre` en vez de `retroceso`), Ctrl+clic para SyncTeX (`ctrlClic`)
 y la letra y el ajuste de línea de los ajustes del studio. La lista de problemas lleva en su `cabecera` los filtros por
 nivel y «Revisar dependencias»; su rol de ubicación es `ubicacion`. El visor PDF sigue propio hasta que la base tenga la
-selección, los enlaces y la búsqueda (§1.11). Pendiente de la base: `EditorTexto.aceptarSugerencia` deja el cursor tras
-el `cierre` (`\frac{}{}|`) y no dentro de la llave (avisado al carril A).
+selección, los enlaces y la búsqueda (§1.11).
+
+**Y el visor, con la 3.2** (el mismo día): la selección, los enlaces y la búsqueda de §1.11 subieron a la base
+(`VistaPdf` con `CapaQtPdf` y `BusquedaQtPdf`, `gui_comun.visor_pdf.VisorPdf`). `studio/latex_app/controladores/visor.py` hereda de
+`VisorPdf` y añade solo SyncTeX (`abrir` con la carpeta del `.synctex.gz`, `haySynctex`, `desdeCodigo`, que marca con
+`marcarRecuadro`, y `haciaCodigo`); `VistaPdf` lleva el doble clic y «Ir al código de este punto» a `haciaCodigo`. Se
+retiraron `VisorPdf.qml`, `CapaQtPdf.qml`, `BusquedaQtPdf.qml`, `DocumentoQtPdf.qml`, `PaginaQtPdf.qml` y el renderizado
+de `studio/latex_app/visor.py` (que queda solo con SyncTeX); `tests/test_visor_qtpdf.py` ejercita las piezas de la base. La
+3.2 arregla además el cursor de `EditorTexto` (`\frac{|}{}`, lo vigila `test_autocompletado_en_el_editor_de_la_base`).
+Una trampa de PySide: una propiedad de la subclase con la señal de la base como `notify` tumba QML al crear el
+metaobjeto (fallo de segmentación); `haySynctex` tiene su señal propia.
 
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)
 
 El autor instaló `qml6-module-qtquick-pdf` y `python3-pyside6.qtpdf`. Cada página la pinta ahora Qt con `PdfPageImage`
-(`studio/latex_app/qml/componentes/PaginaQtPdf.qml`, sobre un `PdfDocument` en `studio/latex_app/qml/componentes/DocumentoQtPdf.qml`), dentro del mismo recuadro de
+(`PaginaQtPdf.qml`, sobre un `PdfDocument` en `DocumentoQtPdf.qml`; desde §1.13, los de `gui-comun` 3.2), dentro del mismo recuadro de
 `VisorPdf`: así se conservan el tamaño en puntos de cada página, el zoom, las miniaturas, la marca de SyncTeX (código →
 PDF) y el doble clic (PDF → código), que `PdfMultiPageView` no deja poner con su vista propia. Los dos componentes viven
 aparte para que `VisorPdf` no importe `QtQuick.Pdf`: sin el módulo, o con `LATEX_STUDIO_VISOR=pdftoppm`, el visor sigue
@@ -112,7 +121,7 @@ búsqueda llegaron el 2026-11-03 (§1.11).
 
 ### §1.11 Seleccionar, seguir enlaces y buscar en el PDF, sin perder SyncTeX (2026-11-03)
 
-Con QtPdf, cada página lleva encima una capa (`studio/latex_app/qml/componentes/CapaQtPdf.qml`) con `PdfSelection`,
+Con QtPdf, cada página lleva encima una capa (`CapaQtPdf.qml`; desde §1.13, la de `gui-comun` 3.2) con `PdfSelection`,
 `PdfLinkModel` y los resultados de un `PdfSearchModel` (`BusquedaQtPdf.qml`, uno para todo el documento); las dos viven
 aparte, como las de §1.10, y sin el módulo el visor sigue igual que antes. Arrastrar con el ratón selecciona (el patrón
 de `PdfMultiPageView`: un `DragHandler` sin destino; la lista de páginas no se desplaza con él, lo vigila una prueba);

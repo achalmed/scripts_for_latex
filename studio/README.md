@@ -69,10 +69,10 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | `latex_app/proyectos.py` | la detección (sin Qt): principal, inclusiones, `.bib`, motor, compilador, categoría, estado del disco; caché |
 | `latex_app/estructura.py` | estructura, etiquetas, claves de los `.bib`, definiciones y autocompletado (sin Qt) |
 | `latex_app/diagnostico.py` | errores presentables (causa y acción) y la revisión de dependencias con `kpsewhich` (sin Qt) |
-| `latex_app/visor.py` | páginas con `pdftoppm` (el respaldo sin QtPdf) en una caché acotada y SyncTeX (sin Qt) |
+| `latex_app/visor.py` | SyncTeX (sin Qt); las páginas son del visor de `gui-comun` 3.2 (`gui_comun.visor_pdf`) |
 | `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
-| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `VisorPdf` con `CapaQtPdf` y `BusquedaQtPdf`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) |
+| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) y el visor PDF, de la 3.2 (`VistaPdf`, `gui_comun.visor_pdf.VisorPdf`, del que hereda `studio/latex_app/controladores/visor.py` para SyncTeX) |
 | `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
 | `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales |
 
@@ -88,10 +88,10 @@ tests/run.sh                                          # desde latex-studio/: la 
 
 ## Límite honesto
 
-- **Visor**: con `QtQuick.Pdf` instalado (`qml6-module-qtquick-pdf`, desde el 2026-11-03) Qt pinta cada página
-  (`PdfPageImage`, `studio/latex_app/qml/componentes/PaginaQtPdf.qml`), más nítida y sin caché en disco; sin él, o con
-  `LATEX_STUDIO_VISOR=pdftoppm`, páginas de `pdftoppm`. Todavía sin selección de texto ni enlaces del PDF: los daría
-  `PdfMultiPageView`, pero su vista propia no deja poner la marca de SyncTeX ni el doble clic al código (§1.10).
+- **Visor**: el de `gui-comun` 3.2 (`VistaPdf`): con `QtQuick.Pdf` instalado (`qml6-module-qtquick-pdf`) Qt pinta cada
+  página, más nítida y sin caché en disco; sin él, o con `LATEX_STUDIO_VISOR=pdftoppm`, páginas de `pdftoppm`. Con QtPdf,
+  selección de texto, enlaces y búsqueda (Ctrl+Alt+F). Lo de LaTeX es SyncTeX: la marca, el doble clic y «Ir al código
+  de este punto» (§1.10, §1.11, §1.13).
 - **SyncTeX necesita el `.synctex.gz`**: `main.sh -k` y latexmk lo dejan; el compilador de `escritura`
   (`<marco>/scripts/build.sh`) no pasa `-synctex=1` y sus proyectos no lo tienen hasta que ese marco lo añada.
 - **El editor es un `TextArea`**: sin plegado, sin multicursor, sin corrector ortográfico; el autocompletado es por

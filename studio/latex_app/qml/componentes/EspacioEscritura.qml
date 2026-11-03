@@ -164,11 +164,20 @@ QQC2.SplitView {
         }
     }
 
-    VisorPdf {
+    // el PDF: VistaPdf de gui-comun 3.2 (QtPdf o pdftoppm, zoom, miniaturas, selección, enlaces, búsqueda); lo de LaTeX
+    // es SyncTeX: el doble clic y «Ir al código de este punto» vuelven al código, y la marca la pone studio.visor
+    VistaPdf {
         id: visorPdf
         visible: raiz.mostrarPdf
+        visor: studio.visor
         QQC2.SplitView.preferredWidth: Kirigami.Units.gridUnit * 30
         QQC2.SplitView.minimumWidth: Kirigami.Units.gridUnit * 14
+        textoPunto: "Ir al código de este punto"
+        puntoHabilitado: studio.visor.haySynctex
+        onDobleClic: (pagina, x, y) => studio.visor.haciaCodigo(pagina, x, y)
+        mensajeVacio: studio.proyectos.hayAbierto ? "Todavía no hay PDF" : "Ningún proyecto abierto"
+        explicacionVacia: studio.proyectos.hayAbierto ? "Compila el proyecto (F5 o Ctrl+B): el PDF aparece aquí y se recarga en cada compilación."
+                                                      : "Abre un proyecto en la página de proyectos (Ctrl+1)."
     }
 
     function buscar(reemplazar) { busqueda.abrir(reemplazar) }

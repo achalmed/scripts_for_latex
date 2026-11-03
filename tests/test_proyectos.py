@@ -347,20 +347,23 @@ def test_compila_con_bibtex_y_comentario_magico(muestra, tmp_path):
 @requiere_lualatex
 @requiere_poppler
 def test_visor_renderiza_por_demanda_y_poda_la_cache(muestra, tmp_path):
+    """Las páginas del PDF de un proyecto real de la muestra con el visor de gui-comun 3.2 (`gui_comun.visor_pdf`), que
+    sustituye al renderizado propio desde el 2026-11-03."""
+    from gui_comun import visor_pdf as vp
     p = _por_nombre(pr.detectar([muestra]))["roto.tex"]
     nota = _por_nombre(pr.detectar([muestra]))["nota.tex"]
     assert _compilar(nota) == 0
     pdf = Path(nota.carpeta) / "nota.pdf"
-    tamanos = visor.paginas(pdf)
+    tamanos = vp.paginas(pdf)
     assert len(tamanos) == 1 and tamanos[0][0] == pytest.approx(614.0, abs=30)
     cache = tmp_path / "cache"
-    png = visor.renderizar(pdf, 1, 50, cache)
+    png = vp.renderizar(pdf, 1, 50, cache)
     assert png is not None and png.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
-    assert visor.renderizar(pdf, 1, 50, cache) == png                     # de la caché
-    assert visor.tamano_cache(cache) > 0
-    assert visor.podar(cache, limite=0, conservar=visor.clave(pdf)) == 0   # el abierto no se borra
-    assert visor.podar(cache, limite=0) > 0 and visor.tamano_cache(cache) == 0
-    assert visor.paginas(Path(p.carpeta) / "no-hay.pdf") == []
+    assert vp.renderizar(pdf, 1, 50, cache) == png                     # de la caché
+    assert vp.tamano_cache(cache) > 0
+    assert vp.podar(cache, limite=0, conservar=vp.clave(pdf)) == 0   # el abierto no se borra
+    assert vp.podar(cache, limite=0) > 0 and vp.tamano_cache(cache) == 0
+    assert vp.paginas(Path(p.carpeta) / "no-hay.pdf") == []
 
 
 @requiere_biber

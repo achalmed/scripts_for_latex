@@ -192,7 +192,7 @@ técnico desplegable) y `figuras/latex-studio-paleta.png` (la paleta de órdenes
 | estructura, etiquetas, claves, autocompletado (R12) | `studio/latex_app/estructura.py` | ídem |
 | errores presentables y dependencias (R9, R16) | `studio/latex_app/diagnostico.py` | ídem (siete mensajes típicos; uno desconocido no inventa causa; `kpsewhich` real) |
 | recetas por compilador (R5, R8) | `studio/latex_app/compilador.py` (`receta`), CLI `-k` | ídem, compilación real: Biber, BibTeX con comentario mágico, latexmk, el marco de muestra, el que falla |
-| visor y SyncTeX (R10, R11) | `studio/latex_app/visor.py`, `studio/latex_app/controladores/visor.py`, `studio/latex_app/qml/componentes/VisorPdf.qml` | `pdftoppm` y poda de la caché reales; SyncTeX ida y vuelta real sobre la tesis de muestra |
+| visor y SyncTeX (R10, R11) | `studio/latex_app/visor.py` (SyncTeX), `studio/latex_app/controladores/visor.py` (sobre `gui_comun.visor_pdf.VisorPdf`) y `VistaPdf` de gui-comun 3.2 (desde el 2026-11-03) | `pdftoppm` y poda de la caché reales; SyncTeX ida y vuelta real sobre la tesis de muestra |
 | controladores | `studio/latex_app/controladores/{ajustes,proyectos,editor,compilacion,visor}.py` | `tests/test_controladores.py` (carpetas de trabajo, detección en tarea, abrir un capítulo, guardar solo con orden y cambio externo, CRLF, compilar y ver, F8, cola, limpiar sin tocar fuentes, dependencias) |
 | ventana | `studio/latex_app/qml/Main.qml`, `studio/latex_app/qml/componentes/*` | `tests/test_studio.py` (la ventana con un proyecto abierto, cada componente, `--smoke`, sin colores propios ni marca ni QtWidgets) |
 
