@@ -169,7 +169,7 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
 ## 4. Lo que queda para `gui-comun` 3.0
 
 `QApplication` (los diálogos de KDE), las tres funciones de escritorio de R14, el componente de errores presentables
-(aquí `studio/latex_app/qml/componentes/ListaProblemas.qml`) y una ventana sin plantilla. Se anotan en `registro.md` («Para promover»).
+(aquí `ListaProblemas.qml`, hoy `ListaErrores` de la base 3.1) y una ventana sin plantilla. Se anotan en `registro.md` («Para promover»).
 
 ## 5. Lo construido
 
@@ -208,8 +208,8 @@ pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su wo
 
 ## 6. Lo que quedó fuera
 
-- **SyncTeX en los proyectos de `escritura`**: resuelto el 2026-11-03 en ese repo (`-synctex=1` en `CFG_TEX_FLAGS` de su
-  `scripts/config.sh`; el `.synctex.gz` queda en `.build/`, que la ventana ya busca).
+- **SyncTeX en los proyectos de `escritura`**: resuelto el 2026-11-03 en ese repo (`-synctex=1` en `CFG_TEX_FLAGS` de la
+  configuración de su compilador; el `.synctex.gz` queda en la carpeta de auxiliares del proyecto, que la ventana ya busca).
 - **Selección de texto, enlaces y búsqueda del PDF**: hechos el 2026-11-03 con QtPdf (decisiones §1.11).
 - **La ventana sin plantilla** (`VentanaBase` de `gui-comun` 3.0): la distribución propia vive hoy dentro de las ranuras
   de `VentanaStudio` (barra lateral, centro, panel inferior; el panel de detalles no se usa); pasar a `VentanaBase` es

@@ -270,13 +270,13 @@ def completar(antes: str, etiquetas_: list[dict], claves: list[dict], ordenes_ex
     """Qué ofrecer en el cursor, según el texto de la línea antes de él: `\\ref{` → etiquetas, `\\cite{` (o tras una coma
     dentro de las llaves) → claves de los `.bib`, `\\begin{` → entornos, `\\usepackage{`, `\\documentclass{`,
     `\\includegraphics{`, `\\input{`, `\\addbibresource{`… → paquetes, clases y archivos del proyecto, `\\xx` → órdenes
-    (con su firma). Devuelve {tipo, prefijo, elementos: [{texto, detalle, insertar, retroceso}]} o tipo vacío si no hay
-    nada que ofrecer; `retroceso` es cuántos caracteres vuelve el cursor tras insertar (para quedar dentro de la llave)."""
+    (con su firma). Devuelve {tipo, prefijo, elementos: [{texto, detalle, insertar, cierre}]} o tipo vacío si no hay
+    nada que ofrecer; `cierre` va tras el cursor (`EditorTexto` de gui-comun 3.1): el cursor queda dentro de la llave."""
     m = _CONTEXTO_ENTORNO.search(antes)
     if m:
         prefijo = m["prefijo"]
         candidatos = sorted(set(ENTORNOS) | set(entornos_extra))
-        elementos = [{"texto": e, "detalle": "entorno", "insertar": e} for e in candidatos if e.startswith(prefijo)]
+        elementos = [{"texto": e, "detalle": "entorno", "insertar": e, "cierre": "}"} for e in candidatos if e.startswith(prefijo)]
         return {"tipo": "entorno", "prefijo": prefijo, "elementos": elementos[:limite]}
     m = _CONTEXTO_REF.search(antes)
     if m and (m["orden"] in ORDENES_REF or m["orden"] in ORDENES_CITA):
@@ -305,8 +305,7 @@ def completar(antes: str, etiquetas_: list[dict], claves: list[dict], ordenes_ex
                 continue
             firma = FIRMAS.get(o, "")
             obligatorios = firma.count("{")
-            insertar = o + "{}" * obligatorios
             elementos.append({"texto": "\\" + o + firma, "detalle": "definida en el proyecto" if o in ordenes_extra else "",
-                              "insertar": insertar, "retroceso": max(0, 2 * obligatorios - 1)})
+                              "insertar": o + ("{" if obligatorios else ""), "cierre": ("}" + "{}" * (obligatorios - 1)) if obligatorios else ""})
         return {"tipo": "orden", "prefijo": prefijo, "elementos": elementos[:limite]}
     return {"tipo": "", "prefijo": "", "elementos": []}

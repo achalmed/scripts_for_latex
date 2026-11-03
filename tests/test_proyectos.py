@@ -181,10 +181,11 @@ def test_etiquetas_claves_y_autocompletado(muestra):
     r = estructura.completar("texto \\textb", etiquetas, claves)
     # una orden con argumentos lleva su firma y se inserta con sus llaves y el cursor en la primera
     assert r["tipo"] == "orden" and r["elementos"][0]["texto"] == "\\textbf{texto}"
-    assert (r["elementos"][0]["insertar"], r["elementos"][0]["retroceso"]) == ("textbf{}", 1)
+    assert (r["elementos"][0]["insertar"], r["elementos"][0]["cierre"]) == ("textbf{", "}")    # el cursor, dentro
     frac = next(x for x in estructura.completar("\\fra", etiquetas, claves)["elementos"] if x["insertar"].startswith("frac"))
-    assert (frac["insertar"], frac["retroceso"]) == ("frac{}{}", 3)
-    assert next(x for x in estructura.completar("\\cent", etiquetas, claves)["elementos"])["retroceso"] == 0
+    assert (frac["insertar"], frac["cierre"]) == ("frac{", "}{}")
+    assert next(x for x in estructura.completar("\\cent", etiquetas, claves)["elementos"])["cierre"] == ""
+    assert estructura.completar("\\begin{ali", etiquetas, claves)["elementos"][0]["cierre"] == "}"
     assert estructura.completar("texto normal", etiquetas, claves)["tipo"] == ""
 
 

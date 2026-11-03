@@ -24,7 +24,7 @@ from gui_comun.tareas import Tareas
 from latex_app import compilador as svc
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
-from latex_app.controladores.editor import Editor
+from gui_comun.editor import ControladorEditor
 from latex_app.controladores.historial import Historial
 from latex_app.controladores.proyectos import Proyectos, cache_del_studio
 from latex_app.controladores.visor import Visor
@@ -137,7 +137,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     ajustes = Ajustes()
     historial = Historial(consola)
     proyectos = Proyectos(ajustes, historial, consola, tareas, cache=cache)
-    editor = Editor(consola)
+    editor = ControladorEditor(consola)
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)

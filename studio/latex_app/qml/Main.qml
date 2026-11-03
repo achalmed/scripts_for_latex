@@ -78,7 +78,7 @@ VentanaStudio {
             case "buscar": if (e) espacio.buscar(false); break
             case "reemplazar": if (e) espacio.buscar(true); break
             case "ir_linea": if (e) { dialogoLinea.maximo = e.inicios.length; dialogoLinea.open() } break
-            case "completar": if (e) e.completar(true); break
+            case "completar": if (e) e.abrirSugerencias(true); break
             case "comentar": if (e && !e.soloLectura) e.comentar(); break
             case "buscar_pdf": espacio.buscarEnPdf(); break
             case "alternar_pdf": espacio.mostrarPdf = !espacio.mostrarPdf; ventana.registro.marcar("ver.pdf", espacio.mostrarPdf); break
@@ -162,7 +162,29 @@ VentanaStudio {
         altoPreferido: Kirigami.Units.gridUnit * 11
         extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }, { titulo: "Historial", componente: cHistorial }]
     }
-    Component { id: cProblemas; ListaProblemas {} }
+    // los problemas de la compilación: ListaErrores de gui-comun 3.1, con los filtros por nivel de LaTeX en su cabecera
+    Component {
+        id: cProblemas
+        ListaErrores {
+            id: listaProblemas
+            readonly property var c: studio.compilacion
+            modelo: c.problemas
+            Connections { target: listaProblemas.c; function onProblemasCambiados() { listaProblemas.actual = listaProblemas.c.problemaActual } }
+            nombreAccesible: "Problemas"
+            onElegido: (indice) => c.elegir(indice)
+            iconoVacio: c.origenRegistro !== "" && c.nProblemas === 0 ? "data-success" : "data-information"
+            mensajeVacio: !studio.proyectos.hayAbierto ? "Ningún proyecto abierto"
+                          : c.origenRegistro === "" ? "Sin registro todavía" : c.nProblemas === 0 ? "Sin errores ni avisos" : "Todos los problemas están filtrados"
+            explicacionVacia: studio.proyectos.hayAbierto && c.origenRegistro === "" ? "Compila (F5) para leer los errores y avisos con su archivo y su línea." : ""
+            cabecera: [
+                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarErrores; onToggled: listaProblemas.c.mostrarErrores = checked; icon.name: "data-error"; text: listaProblemas.c.nErrores; Accessible.name: "Errores: " + listaProblemas.c.nErrores; QQC2.ToolTip.text: "Errores"; QQC2.ToolTip.visible: hovered },
+                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarAvisos; onToggled: listaProblemas.c.mostrarAvisos = checked; icon.name: "data-warning"; text: listaProblemas.c.nAvisos; Accessible.name: "Avisos: " + listaProblemas.c.nAvisos; QQC2.ToolTip.text: "Avisos"; QQC2.ToolTip.visible: hovered },
+                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarTipografia; onToggled: listaProblemas.c.mostrarTipografia = checked; icon.name: "format-justify-fill"; text: listaProblemas.c.nTipografia; Accessible.name: "Tipografía: " + listaProblemas.c.nTipografia; QQC2.ToolTip.text: "Avisos tipográficos (Overfull, Underfull)"; QQC2.ToolTip.visible: hovered },
+                QQC2.Label { Layout.fillWidth: true; text: listaProblemas.c.origenRegistro ? "de " + listaProblemas.c.origenRegistro.split("/").pop() : ""; elide: Text.ElideMiddle; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor },
+                QQC2.Button { text: "Revisar dependencias"; icon.name: "tools-check-spelling"; flat: true; enabled: studio.proyectos.hayAbierto; onClicked: listaProblemas.c.revisarDependencias("") }
+            ]
+        }
+    }
     Component { id: cRegistro; RegistroCompilacion {} }
     Component { id: cCola; Cola {} }
     Component { id: cHistorial; HistorialCompilaciones {} }

@@ -53,6 +53,46 @@ print(json.dumps({"ok": ok, "confirmaciones": confirmaciones, "titulo_sin": titu
                   "barra": a.barra, "sin": sin, "total": p.total, **resultado}))
 """
 
+COMPLETAR = r"""
+import sys, json; sys.path.insert(0, sys.argv[1])
+from latex_app import aplicacion
+from gui_comun.nucleo import Aplicacion
+from gui_comun.qt import QTimer
+from PySide6.QtCore import QMetaObject, QObject, Q_ARG, Q_RETURN_ARG
+app = Aplicacion("latex-studio", "LaTeX Studio", version="prueba", nombre_ajustes="LatexStudio")
+piezas = aplicacion.construir(app); piezas["proyectos"].detectar_ya()
+app.cargar(aplicacion.QML_DIR / "Main.qml"); raiz = app.motor.rootObjects()[0]
+salida = {}
+def abrir():
+    piezas["interfaz"].pedir.emit("abrir_proyecto", {"ruta": sys.argv[2]}); QTimer.singleShot(800, probar_todo)
+def probar_todo():
+    e = QMetaObject.invokeMethod(raiz, "editor", Q_RETURN_ARG("QVariant"))
+    area = [c for c in e.findChildren(QObject) if c.metaObject().className().startswith("TextArea")][0]
+    def probar(antes, nombre):
+        area.setProperty("text", antes + "\n")
+        area.setProperty("cursorPosition", len(antes))
+        QMetaObject.invokeMethod(e, "abrirSugerencias", Q_ARG("QVariant", True))
+        QMetaObject.invokeMethod(e, "aceptarSugerencia")
+        salida[nombre] = area.property("text").rstrip("\n")
+    probar("\\fra", "orden"); probar("\\begin{ite", "entorno"); probar("\\usepackage{amsm", "paquete")
+    probar("\\input{capitulos/met", "archivo"); probar("\\cite{knu", "cita")
+    app.app.quit()
+QTimer.singleShot(400, abrir); app.app.exec(); app.cerrar(); print(json.dumps(salida))
+"""
+
+
+@requiere_sistema
+def test_autocompletado_en_el_editor_de_la_base(tmp_path):
+    """El autocompletado de LaTeX en el EditorTexto de gui-comun 3.1: una orden con sus llaves (insertar + cierre), un
+    entorno con su llave, un paquete, un archivo del proyecto y una clave del .bib, aceptados en la ventana real."""
+    muestra, env = _entorno(tmp_path)
+    r = correr_python(COMPLETAR, env, str(muestra / "tesis-multiarchivo" / "principal.tex"))
+    assert r.returncode == 0, r.stderr[-3000:]
+    d = json.loads(r.stdout.strip().splitlines()[-1])
+    assert d == {"orden": "\\frac{}{}", "entorno": "\\begin{itemize}", "paquete": "\\usepackage{amsmath",
+                 "archivo": "\\input{capitulos/metodo.tex", "cita": "\\cite{knuth1984"}, d
+
+
 COMPONENTE = """
 import sys, json, os; sys.path.insert(0, sys.argv[1])
 from latex_app import aplicacion

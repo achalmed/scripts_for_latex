@@ -1,11 +1,12 @@
 // EspacioEscritura — la vista Escritura: a la izquierda (en el centro de la ventana) las pestañas de los archivos
 // abiertos con el editor y la barra de búsqueda; a la derecha el PDF integrado (F7 lo oculta). Cada archivo abierto
-// tiene su EditorArchivo (su texto y su deshacer); el aviso de «cambió fuera» y la confirmación de sobrescribir viven
+// tiene su EditorTexto de gui-comun (su texto y su deshacer); el aviso de «cambió fuera» y la confirmación de sobrescribir viven
 // aquí. Sin datos propios: studio.editor (abiertos), studio.visor, studio.proyectos.
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 QQC2.SplitView {
     id: raiz
@@ -104,13 +105,18 @@ QQC2.SplitView {
             Repeater {
                 id: editores
                 model: studio.editor.abiertos
-                delegate: EditorArchivo {
+                delegate: EditorTexto {
                     required property var model
+                    controlador: studio.editor
                     ruta: model.ruta
                     definicion: model.definicion
                     soloLectura: model.solo_lectura
+                    ajustarLineas: studio.ajustes.ajustarLineas
+                    tamanoLetra: studio.ajustes.tamanoLetra
+                    completar: raiz.completarLatex
+                    disparaCompletado: raiz.disparaLatex
                     Component.onCompleted: cargar()
-                    onSynctex: (linea, columna) => studio.visor.desdeCodigo(ruta, linea, columna)
+                    onCtrlClic: (linea, columna) => studio.visor.desdeCodigo(ruta, linea, columna)
                 }
             }
         }
@@ -125,7 +131,7 @@ QQC2.SplitView {
                                                      : "Ctrl+1 muestra los proyectos detectados; Ctrl+O abre un .tex."
         }
 
-        BarraBusqueda {
+        BarraBuscarReemplazar {
             id: busqueda
             Layout.fillWidth: true
             editor: raiz.editorActual
@@ -166,6 +172,23 @@ QQC2.SplitView {
     }
 
     function buscar(reemplazar) { busqueda.abrir(reemplazar) }
+
+    // el autocompletado de LaTeX en el EditorTexto de la base: lo calcula Python (órdenes con su firma, entornos, \ref de
+    // las \label, \cite de los .bib, paquetes, clases y archivos del proyecto); una orden se ofrece desde dos letras
+    function completarLatex(antes, forzado) {
+        const r = studio.proyectos.completar(antes)
+        return (!forzado && r.tipo === "orden" && r.prefijo.length < 2) ? null : r
+    }
+    // qué tecla lo abre: «\», «{», «,», «/» o una letra en un contexto que se completa; Intro y Tab también, para que
+    // al aceptar \usepackage o \begin se ofrezca en el acto su argumento
+    function disparaLatex(antes, tecla) {
+        const aceptar = tecla === "\r" || tecla === "\t"           // tras aceptar una sugerencia: solo si sigue un argumento
+        if (!(aceptar || tecla === "\\" || tecla === "{" || tecla === "," || tecla === "/" || /^[A-Za-z:]$/.test(tecla))) return false
+        if (aceptar && !antes.endsWith("{")) return false           // un entorno o una clave recién puestos: nada más
+        return (!aceptar && /\\[A-Za-z@]{2,}$/.test(antes)) || /\\(begin|end)\s*\{[^{}]*$/.test(antes)
+            || /\\[A-Za-z]*(ref|cite|Cite)[A-Za-z]*\*?\s*(\[[^\]]*\]\s*){0,2}\{[^{}]*$/.test(antes)
+            || /\\(usepackage|RequirePackage|documentclass|includegraphics|input|include|subfile|addbibresource|bibliography|bibliographystyle)\*?\s*(\[[^\]]*\]\s*)?\{[^{}]*$/.test(antes)
+    }
     function buscarEnPdf() {
         if (!raiz.mostrarPdf) { raiz.mostrarPdf = true; ventana.registro.marcar("ver.pdf", true) }
         visorPdf.buscarEnPdf()

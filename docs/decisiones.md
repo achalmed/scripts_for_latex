@@ -84,6 +84,18 @@ su `latexmkrc`.
 `core/` subiendo carpetas como siempre y, si no lo encuentra (un worktree fuera de `~/Documents`, una copia de
 pruebas), usa `CORE_DIR` de `core/env.sh` si está exportada.
 
+### §1.13 El editor, la barra de búsqueda y la lista de problemas son los de `gui-comun` 3.1 (2026-11-03)
+
+Lo que este studio construyó y Quarto copió subió a la base con nombre nuevo: `EditorTexto` (antes `EditorArchivo`),
+`BarraBuscarReemplazar` (`BarraBusqueda`), `ListaErrores` (`ListaProblemas`) y `gui_comun.editor.ControladorEditor`
+(el controlador propio del editor); las copias se retiraron, con la del resaltado. Lo propio de LaTeX se le da al editor
+de la base como ganchos: el autocompletado (`EspacioEscritura.completarLatex` y `disparaLatex`, que calcula Python como
+antes; las órdenes con argumentos dan `insertar` + `cierre` en vez de `retroceso`), Ctrl+clic para SyncTeX (`ctrlClic`)
+y la letra y el ajuste de línea de los ajustes del studio. La lista de problemas lleva en su `cabecera` los filtros por
+nivel y «Revisar dependencias»; su rol de ubicación es `ubicacion`. El visor PDF sigue propio hasta que la base tenga la
+selección, los enlaces y la búsqueda (§1.11). Pendiente de la base: `EditorTexto.aceptarSugerencia` deja el cursor tras
+el `cierre` (`\frac{}{}|`) y no dentro de la llave (avisado al carril A).
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

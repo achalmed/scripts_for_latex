@@ -15,7 +15,7 @@ import pytest
 from conftest import copiar_muestra, requiere_binding, requiere_biber, requiere_lualatex
 
 from latex_app import modelos as mod  # noqa: E402
-from latex_app.controladores import editor as ed  # noqa: E402
+from gui_comun import editor as ed  # noqa: E402  (el editor es el de gui-comun 3.1)
 
 
 # ---------------------------------------------------------------------------------------------------- sin Qt
@@ -66,7 +66,7 @@ def piezas(app, tmp_path, monkeypatch):
     from gui_comun.tareas import Tareas
     from latex_app.controladores.ajustes import Ajustes
     from latex_app.controladores.compilacion import Compilacion
-    from latex_app.controladores.editor import Editor
+    from gui_comun.editor import ControladorEditor as Editor
     from latex_app.controladores.historial import Historial
     from latex_app.controladores.proyectos import Proyectos
     from latex_app.controladores.visor import Visor

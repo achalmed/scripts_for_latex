@@ -17,7 +17,7 @@ from gui_comun.qt import QObject, Property, Signal, Slot
 from latex_app import compilador as svc
 from latex_app import diagnostico as dg
 
-ROLES_PROBLEMAS = ("nivel", "mensaje", "archivo", "linea", "titulo", "causa", "accion", "detalle", "relativa")
+ROLES_PROBLEMAS = ("nivel", "mensaje", "archivo", "linea", "titulo", "causa", "accion", "detalle", "relativa", "ubicacion")   # ubicacion: ListaErrores
 ROLES_COLA = ("ruta", "nombre", "estado", "detalle", "icono")
 _PASO = re.compile(r"(?:Pasada|\(|^\S+\s+\()\s*(\d+)\s*/\s*(\d+)")
 
@@ -329,7 +329,8 @@ class Compilacion(QObject):
             except ValueError:
                 relativa = Path(archivo).name
             filas.append({"nivel": x.nivel, "mensaje": x.mensaje, "archivo": archivo, "linea": x.linea or 0, "titulo": e["titulo"],
-                          "causa": e["causa"], "accion": e["accion"], "detalle": contexto(texto, x.mensaje), "relativa": relativa})
+                          "causa": e["causa"], "accion": e["accion"], "detalle": contexto(texto, x.mensaje), "relativa": relativa,
+                          "ubicacion": relativa})
         self._problemas.poner(filas)
         self._origen, self._registro_texto, self._ruta_problemas = origen, texto, ruta
         self._siguiente = -1

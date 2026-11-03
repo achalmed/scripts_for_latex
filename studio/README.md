@@ -72,7 +72,7 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | `latex_app/visor.py` | páginas con `pdftoppm` (el respaldo sin QtPdf) en una caché acotada y SyncTeX (sin Qt) |
 | `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
-| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `EditorArchivo`, `BarraBusqueda`, `VisorPdf`, `ListaProblemas`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `ResaltadoEditor`) |
+| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `VisorPdf` con `CapaQtPdf` y `BusquedaQtPdf`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) |
 | `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
 | `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales |
 
