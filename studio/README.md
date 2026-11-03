@@ -68,7 +68,7 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | `latex_app/proyectos.py` | la detección (sin Qt): principal, inclusiones, `.bib`, motor, compilador, categoría, estado del disco; caché |
 | `latex_app/estructura.py` | estructura, etiquetas, claves de los `.bib`, definiciones y autocompletado (sin Qt) |
 | `latex_app/diagnostico.py` | errores presentables (causa y acción) y la revisión de dependencias con `kpsewhich` (sin Qt) |
-| `latex_app/visor.py` | páginas con `pdftoppm` en una caché acotada y SyncTeX (sin Qt) |
+| `latex_app/visor.py` | páginas con `pdftoppm` (el respaldo sin QtPdf) en una caché acotada y SyncTeX (sin Qt) |
 | `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
 | `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `EditorArchivo`, `BarraBusqueda`, `VisorPdf`, `ListaProblemas`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `ResaltadoEditor`) |
@@ -87,8 +87,10 @@ tests/run.sh                                          # desde latex-studio/: la 
 
 ## Límite honesto
 
-- **Visor sin QtPdf**: las páginas son imágenes de `pdftoppm` (sin selección de texto ni enlaces del PDF); con
-  `sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf` se podría pasar a `PdfMultiPageView`.
+- **Visor**: con `QtQuick.Pdf` instalado (`qml6-module-qtquick-pdf`, desde el 2026-11-03) Qt pinta cada página
+  (`PdfPageImage`, `studio/latex_app/qml/componentes/PaginaQtPdf.qml`), más nítida y sin caché en disco; sin él, o con
+  `LATEX_STUDIO_VISOR=pdftoppm`, páginas de `pdftoppm`. Todavía sin selección de texto ni enlaces del PDF: los daría
+  `PdfMultiPageView`, pero su vista propia no deja poner la marca de SyncTeX ni el doble clic al código (§1.10).
 - **SyncTeX necesita el `.synctex.gz`**: `main.sh -k` y latexmk lo dejan; el compilador de `escritura`
   (`<marco>/scripts/build.sh`) no pasa `-synctex=1` y sus proyectos no lo tienen hasta que ese marco lo añada.
 - **El editor es un `TextArea`**: sin plegado, sin multicursor, sin corrector ortográfico; el autocompletado es por

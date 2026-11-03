@@ -1,5 +1,6 @@
-// VisorPdf — el PDF del proyecto abierto, integrado (sin QtPdf: páginas de pdftoppm que renderiza studio.visor por
-// demanda, a la resolución del zoom). Barra: página n de N, alejar, zoom, acercar, ajustar al ancho, miniaturas,
+// VisorPdf — el PDF del proyecto abierto, integrado. Con QtQuick.Pdf instalado, cada página la pinta Qt
+// (PaginaQtPdf, sobre DocumentoQtPdf); sin él, páginas de pdftoppm que renderiza studio.visor por demanda, a la
+// resolución del zoom (studio.visor.motor dice cuál). Barra: página n de N, alejar, zoom, acercar, ajustar al ancho, miniaturas,
 // recargar, abrir con su aplicación. Doble clic en una página: SyncTeX al código. La marca de SyncTeX (código → PDF)
 // parpadea sobre el recuadro. Al recompilar, la página y el desplazamiento se conservan.
 import QtQuick
@@ -16,6 +17,26 @@ QQC2.Control {
     property real separacion: Kirigami.Units.largeSpacing
     property int guardadaPagina: -1
     property real guardadaDesplazamiento: 0
+
+    readonly property bool conQtPdf: v.motor === "qtpdf"
+
+    // el documento de QtQuick.Pdf (solo con el módulo): se vuelve a abrir con cada PDF nuevo o recompilado
+    Loader {
+        id: documentoPdf
+        property int revision: -1
+        active: raiz.conQtPdf && raiz.v.pdfUrl !== ""
+        source: "DocumentoQtPdf.qml"
+        onLoaded: { item.source = raiz.v.pdfUrl; revision = raiz.v.revision }
+    }
+    Connections {
+        target: raiz.v
+        function onCambiado() {
+            if (!raiz.conQtPdf || !documentoPdf.item || documentoPdf.revision === raiz.v.revision) return
+            documentoPdf.item.source = ""
+            documentoPdf.item.source = raiz.v.pdfUrl
+            documentoPdf.revision = raiz.v.revision
+        }
+    }
 
     padding: 0
     Kirigami.Theme.colorSet: Kirigami.Theme.View
@@ -99,14 +120,36 @@ QQC2.Control {
                     Component.onCompleted: raiz.v.pedirMiniatura(model.pagina)
                     contentItem: ColumnLayout {
                         spacing: 0
-                        Image {
+                        Item {
+                            id: miniatura
                             Layout.alignment: Qt.AlignHCenter
                             Layout.preferredWidth: listaMiniaturas.width - Kirigami.Units.largeSpacing * 2
                             Layout.preferredHeight: Layout.preferredWidth * model.alto / model.ancho
-                            source: model.miniatura
-                            asynchronous: true
-                            fillMode: Image.PreserveAspectFit
-                            Rectangle { anchors.fill: parent; visible: parent.status !== Image.Ready; color: Kirigami.Theme.backgroundColor; border.color: Kirigami.Theme.disabledTextColor; border.width: 1 }
+                            readonly property int pagina: model.pagina
+                            Image {
+                                id: miniaturaPng
+                                anchors.fill: parent
+                                visible: !raiz.conQtPdf
+                                source: raiz.conQtPdf ? "" : model.miniatura
+                                asynchronous: true
+                                fillMode: Image.PreserveAspectFit
+                            }
+                            Loader {
+                                id: miniaturaQt
+                                anchors.fill: parent
+                                active: raiz.conQtPdf && documentoPdf.item !== null
+                                source: "PaginaQtPdf.qml"
+                                onLoaded: {
+                                    item.document = Qt.binding(() => documentoPdf.item)
+                                    item.pagina = Qt.binding(() => miniatura.pagina)
+                                    item.sourceSize = Qt.binding(() => Qt.size(miniatura.width * raiz.v.escala, miniatura.height * raiz.v.escala))
+                                }
+                            }
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: raiz.conQtPdf ? !(miniaturaQt.item && miniaturaQt.item.status === Image.Ready) : miniaturaPng.status !== Image.Ready
+                                color: Kirigami.Theme.backgroundColor; border.color: Kirigami.Theme.disabledTextColor; border.width: 1
+                            }
                         }
                         QQC2.Label { Layout.alignment: Qt.AlignHCenter; text: model.pagina; font: Kirigami.Theme.smallFont }
                     }
@@ -156,14 +199,31 @@ QQC2.Control {
                         Image {
                             anchors.fill: parent
                             anchors.margins: 1
-                            source: hoja.model.imagen
+                            visible: !raiz.conQtPdf
+                            source: raiz.conQtPdf ? "" : hoja.model.imagen
                             asynchronous: true
                             cache: false
                             smooth: true
                             mipmap: true
                             fillMode: Image.Stretch
                         }
-                        QQC2.BusyIndicator { anchors.centerIn: parent; running: hoja.model.imagen === ""; visible: running }
+                        Loader {
+                            id: paginaQt
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            active: raiz.conQtPdf && documentoPdf.item !== null
+                            source: "PaginaQtPdf.qml"
+                            onLoaded: {
+                                item.document = Qt.binding(() => documentoPdf.item)
+                                item.pagina = Qt.binding(() => hoja.model.pagina)
+                                item.sourceSize = Qt.binding(() => Qt.size(Math.round(papel.width * raiz.v.escala), Math.round(papel.height * raiz.v.escala)))
+                            }
+                        }
+                        QQC2.BusyIndicator {
+                            anchors.centerIn: parent
+                            running: raiz.conQtPdf ? !(paginaQt.item && paginaQt.item.status === Image.Ready) : hoja.model.imagen === ""
+                            visible: running
+                        }
                         Rectangle {
                             visible: marca.visible && marca.pagina === hoja.model.pagina
                             x: marca.rect.x * raiz.v.zoom - 2

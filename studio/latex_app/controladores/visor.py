@@ -3,11 +3,17 @@ modelo (tamaño en puntos y la imagen ya renderizada a la resolución del zoom),
 aparte y por demanda (QML pide las páginas visibles), las miniaturas, la recarga al recompilar conservando la página,
 y SyncTeX en los dos sentidos.
 
+Dos motores de página (`motor`): con el módulo QML `QtQuick.Pdf` instalado (`qml6-module-qtquick-pdf`, desde el
+2026-11-03) cada página la pinta Qt (`PdfPageImage`, `qml/componentes/PaginaQtPdf.qml`) y aquí no se renderiza nada;
+sin él, `pdftoppm` en hilos aparte. `LATEX_STUDIO_VISOR=pdftoppm` fuerza el segundo. El tamaño de las páginas, el zoom,
+SyncTeX y la marca son los mismos con los dos.
+
 Los hilos solo corren `pdftoppm`; el modelo se toca siempre en el hilo de la interfaz (la señal `_hecho` cruza de hilo).
 """
 
 from __future__ import annotations
 
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -19,6 +25,21 @@ from latex_app import visor as vs
 ROLES = ("pagina", "ancho", "alto", "imagen", "miniatura")
 PPP_MINIATURA = 18
 ZOOM_MIN, ZOOM_MAX = 0.25, 4.0
+
+
+def hay_qtpdf() -> bool:
+    """¿Está el módulo QML `QtQuick.Pdf`? Si no, o con `LATEX_STUDIO_VISOR=pdftoppm`, el visor usa `pdftoppm`."""
+    if os.environ.get("LATEX_STUDIO_VISOR", "").strip().lower() == "pdftoppm":
+        return False
+    try:
+        from PySide6.QtCore import QLibraryInfo
+    except ImportError:
+        try:
+            from PyQt6.QtCore import QLibraryInfo
+        except ImportError:
+            return False
+    base = QLibraryInfo.path(QLibraryInfo.LibraryPath.QmlImportsPath)
+    return (Path(base) / "QtQuick" / "Pdf" / "qmldir").is_file()
 
 
 class Visor(QObject):
@@ -41,10 +62,13 @@ class Visor(QObject):
         self._ajustar = True
         self._escala = 1.0                   # devicePixelRatio de la pantalla (lo fija QML)
         self._pedidas: set = set()
+        self._motor = "qtpdf" if hay_qtpdf() else "pdftoppm"
+        self._revision = 0                   # sube con cada PDF nuevo o recompilado: QML vuelve a abrir el documento
         self._hilos = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pdftoppm")
         self._hecho.connect(self._poner_imagen)
 
     paginas = Property(QObject, lambda self: self._paginas, constant=True)
+    motor = Property(str, lambda self: self._motor, constant=True)
 
     # ---------------------------------------------------------------------------------------------------- el PDF
     @Slot(str, str)
@@ -61,6 +85,7 @@ class Visor(QObject):
         if pdf == self._pdf and clave == self._clave:
             return
         self._pdf, self._clave = pdf, clave
+        self._revision += 1
         self._pedidas.clear()
         tamanos = vs.paginas(ruta)
         self._paginas.poner([{"pagina": i, "ancho": a, "alto": b, "imagen": "", "miniatura": ""} for i, (a, b) in enumerate(tamanos, start=1)])
@@ -75,6 +100,14 @@ class Visor(QObject):
     @Property(str, notify=cambiado)
     def pdf(self) -> str:
         return self._pdf
+
+    @Property(str, notify=cambiado)
+    def pdfUrl(self) -> str:
+        return Path(self._pdf).as_uri() if self._pdf else ""
+
+    @Property(int, notify=cambiado)
+    def revision(self) -> int:
+        return self._revision
 
     @Property(int, notify=cambiado)
     def total(self) -> int:
@@ -130,6 +163,8 @@ class Visor(QObject):
         self._pedir(pagina, PPP_MINIATURA)
 
     def _pedir(self, pagina: int, ppp: int) -> None:
+        if self._motor == "qtpdf":           # Qt pinta la página: nada que renderizar aquí
+            return
         if not self._pdf or not (1 <= pagina <= self._paginas.filas):
             return
         clave = (self._clave, pagina, ppp)

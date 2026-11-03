@@ -9,6 +9,7 @@ actualizado: 2026-11-02
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-03 | El visor PDF pinta con QtPdf (`PdfPageImage`) ahora que el autor instaló `qml6-module-qtquick-pdf`; `pdftoppm` queda de respaldo; papel blanco y página correcta en cada recuadro (una prueba vigila el fotograma); 77 pruebas | `decisiones.md` §1.10; `docs/figuras/latex-studio-oscuro.png` |
 | 2026-11-02 | **Reingeniería: LaTeX Studio 3.0, entorno de escritura científica** (rama `wip/2026-11-02-reingenieria`, worktree `~/.cache/reingenieria/latex-studio`, sin fusionar ni empujar): proyectos detectados en las carpetas de trabajo (`WRITING_DIR`, `DESPACHO_DIR` y las del usuario; caché; categorías solo con información), cada uno compilado con su compilador y su motor (marco, latexmk, `main.sh -k`), en cola; editor con resaltado, estructura, autocompletado de `\ref`/`\cite`, buscar y reemplazar con regex; PDF integrado con `pdftoppm` y SyncTeX; errores con causa y acción; revisión de dependencias. CLI: `-k` y `CORE_DIR`. 73 pruebas | `docs/reingenieria.md`; `docs/figuras/`; `tests/run.sh` |
 | 2026-11-02 | Fase 5 dada por buena (el autor delegó la decisión al director con las pruebas en verde y las capturas): `wip/2026-11-02-qml` fusionada en `main` y retirada; `docs/rediseno.md` a `hecho`; `gui-comun` 2.3.0 en `main` y en su remoto con `v2.3.0` | `git log` |
 | 2026-11-02 | **LaTeX Studio en QML + Kirigami sobre `gui-comun` 2.3** (fase 5 de la modernización de la familia; rama `wip/2026-11-02-qml`, sin fusionar): `docs/rediseno.md` (auditoría, ocho preguntas, arquitectura de información, decisiones L1–L10, lo construido con capturas), `studio/` reescrito (tres vistas sobre un documento actual; la tabla de la carpeta con el estado leído del disco; F5 compila, Mayús+F5 simula, Ctrl+B con Biber, Limpiar muestra la lista y confirma; Problemas con «ir a la línea», Registro íntegro, Salidas; recompilar al guardar; solo LuaLaTeX en la ventana; `/usr/bin/python3`), 30 pruebas en `tests/run.sh` sobre `studio/ejemplo/` compilado en un temporal, tres capturas reales, el lanzador del menú reinstalado con `install.sh`. En `gui-comun`, 2.3.0 (`ListaDiagnosticos`; `Tareas.proceso(progreso_de=)`; rama `wip/2026-11-02-qml-latex`, etiqueta local) | `tests/run.sh`; `docs/figuras/latex-studio-*.png`; `/usr/bin/python3 studio/main.py` |
@@ -28,8 +29,8 @@ nada en curso
 - 2026-11-02 · dueño: director · fusionar en `main` el último tramo de `wip/2026-11-02-reingenieria` (la base
   `gui-comun` 3.0: `escritorio` y diálogos de la base, confirmaciones de la base, «Guardar como»; capturas «antes» sin la
   carpeta de inicio). Valorar después pasar de `VentanaStudio` a `VentanaBase` (no cambia lo que se ve).
-- 2026-11-02 · dueño: **el autor** · mejora del visor: `sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`
-  permitiría cambiar las páginas de `pdftoppm` por `PdfMultiPageView` (selección de texto, enlaces, búsqueda en el PDF).
+- 2026-11-03 · dueño: director · el visor ya pinta con QtPdf (el autor lo instaló; `decisiones.md` §1.10): faltan la
+  selección de texto, los enlaces y la búsqueda dentro del PDF.
 - 2026-11-02 · dueño: **el autor** (repo `escritura`) · SyncTeX en los proyectos de `escritura`: su `scripts/build.sh`
   no pasa `-synctex=1` (`CFG_TEX_FLAGS` de `scripts/config.sh`); con esa bandera, LaTeX Studio iría del código al PDF
   y vuelta también en ellos (el `.synctex.gz` quedaría en `.build/`, que la ventana ya busca).

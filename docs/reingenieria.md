@@ -143,8 +143,8 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   técnico (las líneas del registro) desplegable. La regla está en `studio/latex_app/diagnostico.py`, sin Qt, probada.
 - **R10. Visor PDF propio.** Páginas con `pdftoppm` (PNG a la resolución del zoom, por demanda); miniaturas a baja
   resolución; zoom, ajuste al ancho, recarga al recompilar conservando la página; SyncTeX `view` (código → PDF,
-  Ctrl+clic o Ctrl+Alt+J) y `edit` (PDF → código, doble clic). Con QtPdf instalado
-  (`sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`) se podría pasar a `PdfMultiPageView`.
+  Ctrl+clic o Ctrl+Alt+J) y `edit` (PDF → código, doble clic). Desde el 2026-11-03, con QtPdf instalado, Qt pinta
+  cada página en el mismo recuadro (`decisiones.md` §1.10); `pdftoppm` queda de respaldo.
 - **R11. Caché de páginas acotada.** `$XDG_CACHE_HOME/latex-studio/paginas/<clave>/`, 200 MB como mucho; al pasarse se
   borran los PDF renderizados más antiguos. La clave lleva la fecha del PDF: recompilar invalida solo ese documento.
 - **R12. Editor**: `TextArea` con `org.kde.syntaxhighlighting` (LaTeX, BibTeX; tema claro u oscuro de KSyntaxHighlighting
@@ -210,7 +210,7 @@ pruebas de ventana y controladores pasan contra la base `gui-comun` 3.0 de su wo
 
 - **SyncTeX en los proyectos de `escritura`**: su `<marco>/scripts/build.sh` no pasa `-synctex=1`; añadirlo es cambio de ese
   repo (una línea en `CFG_TEX_FLAGS` de su `config.sh`), no de este.
-- **QtPdf** (`sudo apt install qml6-module-qtquick-pdf python3-pyside6.qtpdf`): selección de texto y enlaces del PDF.
+- **Selección de texto y enlaces del PDF**: QtPdf ya está instalado y pinta las páginas (§1.10); faltan esas dos cosas.
 - **La ventana sin plantilla** (`VentanaBase` de `gui-comun` 3.0): la distribución propia vive hoy dentro de las ranuras
   de `VentanaStudio` (barra lateral, centro, panel inferior; el panel de detalles no se usa); pasar a `VentanaBase` es
   posible y no cambia lo que se ve.

@@ -277,3 +277,57 @@ def test_revision_de_dependencias_va_a_problemas(app, piezas, tmp_path):
     _esperar(app, lambda: piezas["tareas"].activa)
     mensajes = [c.problema(i)["mensaje"] for i in range(c.problemas.filas)]
     assert "No existe «falta»" in mensajes and c.origenRegistro == "revisión de dependencias"
+
+
+@requiere_binding
+def test_motor_del_visor_qtpdf_o_pdftoppm(app, tmp_path, monkeypatch):
+    """Con QtQuick.Pdf, Qt pinta las páginas y no se lanza pdftoppm; `LATEX_STUDIO_VISOR=pdftoppm` fuerza el respaldo."""
+    from latex_app.controladores.visor import Visor, hay_qtpdf
+    monkeypatch.setenv("LATEX_STUDIO_VISOR", "pdftoppm")
+    assert Visor(cache=tmp_path / "a").motor == "pdftoppm"
+    monkeypatch.delenv("LATEX_STUDIO_VISOR")
+    v = Visor(cache=tmp_path / "b")
+    assert v.motor == ("qtpdf" if hay_qtpdf() else "pdftoppm")
+    if v.motor == "qtpdf":
+        v._pdf, v._clave = str(tmp_path / "x.pdf"), "x"
+        v.pedir(1)
+        assert not v._pedidas                       # nada encolado para pdftoppm
+    v.apagar()
+
+
+@requiere_binding
+@requiere_lualatex
+def test_qtpdf_pinta_una_pagina_real(app, tmp_path):
+    """Los dos componentes de QtQuick.Pdf abren un PDF compilado y la página llega a estar lista."""
+    from latex_app.controladores.visor import hay_qtpdf
+    if not hay_qtpdf():
+        pytest.skip("QtQuick.Pdf no está instalado (qml6-module-qtquick-pdf)")
+    import subprocess
+    from gui_comun.qt import QQmlApplicationEngine
+    from PySide6.QtCore import QSize, QUrl
+    from PySide6.QtQml import QQmlComponent
+    (tmp_path / "p.tex").write_text("\\documentclass{article}\\begin{document}Hola\\newpage Adiós\\end{document}\n")
+    subprocess.run(["lualatex", "-interaction=batchmode", "p.tex"], cwd=tmp_path, capture_output=True, timeout=120)
+    pdf = tmp_path / "p.pdf"
+    assert pdf.is_file()
+    qml = Path(__file__).resolve().parents[1] / "studio" / "latex_app" / "qml" / "componentes"
+    motor = QQmlApplicationEngine()
+    from PySide6.QtQml import QQmlEngine
+    comp_doc = QQmlComponent(motor, QUrl.fromLocalFile(str(qml / "DocumentoQtPdf.qml")))
+    doc = comp_doc.create()
+    assert doc is not None, comp_doc.errorString()
+    QQmlEngine.setObjectOwnership(doc, QQmlEngine.ObjectOwnership.CppOwnership)     # que el motor no lo recoja
+    doc.setProperty("source", QUrl.fromLocalFile(str(pdf)))
+    _esperar(app, lambda: doc.property("pageCount") < 1, 30)
+    assert doc.property("pageCount") == 2
+    comp_pag = QQmlComponent(motor, QUrl.fromLocalFile(str(qml / "PaginaQtPdf.qml")))
+    pagina = comp_pag.create()
+    assert pagina is not None, comp_pag.errorString()
+    QQmlEngine.setObjectOwnership(pagina, QQmlEngine.ObjectOwnership.CppOwnership)
+    pagina.setProperty("document", doc)
+    pagina.setProperty("pagina", 2)
+    pagina.setProperty("sourceSize", QSize(300, 400))
+    # pintada: progreso completo y un tamaño implícito (el enum `status` no lo convierte PySide)
+    _esperar(app, lambda: pagina.property("progress") < 1.0 or pagina.property("implicitWidth") <= 0, 30)
+    assert pagina.property("progress") == 1.0 and pagina.property("implicitWidth") > 0
+    assert pagina.property("currentFrame") == 1

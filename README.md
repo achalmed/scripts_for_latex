@@ -69,8 +69,9 @@ El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas 
 
 - **La CLI no usa latexmk**: pasadas fijas (`-p`, 2 por defecto y 3 con bibliografía o glosario). La ventana usa
   latexmk solo para el proyecto que tiene `latexmkrc`.
-- **El visor PDF no usa QtPdf** (no instalado): las páginas son imágenes; SyncTeX necesita el `.synctex.gz` del
-  compilador del proyecto (el de `escritura` todavía no lo genera).
+- **El visor PDF** pinta con QtPdf si `qml6-module-qtquick-pdf` está instalado (si no, con `pdftoppm`); aún sin
+  selección de texto ni enlaces del PDF. SyncTeX necesita el `.synctex.gz` del compilador del proyecto (el de
+  `escritura` todavía no lo genera).
 - **El modo watch vigila solo la carpeta del `.tex`**, sin subcarpetas, y necesita `inotifywait`
   (Linux) o `fswatch` (macOS).
 - **La tilde entre comillas no se expande**: `"$HOME/Documents/…"` o la tilde fuera de las comillas.

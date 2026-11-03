@@ -86,6 +86,18 @@ pruebas), usa `CORE_DIR` de `core/env.sh` si está exportada.
 
 ## 2. Motor
 
+### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)
+
+El autor instaló `qml6-module-qtquick-pdf` y `python3-pyside6.qtpdf`. Cada página la pinta ahora Qt con `PdfPageImage`
+(`studio/latex_app/qml/componentes/PaginaQtPdf.qml`, sobre un `PdfDocument` en `studio/latex_app/qml/componentes/DocumentoQtPdf.qml`), dentro del mismo recuadro de
+`VisorPdf`: así se conservan el tamaño en puntos de cada página, el zoom, las miniaturas, la marca de SyncTeX (código →
+PDF) y el doble clic (PDF → código), que `PdfMultiPageView` no deja poner con su vista propia. Los dos componentes viven
+aparte para que `VisorPdf` no importe `QtQuick.Pdf`: sin el módulo, o con `LATEX_STUDIO_VISOR=pdftoppm`, el visor sigue
+con `pdftoppm` (§1.8, R10). Dos trampas, anotadas en el componente: asignar `document` devuelve `currentFrame` a 0 y
+rompe el enlace con la página (todas salían como la primera; se fija a mano y lo vigila una prueba), y QtPdf pinta la
+página sin fondo (el papel blanco va debajo, como lo da un PDF impreso). Quedan para después la selección de texto y los
+enlaces del PDF.
+
 ### §2.1 LuaLaTeX + Biber es el motor normativo (2026-09-20)
 
 Regla 7 del `CLAUDE.md` raíz. Ningún ejemplo ni valor nuevo se escribe para pdflatex o xelatex, que
