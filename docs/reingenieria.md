@@ -113,7 +113,7 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   (`latexmkrc`, `.latexmkrc`, `proyecto.yaml`, `fuentes.yml`). Varios principales pueden compartir carpeta (las
   pruebas de `escritura` lo hacen); cada uno es un proyecto. Los incluidos no son proyectos aparte.
 - **R2. Carpetas de trabajo configurables.** Por omisión `WRITING_DIR` y `DESPACHO_DIR` de `core/env.py` (las que
-  existan), más las que el usuario añada con el diálogo de KDE; la lista y la profundidad (6 por omisión) se guardan en
+  existan), más las que el usuario añada con el diálogo de KDE; la lista y la profundidad (12 por omisión desde el 2026-11-08; antes 6, que no llegaba a los expedientes de evaluación de docencia) se guardan en
   sus ajustes (QSettings), nunca en el repo. Se saltan las carpetas ocultas, `node_modules`, `_site`, `_freeze`,
   `.quarto`, `site_libs`, `.build` y `build`.
 - **R3. Detección rápida.** Recorrido con `os.scandir` en una tarea con progreso y cancelable; cada `.tex` se lee

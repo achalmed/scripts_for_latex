@@ -377,3 +377,16 @@ def test_synctex_real_ida_y_vuelta(muestra, tmp_path):
     assert destino is not None and destino["pagina"] >= 3
     origen = visor.hacia_codigo(pdf, destino["pagina"], destino["x"] + 2, destino["y"] + destino["alto"] / 2)
     assert origen is not None and Path(origen["archivo"]).name == "metodo.tex" and abs(origen["linea"] - 4) <= 1
+
+
+def test_expedientes_de_docencia_profundos_y_su_categoria(tmp_path):
+    """Un expediente de evaluación de docencia está a 7 carpetas de ~/Documents
+    (docencia/contenido/cursos/<c>/04-evaluaciones/<sub>/<expediente>): la profundidad por omisión llega y la clase
+    academic-exam lo pone en «Docencia y evaluaciones» (2026-11-08)."""
+    exp = tmp_path / "docencia" / "contenido" / "cursos" / "matematicas-iii" / "04-evaluaciones" / "practicas" / "2026_pr_02"
+    exp.mkdir(parents=True)
+    (exp / "2026_pr_02.tex").write_text("\\documentclass{academic-exam}\n\\begin{document}\nx\n\\end{document}\n")
+    assert pr.PROFUNDIDAD >= 7
+    ps = pr.detectar([tmp_path])
+    assert [p.nombre for p in ps] == ["2026_pr_02.tex"]
+    assert ps[0].categoria == "Docencia y evaluaciones"

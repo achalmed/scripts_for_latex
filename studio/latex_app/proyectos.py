@@ -22,13 +22,14 @@ from typing import Callable, Iterable
 
 from latex_app import compilador as svc
 
-PROFUNDIDAD = 6
+PROFUNDIDAD = 12                             # el máximo de los ajustes: ~/Documents entero cuesta < 1 s y llega a docencia/contenido/cursos/<c>/04-evaluaciones/<sub>/<expediente>
 CARPETAS_SALTADAS = {"node_modules", "_site", "_freeze", ".quarto", "site_libs", ".build", "build", "__pycache__"}
 LIMITE_LECTURA = 512 * 1024                  # un .tex más grande (tablas generadas) se lee hasta aquí
 VERSION_CACHE = 4
 
 CATEGORIAS = ("Escritura académica", "Tesis y trabajos de investigación", "Artículos científicos",
-              "Documentos legislativos", "Documentos institucionales", "Pruebas y plantillas", "Otros proyectos")
+              "Documentos legislativos", "Documentos institucionales", "Docencia y evaluaciones", "Pruebas y plantillas",
+              "Otros proyectos")
 NOMBRES_MOTOR = {"lualatex": "LuaLaTeX", "pdflatex": "pdfLaTeX", "xelatex": "XeLaTeX"}
 NOMBRES_BIB = {"biber": "Biber", "bibtex": "BibTeX", "ninguna": ""}
 NOMBRES_COMPILADOR = {"marco": "compilador del marco", "latexmk": "latexmk (latexmkrc)", "main.sh": "script_compilar_latex"}
@@ -57,6 +58,7 @@ _CATEGORIA_POR_CLASE = {
     "dictamen": 3,
     "oficio": 4, "memorando": 4, "solicitud": 4, "acta": 4, "agenda": 4, "informe-sr": 4, "rendicion-viaticos": 4, "despacho": 4,
     "monografia": 0, "ensayo": 0, "informe": 0, "libro": 0, "lamina": 0, "presentacion": 0,
+    "academic-exam": 5, "academic-beamer": 5,          # exámenes, prácticas y solucionarios; decks de clase (docencia)
 }
 _CATEGORIA_POR_CARPETA = {
     "theses": 1, "tesis": 1, "thesis": 1, "articles": 2, "articulos": 2, "articulo": 2, "papers": 2,
@@ -475,7 +477,7 @@ def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = Fal
         partes = [p.lower() for p in principal.parent.parts[-3:]]
     prueba = next((p for p in partes if p in _CARPETAS_PRUEBA), "")
     if prueba:
-        return CATEGORIAS[5], f"carpeta «{prueba}»"
+        return CATEGORIAS[6], f"carpeta «{prueba}»"
     yaml = _proyecto_yaml(principal.parent)
     if yaml:
         esquema, tipo, tema = yaml.get("esquema", "").lower(), yaml.get("tipo", "").lower(), yaml.get("tema", "").lower()
@@ -497,7 +499,7 @@ def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = Fal
         return CATEGORIAS[_CATEGORIA_POR_CARPETA[carpeta]], f"carpeta «{carpeta}»"
     if (principal.parent / "fuentes.yml").is_file() or (principal.parent / "fuentes" / "fuentes.yml").is_file():
         return CATEGORIAS[0], "fuentes.yml (Método Documental)"
-    return CATEGORIAS[6], ""
+    return CATEGORIAS[7], ""
 
 
 # ----------------------------------------------------------------------------------------------------- estado

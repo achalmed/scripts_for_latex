@@ -202,7 +202,8 @@ class Proyectos(QObject):
         filas = [{"nombre": TODAS, "texto": "Todos los proyectos", "icono": "view-list-details", "contador": len(self._proyectos)},
                  {"nombre": RECIENTES, "texto": "Recientes", "icono": "document-open-recent",
                   "contador": sum(1 for p in self._proyectos if p.principal in recientes)}]
-        iconos = ["document-edit", "school", "document-new", "view-pim-journal", "view-pim-mail", "run-build-prune", "folder-documents"]
+        iconos = ["document-edit", "school", "document-new", "view-pim-journal", "view-pim-mail", "view-calendar-tasks",
+                  "run-build-prune", "folder-documents"]
         filas += [{"nombre": c, "texto": c, "icono": iconos[i], "contador": cuenta[c]} for i, c in enumerate(pr.CATEGORIAS) if cuenta[c]]
         return filas
 
