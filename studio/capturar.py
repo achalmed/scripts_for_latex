@@ -69,6 +69,7 @@ def main() -> int:
         datos = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
         env.update(HOME=str(casa), XDG_CACHE_HOME=str(casa / ".cache"), XDG_DATA_HOME=str(datos),
                    WRITING_DIR=str(trabajo), DESPACHO_DIR=str(casa / "Documentos" / "despacho"),
+                   LATEX_STUDIO_DOCUMENTOS=str(casa / "Documentos"),
                    LATEX_STUDIO_CAPTURA=str(trabajo))
         # el mismo gui_comun que esta pasada: con HOME temporal no se ve el `pip install --user`, y subir carpetas
         # desde un worktree encontraría otro

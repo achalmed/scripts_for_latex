@@ -1,7 +1,8 @@
 """latex_app/controladores/ajustes.py — las preferencias de LaTeX Studio, en QSettings (nunca en el repo, R2):
 
-- las carpetas de trabajo: las de omisión (`WRITING_DIR` y `DESPACHO_DIR` de `core/env.py`, las que existan; se pueden
-  desactivar) y las que el usuario añade con el diálogo de carpetas; la profundidad del recorrido;
+- las carpetas de trabajo: las de omisión (`WRITING_DIR`, `DESPACHO_DIR` y la raíz del espacio de trabajo, `DOCS_ROOT`,
+  de `core/env.py`, las que existan; se pueden desactivar: con la raíz se reconocen todos los proyectos LaTeX, también
+  los de docencia y los demás marcos) y las que el usuario añade con el diálogo de carpetas; la profundidad del recorrido;
 - las rutas de TeX extra (TEXINPUTS) para compilar con `main.sh` o latexmk documentos de un marco que no está instalado;
 - el editor: tamaño de letra, ajuste de líneas, compilar al guardar;
 - el editor externo («Abrir en Kate») y la terminal.
@@ -17,11 +18,16 @@ from gui_comun.qt import QObject, QSettings, Property, Signal, Slot
 
 from latex_app import proyectos as pr
 
-VARIABLES_OMISION = (("WRITING_DIR", "Escritura"), ("DESPACHO_DIR", "Despacho"))
+VARIABLES_OMISION = (("WRITING_DIR", "Escritura"), ("DESPACHO_DIR", "Despacho"), ("DOCS_ROOT", "Documentos"))
+# La raíz va la última: lo que ya encontraron Escritura y Despacho no se repite (y conserva su categoría). Las pruebas y
+# las capturas la sustituyen con LATEX_STUDIO_DOCUMENTOS (una carpeta temporal): nunca recorren las carpetas del autor.
+SUSTITUTOS = {"DOCS_ROOT": "LATEX_STUDIO_DOCUMENTOS"}
 
 
 def ruta_de_entorno(variable: str) -> str:
     """La ruta de una variable de `core/env.py`; el entorno manda (las pruebas apuntan a temporales)."""
+    if variable in SUSTITUTOS and os.environ.get(SUSTITUTOS[variable]):
+        return os.environ[SUSTITUTOS[variable]]
     if os.environ.get(variable):
         return os.environ[variable]
     try:

@@ -147,7 +147,8 @@ def _graves(errores):
 def _entorno(tmp_path):
     muestra = copiar_muestra(tmp_path / "escritura")
     (tmp_path / "despacho").mkdir(exist_ok=True)
-    return muestra, entorno_gui(tmp_path, WRITING_DIR=str(muestra), DESPACHO_DIR=str(tmp_path / "despacho"))
+    return muestra, entorno_gui(tmp_path, WRITING_DIR=str(muestra), DESPACHO_DIR=str(tmp_path / "despacho"),
+                               LATEX_STUDIO_DOCUMENTOS=str(tmp_path / "documentos"))
 
 
 @requiere_sistema

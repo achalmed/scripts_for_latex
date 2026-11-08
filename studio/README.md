@@ -6,7 +6,7 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `latex_studio`** · objetivo *latex* · estado *activo* · python · interfaz gui
 
-Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.
+Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR, la raíz DOCS_ROOT y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.
 
 - Escribe en: archivos · simula por defecto: no
 - Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 3.0 (módulo QML GuiComun; QApplication para los diálogos de KDE), script_compilar_latex, poppler-utils (pdftoppm, pdfinfo) y synctex para el visor; latexmk para los proyectos con latexmkrc
@@ -35,7 +35,8 @@ ventana; la barra de arriba es la de compilación.
 | **Escritura** (Ctrl+2) | Archivos (principal, `\input`, `.bib`, configuración) · Estructura (secciones, figuras, tablas, etiquetas) · Bibliografía (claves de los `.bib`) | el editor: pestañas, resaltado LaTeX/BibTeX de KSyntaxHighlighting con el tema claro u oscuro, números de línea, buscar y reemplazar (con expresiones regulares), ir a línea, comentar, autocompletado | el PDF integrado (F7): páginas de `pdftoppm`, zoom, ajustar al ancho, miniaturas; Ctrl+clic en el editor → PDF, doble clic en el PDF → código (SyncTeX) | los mismos |
 
 **Un proyecto** es un documento principal con `\documentclass` y lo que incluye (R1). Se detectan en las carpetas de
-trabajo (por omisión `WRITING_DIR` y `DESPACHO_DIR` de `core/env.py`, más las que se añadan con el diálogo de KDE;
+trabajo (por omisión `WRITING_DIR`, `DESPACHO_DIR` y la raíz `DOCS_ROOT` de `core/env.py` —con ella aparecen todos los proyectos:
+docencia, documentos legislativos, CampusTeX, el CV…—, más las que se añadan con el diálogo de KDE;
 profundidad configurable; caché por fecha y tamaño). **Cada proyecto se compila con su compilador y su motor** (R4, R5):
 el `<marco>/scripts/build.sh` de su marco si la clase es de un marco (como `escritura`), latexmk si tiene `latexmkrc`, o
 `../script_compilar_latex/main.sh -k` con el motor que declare (`% !TEX program`, arara) o LuaLaTeX + Biber. La

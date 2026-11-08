@@ -76,6 +76,7 @@ def piezas(app, tmp_path, monkeypatch):
     (tmp_path / "despacho").mkdir()
     monkeypatch.setenv("WRITING_DIR", str(muestra))
     monkeypatch.setenv("DESPACHO_DIR", str(tmp_path / "despacho"))
+    monkeypatch.setenv("LATEX_STUDIO_DOCUMENTOS", str(tmp_path / "documentos"))      # la raíz: nunca ~/Documents
     consola = Consola()
     tareas = Tareas(consola)
     ajustes = Ajustes()
@@ -97,7 +98,8 @@ def piezas(app, tmp_path, monkeypatch):
 def test_carpetas_de_trabajo_por_omision_y_del_usuario(app, piezas, tmp_path):
     a, muestra = piezas["ajustes"], piezas["muestra"]
     filas = a.carpetas
-    assert [(f["nombre"], f["ruta"], f["activa"]) for f in filas] == [("Escritura", str(muestra), True), ("Despacho", str(tmp_path / "despacho"), True)]
+    assert [(f["nombre"], f["ruta"], f["activa"]) for f in filas] == [("Escritura", str(muestra), True), ("Despacho", str(tmp_path / "despacho"), True),
+                                                                    ("Documentos", str(tmp_path / "documentos"), True)]
     otra = tmp_path / "otra"
     otra.mkdir()
     assert a.anadirCarpeta(str(otra)) == "" and a.anadirCarpeta(str(tmp_path / "no-hay")).startswith("No es una carpeta")

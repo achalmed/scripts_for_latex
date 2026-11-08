@@ -2,7 +2,7 @@
 # Contrato: core/suite.schema.yml; core/suites.py validar lo comprueba y generar escribe los índices y README.
 id: latex_studio
 objetivo: latex
-resumen: 'Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.'
+resumen: 'Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR, la raíz DOCS_ROOT y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.'
 escribe_en:
 - archivos
 simula_por_defecto: false
