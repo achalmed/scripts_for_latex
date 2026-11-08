@@ -91,6 +91,7 @@ Un cambio en la detección de errores se prueba en los tres modos (normal, `-s`,
 | manifiesto de la suite | `script_compilar_latex/suite.yml` · `studio/suite.yml` |
 | la ventana: acciones, controladores, QML | `studio/latex_app/aplicacion.py` · `studio/latex_app/controladores/` · `studio/latex_app/qml/` |
 | detección, estructura, diagnósticos, visor, recetas | `studio/latex_app/{proyectos,estructura,diagnostico,visor,compilador}.py` (sin Qt) |
+| Okular como visor y la ventana única (`--ir`) | `studio/latex_app/okular.py` · `studio/latex_app/instancia.py` |
 | compilar desde TeXstudio (puente y su configuración) | `studio/compilar.py` · `studio/latex_app/texstudio.py` · `studio/latex_app/qml/componentes/DialogoTexstudio.qml` |
 | configuración de documentos (esquema, lectura, diferencia, escritura) | `studio/latex_app/configuracion.py` (sin Qt) · `docs/configuracion-de-documentos.md` |
 | el alias `compilar` | `~/.dotfiles/shell/.zshrc` (ruta literal: no carga `core/`) |

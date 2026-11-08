@@ -11,7 +11,7 @@ import GuiComun
 QQC2.SplitView {
     id: raiz
 
-    property bool mostrarPdf: true
+    property bool mostrarPdf: !studio.ajustes.visorOkular       // con Okular (por omisión) el visor integrado queda en F7
     readonly property var editorActual: editores.count > 0 && studio.editor.indiceActual >= 0 ? editores.itemAt(studio.editor.indiceActual) : null
 
     orientation: Qt.Horizontal
@@ -117,7 +117,7 @@ QQC2.SplitView {
                     completar: raiz.completarLatex
                     disparaCompletado: raiz.disparaLatex
                     Component.onCompleted: cargar()
-                    onCtrlClic: (linea, columna) => studio.visor.desdeCodigo(ruta, linea, columna)
+                    onCtrlClic: (linea, columna) => ventana.alPdf(ruta, linea, columna)
                 }
             }
         }

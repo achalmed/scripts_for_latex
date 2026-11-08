@@ -140,6 +140,14 @@ pide el documento. Elegir otra en la ventana no escribe (como compilar); fijarla
 diferencia a la vista, junto con la línea `TXS-program:view` que hace que el visor de TeXstudio abra ese PDF.
 Descartado: órdenes de usuario de TeXstudio por versión (serían de un marco en la configuración global de TeXstudio).
 
+**Okular, el visor por omisión (2026-11-08).** El visor integrado no siempre seguía a la compilación (con versiones, el
+documento declaraba el solucionario y la ventana miraba el examen) y el autor lo veía menos nítido que un visor de
+escritorio. Se decidió que, con Okular instalado, el PDF se vea en Okular: recarga solo, SyncTeX en los dos sentidos
+(`#src:` hacia el PDF; su editor externo `main.py --ir %f %l` de vuelta, a la ventana abierta por un socket local) y
+todo lo de Okular (búsqueda, anotaciones, presentación). El integrado queda en F7 y en Ajustes. Descartado: incrustar
+Okular (KParts es C++/Widgets; la ventana es QML). Los avisos sin decisión pasan a las notificaciones de KDE (gui-comun
+4.1), que no ocupan la ventana.
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

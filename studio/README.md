@@ -51,32 +51,24 @@ sección por grupo. Aceptar muestra la diferencia del preámbulo; «Aplicar» o 
 esquema, todo documento ofrece título, autor, fecha y opciones de la clase. Contrato y marcos que lo publican:
 [../docs/configuracion-de-documentos.md](../docs/configuracion-de-documentos.md).
 
-**Junto a TeXstudio** (Ctrl+Mayús+E o «TeXstudio» en la ficha): abre el archivo actual en su línea, o el principal como
-documento maestro. Mientras un proyecto está abierto, la ventana vigila sus fuentes y su PDF
-(`latex_app/controladores/sincronizacion.py`): lo que se guarde en TeXstudio se recarga aquí (y la estructura se
-relee), el PDF que compile TeXstudio se ve aquí al instante, y con «Compilar cuando otro programa guarde» (Ajustes ›
-Compilación) la ventana compila sola; tras una compilación de fuera, sus problemas se leen aquí (F8 los recorre).
+**Junto a TeXstudio** (Ctrl+Mayús+E): abre el archivo en su línea, o el principal como maestro. La ventana vigila las
+fuentes y el PDF del proyecto abierto (`latex_app/controladores/sincronizacion.py`): lo guardado en TeXstudio se recarga,
+lo que compile se ve aquí con sus problemas y, si se pide (Ajustes › Compilación), la ventana compila sola. El
+«Compilar» de TeXstudio corre `studio/compilar.py %.tex`, la misma receta que F5 (el marco, latexmk o LuaLaTeX + Biber;
+`--version`, `--reconstruir`, `--limpiar`, `--simular`): lo deja así Herramientas › «Compilar desde TeXstudio con LaTeX
+Studio…» (cuatro claves de su `.ini`, con TeXstudio cerrado, respaldo y deshacer; `latex_app/texstudio.py`).
 
-**Versiones de un mismo documento.** Si el marco produce varias salidas de un `.tex` (docencia: examen en blanco,
-claves, solucionario o las tres), bajo el proyecto abierto aparece «Versión»: elegir una la compila con F5 y la muestra
-(su PDF, su SyncTeX, sus problemas) sin tocar el documento. La que compila F5 por omisión —también en TeXstudio, cuyo
-visor abre ese PDF— se fija en «Configurar el documento» › Versión (escribe `% !MODO = soluciones` al inicio).
-Contrato: `docs/configuracion-de-documentos.md` §7.
+**El PDF en Okular (por omisión, 2026-11-08).** Con Okular instalado el PDF se ve en Okular, que lo recarga solo al
+compilar; el visor integrado queda en F7 y en Ajustes. Ctrl+clic en el editor (o Ctrl+Alt+J) lleva al punto del PDF;
+Ctrl+Alt+O lo trae al frente; Mayús+clic en Okular vuelve al código aquí una vez fijado su editor externo
+(Herramientas › «Volver del PDF al código desde Okular…»: `main.py --ir %f %l`; `latex_app/okular.py`, `instancia.py`).
 
-**Compilar desde TeXstudio con la receta de LaTeX Studio.** El «Compilar» de TeXstudio corre por omisión LuaLaTeX o
-pdfLaTeX a secas: no encuentra las clases de un marco (docencia, escritura, marco_documental…), no corre Biber y no usa
-el `<marco>/scripts/build.sh`. `studio/compilar.py ARCHIVO.tex` compila con la misma receta que la ventana (el
-compilador del marco, latexmk o `main.sh -k` con LuaLaTeX + Biber; un capítulo compila su principal), desde TeXstudio,
-Kate o la terminal; admite `--reconstruir`, `--limpiar` y `--simular`. Herramientas › «Compilar desde TeXstudio con
-LaTeX Studio…» (también en Ajustes › Compilación) muestra las cuatro claves de `~/.config/texstudio/texstudio.ini` que
-cambiarían (`compile` → `compilar.py %.tex`, `bibliography` → Biber, rutas de registro y de PDF → `.build`) y las
-escribe al confirmar, con TeXstudio cerrado y un respaldo al lado; «Deshacer» vuelve al respaldo. Lo mismo en la
-terminal: `python3 studio/latex_app/texstudio.py [--aplicar | --deshacer]` (simula sin opciones).
-
-**Lo que LaTeX Studio añade a TeXstudio**: la configuración por esquema de cada documento, la categoría y el compilador
-de cada proyecto, los problemas explicados con causa y acción, la cola de compilación y el historial. Con Ajustes ›
-Editor › «Doble clic en el PDF: ir al código en TeXstudio», el SyncTeX inverso abre TeXstudio en esa línea (para
-escribir en TeXstudio y leer el PDF aquí). La revisión ortográfica del editor está apagada por omisión (Ajustes › Editor).
+**Versiones de un mismo documento.** Si el marco produce varias salidas de un `.tex` (docencia: examen, claves,
+solucionario o las tres), «Versión» bajo el proyecto abierto compila y muestra la elegida sin tocar el documento; la que
+compila F5 por omisión, también en TeXstudio, se fija en «Configurar el documento» › Versión (`% !MODO = soluciones`;
+contrato: `docs/configuracion-de-documentos.md` §7). Lo propio de LaTeX Studio: la configuración por esquema, la
+categoría y el compilador de cada proyecto, los problemas explicados, la cola y el historial. La revisión ortográfica
+del editor está apagada por omisión (Ajustes › Editor).
 
 ## Atajos
 

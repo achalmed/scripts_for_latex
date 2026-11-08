@@ -133,6 +133,53 @@ class Sistema(QObject):
         except OSError as e:
             self.aviso.emit(f"No se pudo abrir TeXstudio: {e.strerror}", "error")
 
+    @Property(bool, constant=True)
+    def hayOkular(self) -> bool:
+        return shutil.which("okular") is not None
+
+    @Slot(str, str, int)
+    def abrirEnOkular(self, pdf: str, tex: str = "", linea: int = 0) -> None:
+        """El PDF en Okular (`--unique`: si ya está abierto, el mismo; Okular lo recarga solo al compilar); con `tex` y
+        `linea`, en ese punto (SyncTeX)."""
+        from latex_app import okular
+        if not pdf or not Path(pdf).is_file():
+            self.aviso.emit("Todavía no hay PDF: compila primero (F5).", "informacion")
+            return
+        if not shutil.which("okular"):
+            self.aviso.emit("Okular no está instalado (paquete okular).", "error")
+            return
+        orden = okular.orden_abrir(pdf, tex, linea)
+        try:
+            subprocess.Popen(orden, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            self.consola.registrar("info", "Okular: " + " ".join(orden))
+        except OSError as e:
+            self.aviso.emit(f"No se pudo abrir Okular: {e.strerror}", "error")
+
+    @Slot(result="QVariantMap")
+    def estadoOkular(self) -> dict:
+        from latex_app import okular
+        ruta = okular.ruta_config()
+        return {"instalado": shutil.which("okular") is not None, "abierto": okular.okular_abierto(), "existe": True,
+                "configurado": okular.configurado(), "ini": str(ruta), "orden": okular.deseado()["ExternalEditorCommand"],
+                "enlace": str(ruta.resolve()) if ruta.is_symlink() else "",
+                "cambios": [{"clave": k, "actual": a, "nuevo": n} for k, a, n in okular.cambios()]}
+
+    @Slot(result=str)
+    def configurarOkular(self) -> str:
+        from latex_app import okular
+        error = okular.aplicar()
+        if not error:
+            self.consola.registrar("info", f"Okular: Mayús+clic vuelve al código en LaTeX Studio ({okular.ruta_config()})")
+        return error
+
+    @Slot(result=str)
+    def deshacerOkular(self) -> str:
+        from latex_app import okular
+        error = okular.deshacer()
+        if not error:
+            self.consola.registrar("info", "Okular: restaurada la configuración anterior")
+        return error
+
     @Slot(result="QVariantMap")
     def estadoTexstudio(self) -> dict:
         from latex_app import texstudio as txs
@@ -230,6 +277,19 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("archivo.guardar_todo", "Guardar &todo", "document-save-all", "Ctrl+L", "Archivo", habilitada=False, al_disparar=pedir("guardar_todo"),
                        operacion="escritura")
     acciones.registrar("archivo.cerrar", "&Cerrar el archivo", "document-close", StandardKey.Close, "Archivo", habilitada=False, al_disparar=pedir("cerrar_archivo"))
+    def okular_ahora(*_):
+        p = proyectos.proyecto_abierto()
+        if p is not None:
+            sistema.abrirEnOkular(p.pdf, "", 0)
+
+    acciones.registrar("ver.okular", "Ver el PDF en &Okular", "okular", "Ctrl+Alt+O", "Ver", habilitada=False,
+                       al_disparar=okular_ahora,
+                       descripcion="El PDF del proyecto (o de la versión elegida) en Okular, que lo recarga solo al compilar; "
+                                   "Ctrl+clic en el editor lleva ahí y Mayús+clic en Okular vuelve aquí")
+    acciones.registrar("okular.configurar", "Volver del PDF al código desde Okular…", "okular", None, "Herramientas",
+                       al_disparar=pedir("configurar_okular"),
+                       descripcion="Que Mayús+clic en Okular abra el código en esta ventana (su editor externo); muestra el "
+                                   "cambio y guarda respaldo")
     acciones.registrar("archivo.texstudio", "Abrir en &TeXstudio", "texstudio", "Ctrl+Shift+E", "Archivo", habilitada=False,
                        al_disparar=pedir("texstudio"),
                        descripcion="El archivo actual en TeXstudio, en la línea del cursor (o el principal del proyecto como "
@@ -321,16 +381,16 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                       "archivo.cerrar", "proyecto.cerrar", "|", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
                       "escritorio.copiar", "escritorio.editor", "archivo.texstudio", "|", "archivo.salir"]),
         ("&Editar", ["editar.buscar", "editar.reemplazar", "editar.ir_linea", "|", "editar.completar", "editar.comentar"]),
-        ("&Ver", ["ver.proyectos", "ver.escritura", "|", "ventana.navegacion", "ver.pdf", "ventana.inferior", "|",
+        ("&Ver", ["ver.proyectos", "ver.escritura", "|", "ventana.navegacion", "ver.okular", "ver.pdf", "ventana.inferior", "|",
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
         ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
                        "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
-        ("&Herramientas", ["documento.configurar", "|", "texstudio.configurar", "|", "ventana.paleta"]),
+        ("&Herramientas", ["documento.configurar", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
     ])
     acciones.definir_barra(["compilar.compilar", "compilar.cancelar", "compilar.reconstruir", "|", "archivo.guardar", "editar.buscar", "|",
-                            "synctex.pdf", "escritorio.pdf", "|", "documento.configurar", "archivo.texstudio"])
+                            "synctex.pdf", "ver.okular", "|", "documento.configurar", "archivo.texstudio"])
 
     # la paleta: las vistas, las categorías y cada proyecto detectado
     def entradas_paleta(texto: str) -> list[dict]:
@@ -358,6 +418,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("compilar.siguiente", compilacion.nProblemas > 0)
         acciones.habilitar("synctex.pdf", hay_archivo and bool(p and p.pdf))
         acciones.habilitar("escritorio.pdf", bool(p and p.pdf))
+        acciones.habilitar("ver.okular", bool(p and p.pdf) and sistema.hayOkular)
         acciones.habilitar("ver.buscar_pdf", bool(p and p.pdf) and visor.motor == "qtpdf")
         for nombre in ("escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal", "escritorio.copiar"):
             acciones.habilitar(nombre, hay_proyecto or hay_archivo)
@@ -382,6 +443,17 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     # ------------------------------------------------- lo que encadena a los controladores
     ultimo_job: dict[str, str] = {}
+    en_okular = {"pdf": ""}                      # el PDF que la ventana ya abrió en Okular (lo recarga él)
+
+    def a_okular(forzar: bool = False):
+        """Con el visor Okular: abre el PDF del proyecto si es otro que el ya abierto, o si Okular se cerró y se pide."""
+        p = proyectos.proyecto_abierto()
+        if not ajustes.visorOkular or p is None or not p.pdf or not sistema.hayOkular:
+            return
+        from latex_app import okular
+        if p.pdf != en_okular["pdf"] or (forzar and not okular.okular_abierto()):
+            en_okular["pdf"] = p.pdf
+            sistema.abrirEnOkular(p.pdf, "", 0)
 
     def abierto_cambiado():
         p = proyectos.proyecto_abierto()
@@ -395,11 +467,14 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         if compilacion._ruta_problemas != p.principal or ultimo_job.get(p.principal) != p.job:
             ultimo_job[p.principal] = p.job              # otra versión: su .log tiene otros problemas
             compilacion.leerProblemas(p.principal)
+        a_okular()
 
     def terminada(ruta: str, ok: bool):
         if ruta == proyectos.principal:
             abierto_cambiado()
             sincronizacion.anotar_pdf_propio()
+            if ok:
+                a_okular(forzar=True)                    # si cerraste Okular, vuelve con el PDF nuevo
 
     # --- junto a TeXstudio (u otro editor): lo que cambia fuera de la ventana
     def fuentes_de_fuera(rutas: list):
@@ -441,9 +516,21 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     editor.guardadoArchivo.connect(guardado)
     disponibilidad()
 
+    from latex_app import instancia
+    servidor = instancia.Servidor()                  # Mayús+clic en Okular → aquí (main.py --ir)
+
+    def ir_desde_fuera(archivo: str, linea: int):
+        if not Path(archivo).is_file():
+            return
+        if not proyectos.hayAbierto or (archivo != proyectos.principal and archivo not in proyectos.proyecto_abierto().archivos):
+            proyectos.abrir(archivo)
+        interfaz.fijarVista("escritura")
+        interfaz.pedir.emit("ir_a_fuera", {"archivo": archivo, "linea": linea})
+
+    servidor.irA.connect(ir_desde_fuera)
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
                   editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
-                  configuracion=configuracion, sincronizacion=sincronizacion)
+                  configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)
@@ -453,6 +540,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
 def main(argv: list[str]) -> int:
     from gui_comun import lanzador
+    from latex_app import instancia
+    ir = instancia.argumentos_ir(argv)                                # Mayús+clic en Okular: main.py --ir ARCHIVO LÍNEA
+    if ir and instancia.enviar(*ir):
+        return 0                                                     # la ventana abierta va ahí
     atendido = lanzador.desde_main(argv, **datos_lanzador())         # --instalar-lanzador / --quitar-lanzador
     if atendido is not None:
         return atendido
@@ -460,12 +551,16 @@ def main(argv: list[str]) -> int:
     piezas = construir(app)
     humo = "--smoke" in argv
     archivos = [a for a in argv if a.endswith(".tex")]
+    if ir:
+        archivos = [ir[0]]
     if archivos:
         error = piezas["proyectos"].abrir(archivos[0])
         if error:
             piezas["consola"].registrar("warn", error)
         else:
             piezas["interfaz"].fijarVista("escritura")
+            if ir:
+                piezas["interfaz"].pedir.emit("ir_a", {"archivo": ir[0], "linea": ir[1]})
     elif not humo:
         ultimo = piezas["proyectos"].ultimo_abierto()
         if ultimo and Path(ultimo).is_file() and not piezas["proyectos"].abrir(ultimo):
@@ -478,3 +573,4 @@ def main(argv: list[str]) -> int:
         piezas["visor"].apagar()
         piezas["editor"].soltar()
         piezas["sincronizacion"].soltar()
+        piezas["servidor"].cerrar()

@@ -45,6 +45,13 @@ VentanaStudio {
         studio.interfaz.fijarVista("escritura")
         espacio.abrir(archivo, linea)
     }
+    // del código al PDF (Ctrl+clic, Ctrl+Alt+J): en Okular si es el visor elegido; si no, en el integrado
+    function alPdf(ruta, linea, columna) {
+        if (studio.ajustes.visorOkular && studio.sistema.hayOkular && !espacio.mostrarPdf)
+            studio.sistema.abrirEnOkular(p.hayAbierto ? p.abierto.pdf : "", ruta, linea)
+        else
+            studio.visor.desdeCodigo(ruta, linea, columna)
+    }
     function insertar(texto) {
         const e = editor()
         if (!e) return
@@ -83,7 +90,9 @@ VentanaStudio {
             case "buscar_pdf": espacio.buscarEnPdf(); break
             case "alternar_pdf": espacio.mostrarPdf = !espacio.mostrarPdf; ventana.registro.marcar("ver.pdf", espacio.mostrarPdf); break
             case "compilar_marcados": studio.interfaz.fijarVista("proyectos"); paginaProyectos.compilarMarcados(); break
-            case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
+            case "synctex": if (e) ventana.alPdf(e.ruta, e.lineaActual, e.columnaActual); break
+            case "ir_a_fuera": ventana.irA(datos.archivo, datos.linea || 0); ventana.raise(); ventana.requestActivate(); break
+            case "configurar_okular": dialogoOkular.abrir(); break
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
             case "configurar_texstudio": dialogoTexstudio.abrir(); break
@@ -283,5 +292,17 @@ VentanaStudio {
     }
     DialogoConfigurarDocumento { id: dialogoConfigurar }
     DialogoTexstudio { id: dialogoTexstudio }
+    DialogoTexstudio {
+        id: dialogoOkular
+        title: "Volver del PDF al código desde Okular"
+        programa: "Okular"
+        estadoDe: () => studio.sistema.estadoOkular()
+        aplicarDe: () => studio.sistema.configurarOkular()
+        deshacerDe: () => studio.sistema.deshacerOkular()
+        explicacion: "Con esto, Mayús+clic sobre el PDF en Okular abre el código en esta ventana, en esa línea (SyncTeX), "
+                   + "y Ctrl+clic en el editor lleva al punto del PDF en Okular. Se cambian solo estas claves (su editor externo) de "
+        hecho: "Listo: Mayús+clic en Okular vuelve al código en LaTeX Studio."
+        yaEsta: "Okular ya vuelve al código en esta ventana con Mayús+clic."
+    }
     dialogoAjustes: DialogoAjustesStudio {}
 }
