@@ -10,6 +10,7 @@ después, diferencia) y los escribe solo cuando se le pide (`aplicar`). Nada aqu
 from __future__ import annotations
 
 import difflib
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -516,8 +517,22 @@ def aplicar(lista: list[Cambio]) -> list[Path]:
         if c.archivo.read_text(encoding="utf-8", errors="replace") != c.antes:
             raise ErrorEsquema(f"{c.archivo.name} cambió desde que se calculó la diferencia: vuelve a abrir la configuración")
     for c in lista:
-        c.archivo.write_text(c.despues, encoding="utf-8")
+        escribir_atomico(c.archivo, c.despues)
     return [c.archivo for c in lista]
+
+
+def escribir_atomico(archivo: Path, texto: str) -> None:
+    """Escribe en un temporal de la misma carpeta y lo renombra encima: quien vigila el archivo (el editor, TeXstudio)
+    nunca lo ve a medio escribir ni vacío. Si es un enlace, se escribe su destino (el enlace queda); se conservan los
+    permisos."""
+    destino = Path(os.path.realpath(archivo))
+    temporal = destino.with_name(f".{destino.name}.latex-studio-{os.getpid()}")
+    temporal.write_text(texto, encoding="utf-8")
+    try:
+        os.chmod(temporal, os.stat(destino).st_mode & 0o7777)
+    except OSError:
+        pass
+    os.replace(temporal, destino)
 
 
 # ----------------------------------------------------------------------------------------------- verificación
