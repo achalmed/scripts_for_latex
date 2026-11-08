@@ -13,6 +13,11 @@ from gui_comun.qt import QObject, Property, Signal, Slot
 from latex_app import configuracion as cf
 
 
+def _lista(valor) -> list:
+    """Una propiedad de Qt llega como lista; un doble de prueba puede darla como método."""
+    return list(valor() if callable(valor) else valor or [])
+
+
 class ConfiguracionDocumento(QObject):
     cambiado = Signal()
     aplicado = Signal(str)                # el principal, tras escribir
@@ -97,7 +102,7 @@ class ConfiguracionDocumento(QObject):
         """Escribe la diferencia calculada; devuelve el error o "". No pisa un archivo con cambios sin guardar."""
         if self._conf is None or not self._cambios:
             return "No hay cambios que aplicar."
-        sucios = set(self.editor.modificados()) if self.editor is not None else set()
+        sucios = set(_lista(getattr(self.editor, "modificados", []))) if self.editor is not None else set()
         tocados = [c.archivo for c in self._cambios if str(c.archivo) in sucios]
         if tocados:
             return f"{tocados[0].name} tiene cambios sin guardar en el editor: guárdalos o descártalos antes."

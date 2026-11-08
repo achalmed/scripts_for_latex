@@ -172,6 +172,13 @@ class Ajustes(QObject):
                              lambda self, v: (self._s.setValue("editor/ajustar", bool(v)), self.cambiado.emit()), notify=cambiado)
     compilarAlGuardar = Property(bool, lambda self: self._bool("editor/compilar_al_guardar", False),
                                  lambda self, v: (self._s.setValue("editor/compilar_al_guardar", bool(v)), self.cambiado.emit()), notify=cambiado)
+    # La revisión ortográfica de KDE (Sonnet, en su idioma predeterminado): apagada por omisión en código LaTeX.
+    revisarOrtografia = Property(bool, lambda self: self._bool("editor/ortografia", False),
+                                 lambda self, v: (self._s.setValue("editor/ortografia", bool(v)), self.cambiado.emit()), notify=cambiado)
+    # Trabajo junto a TeXstudio (u otro editor): compilar cuando un archivo del proyecto abierto cambia fuera de la ventana.
+    compilarAlCambiarFuera = Property(bool, lambda self: self._bool("editor/compilar_al_cambiar_fuera", False),
+                                      lambda self, v: (self._s.setValue("editor/compilar_al_cambiar_fuera", bool(v)), self.cambiado.emit()),
+                                      notify=cambiado)
 
     # ------------------------------------------------------------- sistema
     def _texto(self, clave: str, defecto: str) -> str:

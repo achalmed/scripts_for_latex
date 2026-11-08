@@ -25,6 +25,7 @@ from latex_app import compilador as svc
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
 from latex_app.controladores.configuracion import ConfiguracionDocumento
+from latex_app.controladores.sincronizacion import Sincronizacion
 from gui_comun.editor import ControladorEditor
 from latex_app.controladores.historial import Historial
 from latex_app.controladores.proyectos import Proyectos, cache_del_studio
@@ -106,10 +107,38 @@ class Sistema(QObject):
         QGuiApplication.clipboard().setText(ruta)
         self.consola.registrar("info", f"Ruta copiada: {ruta}")
 
+    @staticmethod
+    def orden_texstudio(ruta: str, linea: int = 0, principal: str = "") -> list[str]:
+        """La orden de TeXstudio: el archivo en su línea; si es el principal del proyecto, como documento maestro."""
+        orden = ["texstudio"]
+        if principal and Path(principal).resolve() == Path(ruta).resolve():
+            orden.append("--master")
+        return orden + ["--line", str(linea or 1), ruta]
+
+    @Property(bool, constant=True)
+    def hayTexstudio(self) -> bool:
+        return shutil.which("texstudio") is not None
+
+    @Slot(str, int, str)
+    def abrirEnTexstudio(self, ruta: str, linea: int = 0, principal: str = "") -> None:
+        if not Path(ruta).is_file():
+            return
+        if not shutil.which("texstudio"):
+            self.aviso.emit("TeXstudio no está instalado (paquete texstudio).", "error")
+            return
+        orden = self.orden_texstudio(ruta, linea, principal)
+        try:
+            subprocess.Popen(orden, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            self.consola.registrar("info", "TeXstudio: " + " ".join(orden))
+        except OSError as e:
+            self.aviso.emit(f"No se pudo abrir TeXstudio: {e.strerror}", "error")
+
     def orden_editor(self, ruta: str, linea: int = 0) -> list[str]:
         preferido = self.ajustes.editor or "kate"
         for editor in (preferido, "kate", "kwrite", "code"):
             if shutil.which(editor):
+                if editor == "texstudio":
+                    return self.orden_texstudio(ruta, linea)
                 if editor in ("kate", "kwrite"):
                     return [editor, "--line", str(linea or 1), ruta]
                 if editor == "code":
@@ -142,6 +171,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)
+    sincronizacion = Sincronizacion()
     configuracion = ConfiguracionDocumento(
         consola, editor, rutas=lambda: list(ajustes.rutasTex) + sorted({p.marco for p in proyectos.todos() if p.marco}))
     escritorio = app.escritorio                 # gui-comun 3.0: abrir con su aplicación, mostrar en Dolphin, abrir carpeta
@@ -175,6 +205,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("archivo.guardar_todo", "Guardar &todo", "document-save-all", "Ctrl+L", "Archivo", habilitada=False, al_disparar=pedir("guardar_todo"),
                        operacion="escritura")
     acciones.registrar("archivo.cerrar", "&Cerrar el archivo", "document-close", StandardKey.Close, "Archivo", habilitada=False, al_disparar=pedir("cerrar_archivo"))
+    acciones.registrar("archivo.texstudio", "Abrir en &TeXstudio", "texstudio", "Ctrl+Shift+E", "Archivo", habilitada=False,
+                       al_disparar=pedir("texstudio"),
+                       descripcion="El archivo actual en TeXstudio, en la línea del cursor (o el principal del proyecto como "
+                                   "documento maestro); lo que se guarde allí se recarga aquí y el PDF que compile se ve aquí")
     acciones.registrar("documento.configurar", "Configurar el &documento…", "document-properties", "Ctrl+Alt+D", "Archivo",
                        habilitada=False, al_disparar=lambda *_: interfaz.pedir.emit("configurar_documento", {"ruta": proyectos.principal}),
                        descripcion="Metadatos, elementos visibles y opciones del documento, según el latex-studio.yml de su marco; "
@@ -306,6 +340,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("archivo.guardar_todo", editor.hayModificados)
         acciones.habilitar("proyecto.cerrar", hay_proyecto)
         acciones.habilitar("documento.configurar", hay_proyecto)
+        acciones.habilitar("archivo.texstudio", (hay_proyecto or hay_archivo) and sistema.hayTexstudio)
         acciones.habilitar("proyectos.detectar", not proyectos.enDeteccion)
         acciones.marcar("compilar.al_guardar", ajustes.compilarAlGuardar)
         acciones.marcar("ver.ajustar", visor.ajustarAncho)
@@ -321,7 +356,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         p = proyectos.proyecto_abierto()
         if p is None:
             visor.abrir("", "")
+            sincronizacion.olvidar()
             return
+        sincronizacion.vigilar(p.fuentes(), p.pdf or str(Path(p.principal).with_suffix(".pdf")))
         carpeta_synctex = str(Path(p.carpeta) / p.carpeta_aux) if p.carpeta_aux else ""
         visor.abrir(p.pdf, carpeta_synctex)
         if compilacion._ruta_problemas != p.principal:
@@ -330,6 +367,27 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     def terminada(ruta: str, ok: bool):
         if ruta == proyectos.principal:
             abierto_cambiado()
+            sincronizacion.anotar_pdf_propio()
+
+    # --- junto a TeXstudio (u otro editor): lo que cambia fuera de la ventana
+    def fuentes_de_fuera(rutas: list):
+        propias = set(editor.modificados)            # con cambios aquí sin guardar: el editor pregunta
+        abiertas = set(editor.rutasAbiertas)
+        de_fuera = [r for r in rutas if r not in propias and (r not in abiertas or editor.cambioEnDisco(r))]
+        if not de_fuera or not proyectos.hayAbierto:
+            return
+        consola.registrar("info", "Cambiaron fuera de la ventana: " + ", ".join(Path(r).name for r in de_fuera))
+        proyectos.releerEstructura()
+        if ajustes.compilarAlCambiarFuera and not compilacion.enCurso:
+            compilacion.compilar()
+
+    def pdf_de_fuera(_pdf: str):
+        if not compilacion.enCurso:
+            consola.registrar("info", "El PDF cambió fuera de la ventana: recargado.")
+            abierto_cambiado()
+
+    sincronizacion.fuentesCambiadas.connect(fuentes_de_fuera)
+    sincronizacion.pdfCambiado.connect(pdf_de_fuera)
 
     def guardado(ruta: str):
         if proyectos.hayAbierto and ruta in proyectos.proyecto_abierto().fuentes():
@@ -349,7 +407,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
                   editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
-                  configuracion=configuracion)
+                  configuracion=configuracion, sincronizacion=sincronizacion)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)
@@ -383,3 +441,4 @@ def main(argv: list[str]) -> int:
     finally:
         piezas["visor"].apagar()
         piezas["editor"].soltar()
+        piezas["sincronizacion"].soltar()

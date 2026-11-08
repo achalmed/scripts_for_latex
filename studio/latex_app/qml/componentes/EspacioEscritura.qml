@@ -112,6 +112,7 @@ QQC2.SplitView {
                     definicion: model.definicion
                     soloLectura: model.solo_lectura
                     ajustarLineas: studio.ajustes.ajustarLineas
+                    revisarOrtografia: studio.ajustes.revisarOrtografia
                     tamanoLetra: studio.ajustes.tamanoLetra
                     completar: raiz.completarLatex
                     disparaCompletado: raiz.disparaLatex

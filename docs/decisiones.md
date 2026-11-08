@@ -115,6 +115,14 @@ Descartado: campos fijos por marco dentro de LaTeX Studio (acoplaría la ventana
 escritura es la única excepción a «nunca se escriben fuentes» fuera de Ctrl+S: solo el preámbulo, con la diferencia a
 la vista y confirmación, y nunca sobre un archivo con cambios sin guardar en el editor.
 
+### §1.15 Complementaria de TeXstudio; editor sin ortografía por omisión; visor sobremuestreado (2026-11-08)
+
+El autor quiere usar TeXstudio y LaTeX Studio a la vez: editar en uno y compilar o ver en el otro. Se decidió abrir en
+TeXstudio desde la ventana (archivo y línea; el principal como maestro) y vigilar el proyecto abierto entero, no solo
+lo abierto en el editor: lo guardado fuera se recarga, el PDF compilado fuera se muestra y, si se pide, se compila. La
+revisión ortográfica que KDE enciende sola en los campos de texto queda apagada (marcaba en rojo el LaTeX en el idioma
+de Sonnet) y el visor dibuja al doble de resolución (Pdfium a 1× empastaba el texto frente a Poppler).
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

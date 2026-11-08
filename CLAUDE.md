@@ -29,7 +29,7 @@ studios) y el compilador del `.tex` suelto (`script_compilar_latex/`, alias `com
   nueva de `main.sh` entra primero en la CLI.
 - **Nunca se escriben fuentes**: compilar no las toca y el editor escribe solo con Ctrl+S (`Editor.guardar`), sin pisar
   un cambio externo sin confirmación. Limpiar muestra la lista y confirma. La única otra escritura es «Configurar el
-  documento» (Ctrl+Alt+D, `latex_app/configuracion.py`): toca solo el preámbulo, muestra la diferencia y escribe al
+  documento» (Ctrl+Alt+D, `studio/latex_app/configuracion.py`): toca solo el preámbulo, muestra la diferencia y escribe al
   confirmar, y no pisa un archivo con cambios sin guardar en el editor.
 - **Lo configurable de un documento lo declara su marco** en `latex-studio.yml` (contrato:
   `docs/configuracion-de-documentos.md`); la ventana no sabe nada de ningún marco ni añade campos propios de uno.
@@ -76,7 +76,8 @@ un PDF anterior en la carpeta.
 - `inotifywait` no está instalado en esta máquina: el watch no arranca aquí, y `-n -w` sale con 1
   por la dependencia. La ventana vigila los archivos abiertos con `QFileSystemWatcher` (`Editor`), creado al abrir el
   primero y retirado con `deleteLater` (`Editor.soltar`): su notificador de inotify no sobrevive a que Python recoja
-  el controlador.
+  el controlador. Lo mismo el vigía del proyecto abierto
+  (`Sincronizacion.soltar`, para TeXstudio), que además vigila la carpeta del PDF porque los compiladores lo reemplazan.
 - **Fuera de `~/Documents` (un worktree) la CLI no encuentra `core/`** subiendo carpetas: exporta `CORE_DIR`
   (`tests/conftest.py` lo toma de `gui_comun.rutas`). `capturar.py` fija además `PYTHONPATH` al `gui_comun` que lo lanzó:
   con `HOME` temporal no se ve el `pip install --user`, y subir carpetas desde un worktree encontraría otro.

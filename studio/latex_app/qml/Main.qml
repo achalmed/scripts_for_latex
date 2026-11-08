@@ -86,6 +86,10 @@ VentanaStudio {
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
+            case "texstudio":
+                if (e) studio.sistema.abrirEnTexstudio(e.ruta, e.lineaActual, p.hayAbierto ? p.principal : "")
+                else if (datos.ruta || p.hayAbierto) studio.sistema.abrirEnTexstudio(datos.ruta || p.principal, 1, datos.ruta || p.principal)
+                break
             case "salir": ventana.close(); break
             }
         }

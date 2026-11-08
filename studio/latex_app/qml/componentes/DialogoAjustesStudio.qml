@@ -59,6 +59,7 @@ DialogoAjustes {
             FormCard.FormCard {
                 FormCard.FormTextDelegate { text: "Cada proyecto se compila con su compilador y su motor: el de su marco (scripts/build.sh), latexmk si tiene latexmkrc, o script_compilar_latex con el motor que declare (% !TEX program, arara) y, sin declaración, LuaLaTeX + Biber." }
                 FormCard.FormSwitchDelegate { text: "Compilar al guardar"; description: "Ctrl+S guarda y compila el proyecto abierto"; checked: dialogo.a.compilarAlGuardar; onToggled: dialogo.a.compilarAlGuardar = checked }
+                FormCard.FormSwitchDelegate { text: "Compilar cuando otro programa guarde"; description: "Al trabajar con TeXstudio u otro editor: cuando un archivo del proyecto abierto cambia fuera de la ventana, se compila aquí (lo cambiado se recarga siempre)"; checked: dialogo.a.compilarAlCambiarFuera; onToggled: dialogo.a.compilarAlCambiarFuera = checked }
             }
             FormCard.FormHeader { title: "Rutas de TeX extra (TEXINPUTS)" }
             FormCard.FormCard {
@@ -84,6 +85,7 @@ DialogoAjustes {
             FormCard.FormCard {
                 FormCard.FormSpinBoxDelegate { label: "Tamaño de letra (0: el de la fuente fija del sistema)"; from: 0; to: 32; value: dialogo.a.tamanoLetra; onValueChanged: dialogo.a.tamanoLetra = value }
                 FormCard.FormSwitchDelegate { text: "Ajustar las líneas largas"; checked: dialogo.a.ajustarLineas; onToggled: dialogo.a.ajustarLineas = checked }
+                FormCard.FormSwitchDelegate { text: "Revisión ortográfica"; description: "Subraya las palabras que no reconoce el corrector de KDE, en su idioma predeterminado (Preferencias del sistema › Revisión ortográfica: elige español); apagada, el código LaTeX no se marca"; checked: dialogo.a.revisarOrtografia; onToggled: dialogo.a.revisarOrtografia = checked }
             }
         }
     }

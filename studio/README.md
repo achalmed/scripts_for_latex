@@ -50,6 +50,12 @@ sección por grupo. Aceptar muestra la diferencia del preámbulo; «Aplicar» o 
 esquema, todo documento ofrece título, autor, fecha y opciones de la clase. Contrato y marcos que lo publican:
 [../docs/configuracion-de-documentos.md](../docs/configuracion-de-documentos.md).
 
+**Junto a TeXstudio** (Ctrl+Mayús+E o «TeXstudio» en la ficha): abre el archivo actual en su línea, o el principal como
+documento maestro. Mientras un proyecto está abierto, la ventana vigila sus fuentes y su PDF
+(`latex_app/controladores/sincronizacion.py`): lo que se guarde en TeXstudio se recarga aquí (y la estructura se
+relee), el PDF que compile TeXstudio se ve aquí al instante, y con «Compilar cuando otro programa guarde» (Ajustes ›
+Compilación) la ventana compila sola. La revisión ortográfica del editor está apagada por omisión (Ajustes › Editor).
+
 ## Atajos
 
 | atajo | qué hace | atajo | qué hace |
@@ -64,7 +70,7 @@ esquema, todo documento ofrece título, autor, fecha y opciones de la clase. Con
 | Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
 | Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+O · Ctrl+Mayús+O | abrir un `.tex` · carpetas de trabajo |
 | Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
-| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones) | | |
+| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones) | Ctrl+Mayús+E | abrir en TeXstudio (archivo y línea actuales) |
 | Ctrl+Alt+F | buscar en el PDF (Intro · Mayús+Intro: siguiente · anterior) | arrastrar en el PDF · Ctrl+C · Ctrl+A | seleccionar · copiar · toda la página (con QtPdf) |
 
 La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
