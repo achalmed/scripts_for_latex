@@ -445,7 +445,8 @@ def _entorno_rutas(rutas_tex: list[str]) -> dict:
 
 def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_tex: list[str] = ()) -> list[Paso]:
     """Los pasos de `que` (compilar · reconstruir · limpiar · simular · borrador) para un `proyectos.Proyecto`:
-    - marco: `<marco>/scripts/build.sh <principal>` (limpiar: `--clean`; reconstruir: limpiar y compilar);
+    - marco: `<marco>/scripts/build.sh <principal>` (limpiar: `--clean`; reconstruir: limpiar y compilar); si el marco
+      declara versiones, con la elegida (`--modo soluciones`: el `argumento` de su `latex-studio.yml`);
     - latexmk: `latexmk` con SyncTeX, sin parar en el primer error (lee su `latexmkrc`; limpiar: `-c`; reconstruir: `-g`);
     - main.sh: `main.sh -k -e <motor> [--biber|-b] [-i] [-g] --log <registro>` (limpiar: `-c`; simular: `-n`; reconstruir:
       `-c` y compilar; borrador: `--draft`, comprueba sin PDF). Con otro compilador, borrador es compilar.
@@ -456,13 +457,17 @@ def receta(proyecto, que: str = "compilar", registro: Path | None = None, rutas_
     if proyecto.compilador == "marco":
         build = str(Path(proyecto.marco) / "scripts" / "build.sh")
         limpiar = Paso("Limpiar auxiliares (marco)", ["bash", build, "--clean", str(tex)], cwd)
-        compilar = Paso("Compilar con el compilador del marco", ["bash", build, str(tex)], cwd)
+        version = getattr(proyecto, "version", "")
+        pedir = [proyecto.version_argumento, version] if version and getattr(proyecto, "version_argumento", "") else []
+        nombre = next((v["nombre"] for v in getattr(proyecto, "versiones", []) if v.get("clave") == version), "")
+        compilar = Paso("Compilar con el compilador del marco" + (f" · {nombre}" if nombre else ""),
+                        ["bash", build, str(tex), *pedir], cwd)
         if que == "limpiar":
             return [limpiar]
         if que == "reconstruir":
             return [limpiar, compilar]
         if que == "simular":
-            return [Paso("Simular (orden del marco)", ["echo", "bash", build, str(tex)], cwd)]
+            return [Paso("Simular (orden del marco)", ["echo", *compilar.argv], cwd)]
         return [compilar]
     if proyecto.compilador == "latexmk":
         base = ["latexmk", "-synctex=1", "-interaction=nonstopmode", "-file-line-error"]
@@ -502,7 +507,8 @@ def orden_legible(pasos: list[Paso]) -> str:
 
 
 def registro_motor(proyecto) -> Path:
-    """El `.log` del motor de un proyecto (en la carpeta de auxiliares del marco o de latexmk, o junto al principal)."""
+    """El `.log` del motor de un proyecto (en la carpeta de auxiliares del marco o de latexmk, o junto al principal); con
+    versiones, el de la que se compila (`2026_pr_02-soluciones.log`)."""
     tex = Path(proyecto.principal)
     carpeta = tex.parent / proyecto.carpeta_aux if proyecto.carpeta_aux else tex.parent
-    return carpeta / f"{tex.stem}.log"
+    return carpeta / f"{getattr(proyecto, 'job', '') or tex.stem}.log"      # el de la versión elegida, si las hay

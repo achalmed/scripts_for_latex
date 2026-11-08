@@ -5,6 +5,13 @@ marco: muestra
 documentos:
   - nombre: Memoria
     clases: [memoria]
+    versiones:                     # dos versiones de un mismo .tex (scripts/build.sh --version; §7 del contrato)
+      comentario: VERSION
+      argumento: --version
+      omision: completa
+      lista:
+        - {clave: completa, nombre: Completa, job: "{nombre}"}
+        - {clave: resumen, nombre: Resumen, job: "{nombre}-resumen"}
     secciones:
       - titulo: Datos del documento
         icono: document-properties

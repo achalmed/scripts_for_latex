@@ -132,6 +132,14 @@ sabe leer): se edita el `.ini` como texto, solo cuatro claves, con TeXstudio cer
 al lado y «Deshacer». Es configuración de otro programa, no una fuente: la escribe solo el autor, al confirmar. El
 SyncTeX inverso puede llevar a TeXstudio (ajuste), y el marco de docencia pasa `-synctex=1` desde este día.
 
+**Versiones de un mismo `.tex` (2026-11-08).** Un `.tex` de `academic-exam` produce tres PDF (`--modo` de su
+`build.sh`), pero F5, aquí y en TeXstudio, solo producía el examen en blanco. Se decidió que el marco declare sus
+versiones en `latex-studio.yml` (cómo se piden, cómo se llama cada salida) y que el documento declare la suya con un
+comentario mágico que su compilador lee: la ventana sigue sin saber nada de docencia y cualquier editor compila la que
+pide el documento. Elegir otra en la ventana no escribe (como compilar); fijarla escribe por «Configurar», con la
+diferencia a la vista, junto con la línea `TXS-program:view` que hace que el visor de TeXstudio abra ese PDF.
+Descartado: órdenes de usuario de TeXstudio por versión (serían de un marco en la configuración global de TeXstudio).
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

@@ -121,6 +121,13 @@ def cargar_esquema(ruta: Path) -> dict:
     if not isinstance(datos, dict) or not isinstance(datos.get("documentos"), list):
         raise ErrorEsquema(f"{ruta}: falta la lista `documentos`")
     for i, doc in enumerate(datos["documentos"]):
+        versiones = doc.get("versiones")
+        if versiones is not None:
+            lista = versiones.get("lista") if isinstance(versiones, dict) else None
+            if not isinstance(lista, list) or not lista or not all(isinstance(v, dict) and v.get("clave") for v in lista):
+                raise ErrorEsquema(f"{ruta}: documentos[{i}].versiones necesita `lista` con una `clave` por versión")
+            if versiones.get("comentario") and not re.fullmatch(r"[A-Za-z][\w-]*", str(versiones["comentario"])):
+                raise ErrorEsquema(f"{ruta}: documentos[{i}].versiones.comentario es una palabra (p. ej. MODO)")
         for j, sec in enumerate(doc.get("secciones") or []):
             for k, campo in enumerate(sec.get("campos") or []):
                 donde = f"{ruta}: documentos[{i}].secciones[{j}].campos[{k}]"
@@ -208,8 +215,20 @@ def _como_bool(valor: object, omision: object = None) -> bool:
     return str(valor).strip().lower() in ("true", "1", "si", "sí", "yes")
 
 
+def _magico_re(nombre: str) -> re.Pattern:
+    return re.compile(r"^[ \t]*%[ \t]*![ \t]*" + re.escape(nombre) + r"[ \t]*=[ \t]*(?P<valor>\S[^\n]*?)[ \t]*$", re.M | re.I)
+
+
+# la línea que hace que el visor de TeXstudio abra el PDF de la versión (manual de TeXstudio, «magic comments»)
+_VISOR_TXS = re.compile(r"^[ \t]*%[ \t]*!TeX[ \t]+TXS-program:view[ \t]*=[^\n]*view-pdf-internal[^\n]*\n?", re.M | re.I)
+
+
 def leer(texto: str, destino: dict, tipo: str, omision: object = None) -> object:
     """El valor de un campo en el texto del archivo (None si no está escrito)."""
+    if "version" in destino:
+        m = _magico_re(destino["version"]["comentario"]).search(texto[:4000])
+        valor = m.group("valor").strip().lower() if m else None
+        return valor if valor in destino["version"]["jobs"] else None
     if destino.get("opciones_clase"):
         m = _clase(texto)
         return (m.group("op") or "").strip() if m else None
@@ -268,6 +287,21 @@ def escribir(texto: str, destino: dict, tipo: str, valor: object, omision: objec
              anclas: list[re.Pattern] | None = None) -> str:
     """El texto con el campo puesto en `valor` (sin tocar nada más)."""
     anclas = anclas or []
+    if "version" in destino:
+        # «% !MODO = soluciones» y la línea del visor de TeXstudio, justo antes de \documentclass; la de omisión no se
+        # escribe (quita las dos)
+        v = destino["version"]
+        texto = re.compile(_magico_re(v["comentario"]).pattern + r"\n?", re.M | re.I).sub("", texto)
+        texto = _VISOR_TXS.sub("", texto)
+        valor = str(valor or "").strip().lower()
+        if not valor or valor == str(v.get("omision") or "") or valor not in v["jobs"]:
+            return texto
+        pdf = v["jobs"][valor].replace("{nombre}", "?m)") + ".pdf"     # ?m) = el nombre del maestro sin comillas (% las pone)
+        nuevas = (f"% !{v['comentario']} = {valor}\n"
+                  f"% !TeX TXS-program:view = txs:///view-pdf-internal --embedded {pdf}\n")
+        m = _clase(texto)
+        inicio = texto.rfind("\n", 0, m.start()) + 1 if m else 0
+        return texto[:inicio] + nuevas + texto[inicio:]
     if destino.get("opciones_clase") or "opcion_clase" in destino:
         m = _clase(texto)
         if not m:
@@ -378,6 +412,22 @@ def buscar_clase(clase: str, rutas: list[Path] | None = None) -> Path | None:
     return None
 
 
+def _seccion_version(versiones: dict) -> dict:
+    """La sección «Versión» de un marco que produce varias versiones de un mismo .tex (`versiones:`, §7 del contrato)."""
+    lista = [v for v in versiones["lista"] if isinstance(v, dict) and v.get("clave")]
+    omision = str(versiones.get("omision") or lista[0]["clave"])
+    nombres = " · ".join(f"{v['clave']}: {v.get('nombre', v['clave'])}" for v in lista)
+    return {"titulo": "Versión", "icono": "document-multiple",
+            "descripcion": "La versión que compila F5 aquí y en TeXstudio (se escribe como «% !"
+                           f"{versiones['comentario']} = …» antes de \\documentclass, con la línea que hace que el visor de "
+                           "TeXstudio abra ese PDF). Para compilar otra una sola vez, sin tocar el documento, está el "
+                           "selector «Versión» de la ventana.",
+            "campos": [{"clave": "_version", "etiqueta": "Versión que compila F5", "tipo": "opcion",
+                        "opciones": [v["clave"] for v in lista], "omision": omision, "ayuda": nombres,
+                        "destino": {"version": {"comentario": str(versiones["comentario"]), "omision": omision,
+                                                "jobs": {str(v["clave"]): str(v.get("job") or "{nombre}") for v in lista}}}}]}
+
+
 def configuracion_de(principal: Path, clase: str | None = None, rutas: list[Path] | None = None) -> Configuracion:
     """Lo configurable del documento con sus valores actuales. `rutas`: dónde buscar la clase si el esquema no está
     subiendo desde el documento (documentos fuera del árbol de su marco)."""
@@ -391,7 +441,7 @@ def configuracion_de(principal: Path, clase: str | None = None, rutas: list[Path
         archivo_clase = buscar_clase(clase or "", rutas)
         if archivo_clase is not None:
             esquema = buscar_esquema(archivo_clase)
-    marco, nombre, crudo, generica = "", "Documento LaTeX", [], True
+    marco, nombre, crudo, generica, versiones = "", "Documento LaTeX", [], True, None
     if esquema:
         datos = cargar_esquema(esquema)
         marco = str(datos.get("marco", esquema.parent.name))
@@ -401,9 +451,12 @@ def configuracion_de(principal: Path, clase: str | None = None, rutas: list[Path
                 nombre = str(doc.get("nombre", nombre))
                 crudo = list(doc.get("secciones") or [])
                 generica = doc.get("generica", True) is not False
+                versiones = doc.get("versiones")
                 break
     if generica:
         crudo = crudo + [GENERICA]
+    if versiones and versiones.get("comentario"):
+        crudo = [_seccion_version(versiones)] + crudo
     secciones = []
     cache: dict[Path, str] = {principal: texto}
     for sec in crudo:

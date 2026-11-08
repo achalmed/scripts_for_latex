@@ -83,6 +83,7 @@ class Proyectos(QObject):
         self._bib = ModeloLista(ROLES_BIB, parent=self)
         self._bib_filtrada = ModeloFiltrado(self._bib, parent=self)
         self._abierto: pr.Proyecto | None = None
+        self._elegidas: dict[str, str] = {}      # principal → versión elegida en la ventana (no escrita en el .tex)
         self._etiquetas: list[dict] = []
         self._claves: list[dict] = []
         self._ordenes: list[str] = []
@@ -145,7 +146,15 @@ class Proyectos(QObject):
                                 despacho=self.ajustes.despacho()))
         self._detectado = True
 
+    def _con_eleccion(self, p: pr.Proyecto) -> pr.Proyecto:
+        """Aplica la versión elegida en la ventana (si la hay y el marco la sigue declarando) y relee su estado."""
+        elegida = self._elegidas.get(p.principal)
+        if elegida and elegida != p.version and p.elegir_version(elegida):
+            pr.leer_estado(p, self._cache, self.registro_de(Path(p.principal)))
+        return p
+
     def _poner(self, proyectos: list[pr.Proyecto]) -> None:
+        proyectos = [self._con_eleccion(p) for p in proyectos]
         self._proyectos = sorted(proyectos, key=lambda p: (pr.orden_categoria(p.categoria), p.principal))
         self._por_ruta = {p.principal: p for p in self._proyectos}
         self._tabla.poner([fila_proyecto(p, self._en_curso) for p in self._proyectos])
@@ -265,6 +274,9 @@ class Proyectos(QObject):
             return None
         nuevo = pr.construir(Path(p.principal), Path(p.raiz), self._cache, en_despacho=False)
         nuevo.categoria, nuevo.categoria_motivo, nuevo.categoria_icono = p.categoria, p.categoria_motivo, p.categoria_icono
+        elegida = self._elegidas.get(nuevo.principal)
+        if elegida:
+            nuevo.elegir_version(elegida)
         pr.leer_estado(nuevo, self._cache, self.registro_de(Path(p.principal)))
         if ruta in self._por_ruta:
             i = self._proyectos.index(self._por_ruta[ruta])
@@ -292,6 +304,7 @@ class Proyectos(QObject):
             p = pr.proyecto_de(Path(ruta), self._cache)
             if p is not None:
                 p.categoria, p.categoria_motivo = "Otros proyectos", "abierto suelto"
+                self._con_eleccion(p)
         if p is None:
             return f"No es un documento LaTeX con \\documentclass ni pertenece a un proyecto conocido: {ruta}"
         self._abierto = p
@@ -300,6 +313,25 @@ class Proyectos(QObject):
         self._cargar_abierto()
         self.consola.registrar("info", f"Proyecto: {p.principal}")
         return ""
+
+    @Slot(str)
+    def elegirVersion(self, clave: str) -> None:
+        """Compila y ve otra versión del proyecto abierto (de las que declara su marco), sin escribir en el documento:
+        la que el documento declara la fija «Configurar el documento»."""
+        p = self._abierto
+        if p is None or clave == p.version or not any(v.get("clave") == clave for v in p.versiones):
+            return
+        if clave == p.version_declarada:
+            self._elegidas.pop(p.principal, None)
+        else:
+            self._elegidas[p.principal] = clave
+        nombre = next((v["nombre"] for v in p.versiones if v["clave"] == clave), clave)
+        self.consola.registrar("info", f"Versión: {nombre} ({Path(p.principal).name})")
+        self.refrescar(p.principal)
+
+    def olvidar_version(self, ruta: str) -> None:
+        """Tras escribir la versión en el documento, manda la declarada."""
+        self._elegidas.pop(ruta, None)
 
     @Slot()
     def cerrar(self) -> None:

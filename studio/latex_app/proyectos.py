@@ -25,7 +25,7 @@ from latex_app import compilador as svc
 PROFUNDIDAD = 12                             # el máximo de los ajustes: ~/Documents entero cuesta < 1 s y llega a docencia/contenido/cursos/<c>/04-evaluaciones/<sub>/<expediente>
 CARPETAS_SALTADAS = {"node_modules", "_site", "_freeze", ".quarto", "site_libs", ".build", "build", "__pycache__"}
 LIMITE_LECTURA = 512 * 1024                  # un .tex más grande (tablas generadas) se lee hasta aquí
-VERSION_CACHE = 4
+VERSION_CACHE = 5
 
 CATEGORIAS = ("Escritura académica", "Tesis y trabajos de investigación", "Artículos científicos",
               "Documentos legislativos", "Documentos institucionales", "Docencia y evaluaciones", "Publicaciones (Quarto)",
@@ -38,6 +38,8 @@ NOMBRES_COMPILADOR = {"marco": "compilador del marco", "latexmk": "latexmk (late
 _COMENTARIO = re.compile(r"(?<!\\)%.*")
 _CLASE = re.compile(r"\\documentclass\s*(?:\[(?P<op>[^\]]*)\])?\s*\{(?P<clase>[^}]+)\}")
 _MAGICO = re.compile(r"^\s*%\s*!\s*(?P<que>TEX\s+(?:TS-)?program|TEX\s+root|BIB\s+(?:TS-)?program)\s*=\s*(?P<valor>\S.*?)\s*$", re.I | re.M)
+# los comentarios mágicos de un marco: «% !MODO = soluciones» (una palabra; los de TeX llevan dos: «TEX program»)
+_MAGICO_MARCO = re.compile(r"^\s*%\s*!\s*(?P<que>[A-Za-z][\w-]*)\s*=\s*(?P<valor>\S.*?)\s*$", re.M)
 _ARARA = re.compile(r"^\s*%\s*arara\s*:\s*(?P<regla>[\w-]+)(?P<resto>.*)$", re.M)
 _INCLUSION = re.compile(r"\\(?P<orden>input|include|subfile|import|subimport|includefrom|subincludefrom)\s*"
                         r"(?:\{(?P<a>[^}]*)\}\s*)(?:\{(?P<b>[^}]*)\})?")
@@ -99,6 +101,8 @@ def analizar_tex(texto: str) -> dict:
     for m in _MAGICO.finditer(texto[:4000]):
         que = re.sub(r"\s+", " ", m["que"].upper()).replace("TS-", "")
         magicos[que] = m["valor"].strip()
+    for m in _MAGICO_MARCO.finditer(texto[:4000]):
+        magicos.setdefault(m["que"].upper(), m["valor"].strip())
     arara = [(m["regla"].lower(), m["resto"].strip()) for m in _ARARA.finditer(texto[:8000])]
     m = _CLASE.search(limpio)
     inclusiones = []
@@ -235,6 +239,12 @@ class Proyecto:
     log: str = ""
     auxiliares: int = 0
     synctex: str = ""
+    # versiones que el compilador del marco produce de este .tex (`versiones:` del latex-studio.yml; §7 del contrato)
+    versiones: list = field(default_factory=list)   # [{clave, nombre, job}]
+    version_argumento: str = ""          # cómo se pide una al compilador del marco (--modo)
+    version_comentario: str = ""         # el comentario mágico que la declara (MODO → «% !MODO = …»)
+    version_declarada: str = ""          # la que declara el documento (o la de omisión)
+    version: str = ""                    # la que se compila y se ve (la declarada, o la elegida en la ventana)
 
     @property
     def carpeta(self) -> str:
@@ -246,7 +256,20 @@ class Proyecto:
 
     @property
     def job(self) -> str:
-        return Path(self.principal).stem
+        """El nombre de la salida (PDF, .log, SyncTeX): el del principal o, con versiones, el de la versión elegida."""
+        return self.job_de(self.version)
+
+    def job_de(self, version: str) -> str:
+        nombre = Path(self.principal).stem
+        v = next((v for v in self.versiones if v.get("clave") == version), None)
+        return str(v.get("job") or "{nombre}").replace("{nombre}", nombre) if v else nombre
+
+    def elegir_version(self, version: str) -> bool:
+        """Pasa a compilar y ver otra versión (sin escribir nada); False si el marco no la declara."""
+        if not any(v.get("clave") == version for v in self.versiones):
+            return False
+        self.version = version
+        return True
 
     def texto_motor(self) -> str:
         nombre = NOMBRES_MOTOR.get(self.motor, self.motor)
@@ -479,9 +502,9 @@ _ESQUEMA_DE_CARPETA: dict[str, str] = {}
 _DATOS_ESQUEMA: dict[str, tuple[float, dict]] = {}
 
 
-def categoria_de_esquema(principal: Path, clase: str) -> tuple[str, str, str] | None:
-    """(categoría, icono, marco) que declara el `latex-studio.yml` del marco del documento para su clase
-    (`documentos[i].categoria`, `docs/configuracion-de-documentos.md` §2), o None. Se guarda por carpeta y por fecha."""
+def documento_de_esquema(principal: Path, clase: str) -> tuple[dict, str] | None:
+    """(documentos[i], marco) del `latex-studio.yml` del marco del documento que corresponde a su clase, o None. Se
+    guarda por carpeta y por fecha."""
     from latex_app import configuracion as cf
     carpeta = str(principal.parent)
     if carpeta not in _ESQUEMA_DE_CARPETA:
@@ -499,9 +522,34 @@ def categoria_de_esquema(principal: Path, clase: str) -> tuple[str, str, str] | 
     datos = _DATOS_ESQUEMA[ruta][1]
     for doc in datos.get("documentos") or []:
         clases = doc.get("clases") or []
-        if (not clases or clase in clases) and doc.get("categoria"):
-            return str(doc["categoria"]), str(doc.get("icono") or "folder-documents"), str(datos.get("marco", ""))
+        if not clases or clase in clases:
+            return doc, str(datos.get("marco", ""))
     return None
+
+
+def categoria_de_esquema(principal: Path, clase: str) -> tuple[str, str, str] | None:
+    """(categoría, icono, marco) que declara el `latex-studio.yml` del marco del documento para su clase
+    (`documentos[i].categoria`, `docs/configuracion-de-documentos.md` §2), o None."""
+    hallado = documento_de_esquema(principal, clase)
+    if not hallado or not hallado[0].get("categoria"):
+        return None
+    doc, marco = hallado
+    return str(doc["categoria"]), str(doc.get("icono") or "folder-documents"), marco
+
+
+def versiones_de_esquema(principal: Path, clase: str) -> dict | None:
+    """El bloque `versiones:` que el marco declara para la clase (§7 del contrato), normalizado, o None."""
+    hallado = documento_de_esquema(principal, clase)
+    bloque = hallado[0].get("versiones") if hallado else None
+    if not isinstance(bloque, dict) or not bloque.get("lista"):
+        return None
+    lista = [{"clave": str(v["clave"]), "nombre": str(v.get("nombre") or v["clave"]), "job": str(v.get("job") or "{nombre}")}
+             for v in bloque["lista"] if isinstance(v, dict) and v.get("clave")]
+    if not lista:
+        return None
+    omision = str(bloque.get("omision") or lista[0]["clave"])
+    return {"lista": lista, "argumento": str(bloque.get("argumento") or ""), "comentario": str(bloque.get("comentario") or ""),
+            "omision": omision if any(v["clave"] == omision for v in lista) else lista[0]["clave"]}
 
 
 def orden_categoria(nombre: str) -> tuple[int, str]:
@@ -648,7 +696,15 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
         declarada = categoria_de_esquema(principal, datos["clase"])
         icono = declarada[1] if declarada else ""
     yaml = _proyecto_yaml(principal.parent)
-    return Proyecto(principal=str(principal), raiz=str(raiz), clase=datos["clase"],
+    versiones = versiones_de_esquema(principal, datos["clase"]) if marco is not None else None
+    declarada = ""
+    if versiones:
+        pedida = datos["magicos"].get(versiones["comentario"].upper(), "").strip().lower() if versiones["comentario"] else ""
+        declarada = pedida if any(v["clave"] == pedida for v in versiones["lista"]) else versiones["omision"]
+    return Proyecto(versiones=versiones["lista"] if versiones else [], version_argumento=versiones["argumento"] if versiones else "",
+                    version_comentario=versiones["comentario"] if versiones else "", version_declarada=declarada,
+                    version=declarada,
+                    principal=str(principal), raiz=str(raiz), clase=datos["clase"],
                     titulo=datos["titulo"] or yaml.get("titulo", ""), motor=motor, motor_origen=origen,
                     bibliografia=bib, compilador=compilador, marco=marco["ruta"] if marco else "",
                     latexmkrc=str(rc) if rc else "", carpeta_aux=carpeta_aux, archivos=[str(a) for a in archivos],

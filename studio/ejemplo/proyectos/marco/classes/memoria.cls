@@ -1,7 +1,12 @@
 % memoria.cls — la clase del marco de muestra (sobre article).
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{memoria}[2026/11/02 clase de muestra]
+% «resumen»: la versión corta que produce el compilador del marco (scripts/build.sh --version resumen)
+\newif\ifmem@resumen
+\DeclareOption{resumen}{\mem@resumentrue}
+\ProcessOptions\relax
 \LoadClass[11pt]{article}
+\AtBeginDocument{\ifmem@resumen\noindent\textbf{Versión resumida}\par\fi}
 
 % Lo que configura LaTeX Studio (config/latex-studio.yml): metadatos y elementos visibles, todos con su omisión.
 \RequirePackage{pgfkeys}

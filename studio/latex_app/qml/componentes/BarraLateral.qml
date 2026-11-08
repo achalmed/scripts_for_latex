@@ -78,6 +78,31 @@ QQC2.Control {
                     }
                 }
             }
+            // la versión que se compila y se ve, si el marco produce varias de un mismo .tex (`versiones:` de su
+            // latex-studio.yml): elegirla no escribe nada; la que compila F5 por omisión la fija «Configurar el documento»
+            RowLayout {
+                id: filaVersion
+                readonly property var versiones: raiz.p.hayAbierto && raiz.p.abierto.versiones ? raiz.p.abierto.versiones : []
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.rightMargin: Kirigami.Units.smallSpacing
+                visible: versiones.length > 0
+                QQC2.Label { text: "Versión"; font: Kirigami.Theme.smallFont }
+                QQC2.ComboBox {
+                    id: comboVersion
+                    Layout.fillWidth: true
+                    model: filaVersion.versiones
+                    textRole: "nombre"
+                    currentIndex: filaVersion.versiones.findIndex(v => v.clave === raiz.p.abierto.version)
+                    Accessible.name: "Versión que se compila y se ve"
+                    QQC2.ToolTip.text: "La que se compila (F5) y se ve. El documento declara: "
+                                       + (filaVersion.versiones.find(v => v.clave === raiz.p.abierto.version_declarada) || {nombre: "—"}).nombre
+                                       + ". Para cambiar la que declara (y la que compila TeXstudio): Configurar el documento › Versión."
+                    QQC2.ToolTip.visible: hovered
+                    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onActivated: index => studio.proyectos.elegirVersion(filaVersion.versiones[index].clave)
+                }
+            }
             QQC2.TabBar {
                 id: pestanas
                 Layout.fillWidth: true

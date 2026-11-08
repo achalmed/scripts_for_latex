@@ -11,6 +11,9 @@ incluye o el que declara `% !TEX root`). La salida va a la consola del editor qu
     compilar.py ARCHIVO.tex --reconstruir   # limpiar auxiliares y compilar
     compilar.py ARCHIVO.tex --limpiar       # solo limpiar
     compilar.py ARCHIVO.tex --simular       # mostrar las órdenes sin ejecutarlas
+    compilar.py ARCHIVO.tex --version soluciones   # otra versión de las que declara el marco (sin --version: la que
+                                            # declara el documento, «% !MODO = …», o la de omisión)
+    compilar.py ARCHIVO.tex --versiones     # las versiones que declara el marco del documento
 
 En TeXstudio: Opciones › Configurar TeXstudio › Compilación › «Compilar» = /usr/bin/python3 «ruta»/compilar.py %.tex
 (o, desde LaTeX Studio, Herramientas › «Compilar desde TeXstudio con LaTeX Studio», que lo deja hecho).
@@ -37,6 +40,8 @@ def main(argv: list[str] | None = None) -> int:
     grupo.add_argument("--reconstruir", action="store_true", help="limpiar los auxiliares y compilar")
     grupo.add_argument("--limpiar", action="store_true", help="solo limpiar los auxiliares")
     grupo.add_argument("--simular", action="store_true", help="mostrar las órdenes sin ejecutarlas")
+    grupo.add_argument("--versiones", action="store_true", help="las versiones que declara el marco del documento")
+    ap.add_argument("--version", default="", help="la versión que se compila (una de --versiones)")
     args = ap.parse_args(argv)
     tex = args.tex.expanduser().resolve()
     if not tex.is_file():
@@ -46,10 +51,24 @@ def main(argv: list[str] | None = None) -> int:
     if proyecto is None:
         print(f"compilar.py: {tex.name} no tiene \\documentclass ni declara % !TEX root", file=sys.stderr)
         return 2
+    if args.versiones:
+        if not proyecto.versiones:
+            print(f"{tex.name}: su marco no declara versiones")
+            return 0
+        for v in proyecto.versiones:
+            marca = "  ← la que declara el documento" if v["clave"] == proyecto.version_declarada else ""
+            print(f"{v['clave']:<12} {v['nombre']} → {proyecto.job_de(v['clave'])}.pdf{marca}")
+        return 0
+    if args.version and not proyecto.elegir_version(args.version.strip().lower()):
+        disponibles = ", ".join(v["clave"] for v in proyecto.versiones) or "ninguna (el marco no declara versiones)"
+        print(f"compilar.py: versión desconocida «{args.version}»; disponibles: {disponibles}", file=sys.stderr)
+        return 2
     que = "reconstruir" if args.reconstruir else "limpiar" if args.limpiar else "compilar"
     pasos = svc.receta(proyecto, que)
+    version = next((v["nombre"] for v in proyecto.versiones if v["clave"] == proyecto.version), "")
     print(f"LaTeX Studio · {Path(proyecto.principal).name} · {proyecto.texto_motor()} · "
-          f"{pr.NOMBRES_COMPILADOR.get(proyecto.compilador, proyecto.compilador)}", flush=True)
+          f"{pr.NOMBRES_COMPILADOR.get(proyecto.compilador, proyecto.compilador)}" + (f" · versión: {version}" if version else ""),
+          flush=True)
     codigo = 0
     for paso in pasos:
         print(f"→ {paso.descripcion}: {' '.join(paso.argv)}", flush=True)
@@ -61,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"✗ {paso.descripcion}: terminó con el código {codigo}", flush=True)
             return codigo
     if not args.simular:
-        print(f"✓ listo: {svc.pdf_de(Path(proyecto.principal))}", flush=True)
+        print(f"✓ listo: {Path(proyecto.principal).parent / (proyecto.job + '.pdf')}", flush=True)
     return codigo
 
 

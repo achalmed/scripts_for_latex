@@ -57,6 +57,12 @@ documento maestro. Mientras un proyecto está abierto, la ventana vigila sus fue
 relee), el PDF que compile TeXstudio se ve aquí al instante, y con «Compilar cuando otro programa guarde» (Ajustes ›
 Compilación) la ventana compila sola; tras una compilación de fuera, sus problemas se leen aquí (F8 los recorre).
 
+**Versiones de un mismo documento.** Si el marco produce varias salidas de un `.tex` (docencia: examen en blanco,
+claves, solucionario o las tres), bajo el proyecto abierto aparece «Versión»: elegir una la compila con F5 y la muestra
+(su PDF, su SyncTeX, sus problemas) sin tocar el documento. La que compila F5 por omisión —también en TeXstudio, cuyo
+visor abre ese PDF— se fija en «Configurar el documento» › Versión (escribe `% !MODO = soluciones` al inicio).
+Contrato: `docs/configuracion-de-documentos.md` §7.
+
 **Compilar desde TeXstudio con la receta de LaTeX Studio.** El «Compilar» de TeXstudio corre por omisión LuaLaTeX o
 pdfLaTeX a secas: no encuentra las clases de un marco (docencia, escritura, marco_documental…), no corre Biber y no usa
 el `<marco>/scripts/build.sh`. `studio/compilar.py ARCHIVO.tex` compila con la misma receta que la ventana (el

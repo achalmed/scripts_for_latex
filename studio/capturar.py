@@ -41,6 +41,8 @@ def main() -> int:
     parser.add_argument("--paleta", default=None, help="abre la paleta de órdenes con este texto")
     parser.add_argument("--configurar", action="store_true", help="abre «Configurar el documento» del proyecto")
     parser.add_argument("--modulo", type=int, default=0, help="la sección del diálogo de configuración que se muestra")
+    parser.add_argument("--version", default="", help="elige esta versión del proyecto abierto (si su marco declara versiones)")
+    parser.add_argument("--compilar-abierto", action="store_true", help="compila el proyecto abierto (tras elegir --version)")
     parser.add_argument("--texstudio", action="store_true", help="abre «Compilar desde TeXstudio con LaTeX Studio…» (sobre el .ini del HOME temporal)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -116,6 +118,10 @@ def main() -> int:
     def listo():
         if args.vista == "escritura":
             interfaz.pedir.emit("abrir_proyecto", {"ruta": principal})
+            if args.version:
+                QTimer.singleShot(500, lambda: proyectos.elegirVersion(args.version))
+            if args.compilar_abierto:
+                QTimer.singleShot(900, lambda: compilacion.lanzar(principal, "compilar"))
             if args.archivo:
                 archivo = str(Path(principal).parent / args.archivo)
                 QTimer.singleShot(600, lambda: interfaz.pedir.emit("ir_a", {"archivo": archivo, "linea": args.linea}))
@@ -139,7 +145,7 @@ def main() -> int:
             QTimer.singleShot(900, lambda: interfaz.pedir.emit("configurar_texstudio", {}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
-        app.capturar(args.salida, espera_ms=3500)
+        app.capturar(args.salida, espera_ms=9000 if args.compilar_abierto else 3500)
 
     QTimer.singleShot(300, compilar)
     codigo = app.app.exec()

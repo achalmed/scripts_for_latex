@@ -96,3 +96,40 @@ Sin esquema, o además del esquema, todo documento muestra «Documento»: títul
 | cv | `cv/main/config/latex-studio.yml` | el CV multiperfil (categoría «Currículum vítae») |
 | CampusTeX (`11 Book`) | `11 Book/config/latex-studio.yml` | los libros de curso (categoría «Libros de curso») |
 | bookmarks | `bookmarks/config/latex-studio.yml` | solo la categoría del directorio institucional |
+
+Docencia declara además las versiones de `academic-exam` (examen, claves, soluciones, todos; §7).
+
+## 7. Versiones de un mismo `.tex` (`versiones:`)
+
+Un marco cuyo compilador produce varias salidas de un mismo documento —docencia: el examen en blanco, la hoja de claves
+y el solucionario de una evaluación— lo declara en `documentos[i]`:
+
+```yaml
+    versiones:
+      comentario: MODO             # «% !MODO = soluciones» al inicio del .tex: la versión que compila F5
+      argumento: --modo            # cómo se le pide una versión a <marco>/scripts/build.sh
+      omision: examen              # la que vale si el documento no declara ninguna
+      lista:
+        - {clave: examen, nombre: Estudiante (enunciados), job: "{nombre}"}
+        - {clave: soluciones, nombre: Solucionario (paso a paso), job: "{nombre}-soluciones"}
+```
+
+`job` es el nombre de la salida (`{nombre}` = el del `.tex`): de él salen el PDF, el `.log` y el `.synctex.gz` que la
+ventana muestra y lee. El compilador del marco **debe** aceptar `<argumento> <clave>` y, sin él, compilar la versión
+que declara el comentario (o la omisión), así cualquier editor que lo llame sin argumentos compila la que pide el
+documento. Con eso:
+
+- **la ventana** muestra un selector «Versión» bajo el proyecto abierto: elegir una la compila (F5, con
+  `<argumento> <clave>`) y la muestra, **sin escribir en el documento**;
+- **«Configurar el documento»** añade la sección «Versión»: fija la que compila F5 por omisión escribiendo, antes de
+  `\documentclass`, `% !MODO = soluciones` y `% !TeX TXS-program:view = txs:///view-pdf-internal --embedded
+  ?m)-soluciones.pdf` (el visor de TeXstudio abre así ese PDF; `?m)` es el nombre del maestro sin comillas, que `%` sí
+  pone); la de omisión quita las dos líneas. La primera vez que TeXstudio ve esa orden pregunta si la permite
+  (seguridad de sus comentarios mágicos): «Yes to All» la guarda en su lista blanca y no vuelve a preguntar, porque la
+  orden es la misma en todos los documentos;
+- **`studio/compilar.py`** (el «Compilar» de TeXstudio) compila la declarada, o la que diga `--version <clave>`;
+  `--versiones` las lista.
+
+La muestra (`studio/ejemplo/proyectos/marco`) declara `completa` y `resumen` con `--version` y `% !VERSION`; docencia,
+las cuatro de `academic-exam` con `--modo` y `% !MODO`. Pruebas: `tests/test_versiones.py`.
+

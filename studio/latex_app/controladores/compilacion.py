@@ -210,7 +210,7 @@ class Compilacion(QObject):
             elif ok and que == "borrador":
                 self.aviso.emit(f"{Path(ruta).name} compila (borrador, sin PDF) en {segundos:.1f} s · {detalle}.", "positivo")
             elif ok:
-                self.aviso.emit(f"{Path(ruta).stem}.pdf en {segundos:.1f} s · {detalle}.", "positivo" if not n_err and not n_av else "informacion")
+                self.aviso.emit(f"{p.job if p is not None else Path(ruta).stem}.pdf en {segundos:.1f} s · {detalle}.", "positivo" if not n_err and not n_av else "informacion")
             else:
                 self.aviso.emit(f"{Path(ruta).name} no compiló ({segundos:.1f} s) · {detalle}: revisa Problemas (F8 va al siguiente).", "error")
             filas = self._cola.todas()

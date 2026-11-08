@@ -381,6 +381,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         senal.connect(disponibilidad)
 
     # ------------------------------------------------- lo que encadena a los controladores
+    ultimo_job: dict[str, str] = {}
+
     def abierto_cambiado():
         p = proyectos.proyecto_abierto()
         if p is None:
@@ -390,7 +392,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         sincronizacion.vigilar(p.fuentes(), p.pdf or str(Path(p.principal).with_suffix(".pdf")))
         carpeta_synctex = str(Path(p.carpeta) / p.carpeta_aux) if p.carpeta_aux else ""
         visor.abrir(p.pdf, carpeta_synctex)
-        if compilacion._ruta_problemas != p.principal:
+        if compilacion._ruta_problemas != p.principal or ultimo_job.get(p.principal) != p.job:
+            ultimo_job[p.principal] = p.job              # otra versión: su .log tiene otros problemas
             compilacion.leerProblemas(p.principal)
 
     def terminada(ruta: str, ok: bool):
@@ -428,6 +431,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     def configurado(ruta: str):
         if proyectos.hayAbierto and ruta == proyectos.principal:
+            proyectos.olvidar_version(ruta)          # si cambió «% !MODO», manda lo que dice el documento
+            proyectos.refrescar(ruta)
             proyectos.releerEstructura()
 
     proyectos.abiertoCambiado.connect(abierto_cambiado)
