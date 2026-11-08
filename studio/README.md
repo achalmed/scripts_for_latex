@@ -124,8 +124,8 @@ tests/run.sh                                          # desde latex-studio/: la 
   página, más nítida y sin caché en disco; sin él, o con `LATEX_STUDIO_VISOR=pdftoppm`, páginas de `pdftoppm`. Con QtPdf,
   selección de texto, enlaces y búsqueda (Ctrl+Alt+F). Lo de LaTeX es SyncTeX: la marca, el doble clic y «Ir al código
   de este punto» (§1.10, §1.11, §1.13).
-- **SyncTeX necesita el `.synctex.gz`**: `main.sh -k` y latexmk lo dejan; el compilador de `escritura`
-  (`<marco>/scripts/build.sh`) no pasa `-synctex=1` y sus proyectos no lo tienen hasta que ese marco lo añada.
+- **SyncTeX necesita el `.synctex.gz`**: `main.sh -k`, latexmk y los compiladores de `docencia` y `escritura` lo dejan
+  junto al PDF (escritura, desde el 2026-11-08; antes solo en su carpeta de auxiliares, donde la ventana ya lo buscaba).
 - **El editor es un `TextArea`**: sin plegado, sin multicursor, sin corrector ortográfico; el autocompletado es por
   contexto (no conoce los argumentos de cada orden).
 - **«Salir» con cambios sin guardar** pregunta (Ctrl+Q y cerrar la ventana); matar el proceso no.

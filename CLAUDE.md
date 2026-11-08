@@ -74,8 +74,8 @@ Un cambio en la detección de errores se prueba en los tres modos (normal, `-s`,
   (`tests/conftest.py` lo toma de `gui_comun.rutas`). `capturar.py` fija además `PYTHONPATH` al `gui_comun` que lo
   lanzó: con `HOME` temporal no se ve el `pip install --user`, y subir carpetas desde un worktree encontraría otro.
 - **Una `TabBar` vacía rompe el estilo de KDE** (`'height' of null`): la de los archivos vive en un `Loader`.
-- **El `build.sh` de `escritura` no pasa `-synctex=1`** (auxiliares en `<proyecto>/.build/`): sin SyncTeX hasta que lo
-  añada; el de `docencia` lo pasa desde el 2026-11-08.
+- **SyncTeX de los marcos**: `escritura` deja auxiliares en `<proyecto>/.build/` y, desde el 2026-11-08, copia el
+  `.synctex.gz` junto al PDF (TeXstudio y Okular lo buscan ahí); `docencia` pasa `-synctex=1` desde el mismo día.
 - **El registro de una corrida lleva todas las pasadas**: los problemas salen de la última pasada del motor y de las
   líneas `ERROR`/`WARN` de Biber (`compilador.problemas_de_registro`); el `.log` del motor es una sola pasada.
 
