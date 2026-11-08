@@ -39,6 +39,8 @@ def main() -> int:
     parser.add_argument("--sin-compilar", action="store_true")
     parser.add_argument("--synctex", action="store_true", help="marca en el PDF la línea del editor (SyncTeX)")
     parser.add_argument("--paleta", default=None, help="abre la paleta de órdenes con este texto")
+    parser.add_argument("--configurar", action="store_true", help="abre «Configurar el documento» del proyecto")
+    parser.add_argument("--modulo", type=int, default=0, help="la sección del diálogo de configuración que se muestra")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
     args = parser.parse_args()
@@ -82,7 +84,7 @@ def main() -> int:
 
     from latex_app import aplicacion
     from gui_comun.nucleo import Aplicacion
-    from gui_comun.qt import QTimer
+    from gui_comun.qt import QObject, QTimer
 
     trabajo = Path(os.environ["LATEX_STUDIO_CAPTURA"])
     app = Aplicacion(aplicacion.APP_ID, aplicacion.NOMBRE, version=aplicacion.APP_VERSION, nombre_ajustes=aplicacion.APP_NAME)
@@ -123,6 +125,14 @@ def main() -> int:
         raiz.setProperty("mostrarInferior", args.panel >= 0)
         if args.panel >= 0:
             QTimer.singleShot(400, lambda: raiz.property("inferior").mostrarExtra(args.panel) if raiz.property("inferior") else None)
+        if args.configurar:
+            QTimer.singleShot(900, lambda: interfaz.pedir.emit("configurar_documento", {"ruta": principal}))
+            if args.modulo:
+                def modulo():
+                    for hijo in raiz.findChildren(QObject):
+                        if hijo.property("moduloActual") is not None and hijo.property("c") is not None:
+                            hijo.setProperty("moduloActual", args.modulo)
+                QTimer.singleShot(1500, modulo)
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
         app.capturar(args.salida, espera_ms=3500)

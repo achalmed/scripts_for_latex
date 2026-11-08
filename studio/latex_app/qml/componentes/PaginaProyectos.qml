@@ -198,6 +198,7 @@ QQC2.SplitView {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Button { text: "Abrir"; icon.name: "document-open"; highlighted: true; onClicked: raiz.abrir(raiz.actual) }
                 QQC2.Button { text: "Compilar"; icon.name: "run-build"; onClicked: studio.compilacion.lanzar(raiz.actual, "compilar") }
+                QQC2.Button { text: "Configurar"; icon.name: "document-properties"; onClicked: studio.interfaz.pedir("configurar_documento", { ruta: raiz.actual }) }
                 QQC2.Button { text: "PDF"; icon.name: "application-pdf"; enabled: !!raiz.datos.pdf; onClicked: studio.escritorio.abrirConAplicacion(raiz.datos.pdf) }
                 QQC2.Button { text: "Dolphin"; icon.name: "system-file-manager"; onClicked: studio.escritorio.mostrarEnDolphin(raiz.actual) }
             }

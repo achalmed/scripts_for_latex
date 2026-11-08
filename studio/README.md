@@ -6,11 +6,11 @@ estado: activo
 <!-- suite:inicio -->
 **Suite `latex_studio`** · objetivo *latex* · estado *activo* · python · interfaz gui
 
-Entorno de escritura científica (QML + Kirigami sobre gui-comun 2.x): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.
+Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta los proyectos LaTeX de las carpetas de trabajo (WRITING_DIR, DESPACHO_DIR y las que se añadan), los compila con su compilador y su motor (el del marco, latexmk o main.sh; LuaLaTeX + Biber sin declaración), en cola; editor con resaltado, estructura, autocompletado de \ref y \cite, buscar y reemplazar; PDF integrado con pdftoppm y SyncTeX; problemas con causa y acción.
 
 - Escribe en: archivos · simula por defecto: no
-- Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 2.3 (módulo QML GuiComun), script_compilar_latex, poppler-utils (pdftoppm, pdfinfo) y synctex para el visor; latexmk para los proyectos con latexmkrc
-- Nota: No compila por su cuenta: cada proyecto con su compilador (el scripts/build.sh de su marco, latexmk si tiene latexmkrc, o script_compilar_latex/main.sh -k); nunca escribe fuentes salvo Ctrl+S en el editor; no ofrece pdfLaTeX ni XeLaTeX a un proyecto que no los declare (regla 6). Las carpetas de trabajo del usuario van a sus ajustes, nunca al repo.
+- Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 3.0 (módulo QML GuiComun; QApplication para los diálogos de KDE), script_compilar_latex, poppler-utils (pdftoppm, pdfinfo) y synctex para el visor; latexmk para los proyectos con latexmkrc
+- Nota: No compila por su cuenta: cada proyecto con su compilador (el scripts/build.sh de su marco, latexmk si tiene latexmkrc, o script_compilar_latex/main.sh -k); nunca escribe fuentes salvo Ctrl+S en el editor y «Configurar el documento» (Ctrl+Alt+D: solo el preámbulo, tras mostrar la diferencia; lo configurable lo declara el latex-studio.yml del marco); no ofrece pdfLaTeX ni XeLaTeX a un proyecto que no los declare (regla 6). Las carpetas de trabajo del usuario van a sus ajustes, nunca al repo.
 
 Comandos:
 
@@ -20,7 +20,7 @@ main.py --smoke
 ../install.sh
 ```
 
-<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-02); no se edita a mano.</sub>
+<sub>Bloque generado desde `suite.yml` por `core/suites.py generar` (2026-11-08); no se edita a mano.</sub>
 <!-- suite:fin -->
 
 ## Qué es
@@ -42,6 +42,13 @@ el `<marco>/scripts/build.sh` de su marco si la clase es de un marco (como `escr
 compilación nunca escribe fuentes; el editor escribe solo con Ctrl+S y avisa si el archivo cambió fuera. Los problemas
 llevan causa probable, acción recomendada y el detalle del registro (R9); F8 recorre y salta a la línea.
 
+**Configurar el documento** (Ctrl+Alt+D o «Configurar» en la ficha): lo que el marco del documento declara en su
+`latex-studio.yml` —metadatos (curso, estudiante, código, fecha, título, autor, logo…), elementos visibles (nivel,
+tiempo, puntaje, cajas, títulos de etapa, número y título de paso…) y opciones de la clase (tema, salida, modo…)—, una
+sección por grupo. Aceptar muestra la diferencia del preámbulo; «Aplicar» o «Aplicar y compilar» escriben. Sin
+esquema, todo documento ofrece título, autor, fecha y opciones de la clase. Contrato y marcos que lo publican:
+[../docs/configuracion-de-documentos.md](../docs/configuracion-de-documentos.md).
+
 ## Atajos
 
 | atajo | qué hace | atajo | qué hace |
@@ -56,6 +63,7 @@ llevan causa probable, acción recomendada y el detalle del registro (R9); F8 re
 | Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
 | Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+O · Ctrl+Mayús+O | abrir un `.tex` · carpetas de trabajo |
 | Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
+| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones) | | |
 | Ctrl+Alt+F | buscar en el PDF (Intro · Mayús+Intro: siguiente · anterior) | arrastrar en el PDF · Ctrl+C · Ctrl+A | seleccionar · copiar · toda la página (con QtPdf) |
 
 La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
@@ -70,9 +78,10 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | `latex_app/estructura.py` | estructura, etiquetas, claves de los `.bib`, definiciones y autocompletado (sin Qt) |
 | `latex_app/diagnostico.py` | errores presentables (causa y acción) y la revisión de dependencias con `kpsewhich` (sin Qt) |
 | `latex_app/visor.py` | SyncTeX (sin Qt); las páginas son del visor de `gui-comun` 3.2 (`gui_comun.visor_pdf`) |
+| `latex_app/configuracion.py` | la configuración de un documento (sin Qt): busca el `latex-studio.yml` de su marco, lee los valores del preámbulo, calcula la diferencia y la escribe al confirmar (`../docs/configuracion-de-documentos.md`) |
 | `latex_app/compilador.py` | la orden de la CLI, la lectura del registro y `receta()`: los pasos de cada proyecto según su compilador (sin Qt) |
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
-| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) y el visor PDF, de la 3.2 (`VistaPdf`, `gui_comun.visor_pdf.VisorPdf`, del que hereda `studio/latex_app/controladores/visor.py` para SyncTeX) |
+| `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `DialogoConfigurarDocumento`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) y el visor PDF, de la 3.2 (`VistaPdf`, `gui_comun.visor_pdf.VisorPdf`, del que hereda `studio/latex_app/controladores/visor.py` para SyncTeX) |
 | `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
 | `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales |
 

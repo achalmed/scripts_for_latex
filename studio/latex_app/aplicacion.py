@@ -24,6 +24,7 @@ from gui_comun.tareas import Tareas
 from latex_app import compilador as svc
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
+from latex_app.controladores.configuracion import ConfiguracionDocumento
 from gui_comun.editor import ControladorEditor
 from latex_app.controladores.historial import Historial
 from latex_app.controladores.proyectos import Proyectos, cache_del_studio
@@ -141,6 +142,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)
+    configuracion = ConfiguracionDocumento(
+        consola, editor, rutas=lambda: list(ajustes.rutasTex) + sorted({p.marco for p in proyectos.todos() if p.marco}))
     escritorio = app.escritorio                 # gui-comun 3.0: abrir con su aplicación, mostrar en Dolphin, abrir carpeta
     acciones = Acciones()
     # Ctrl+Q es de «Salir» del menú Archivo (pregunta si hay cambios sin guardar): la estándar app.salir lo cede, porque
@@ -172,6 +175,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.registrar("archivo.guardar_todo", "Guardar &todo", "document-save-all", "Ctrl+L", "Archivo", habilitada=False, al_disparar=pedir("guardar_todo"),
                        operacion="escritura")
     acciones.registrar("archivo.cerrar", "&Cerrar el archivo", "document-close", StandardKey.Close, "Archivo", habilitada=False, al_disparar=pedir("cerrar_archivo"))
+    acciones.registrar("documento.configurar", "Configurar el &documento…", "document-properties", "Ctrl+Alt+D", "Archivo",
+                       habilitada=False, al_disparar=lambda *_: interfaz.pedir.emit("configurar_documento", {"ruta": proyectos.principal}),
+                       descripcion="Metadatos, elementos visibles y opciones del documento, según el latex-studio.yml de su marco; "
+                                   "muestra la diferencia y escribe solo al confirmar")
     acciones.registrar("proyecto.cerrar", "Cerrar el &proyecto", "project-development-close", None, "Archivo", habilitada=False, al_disparar=pedir("cerrar_proyecto"))
     acciones.registrar("escritorio.pdf", "Abrir el PDF con su &aplicación", "application-pdf", "Ctrl+Shift+P", "Archivo", habilitada=False,
                        al_disparar=lambda *_: escritorio.abrirConAplicacion(pdf_abierto()), descripcion="El PDF en Okular (o la aplicación de KDE para PDF)")
@@ -298,6 +305,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("archivo.guardar_como", hay_archivo)
         acciones.habilitar("archivo.guardar_todo", editor.hayModificados)
         acciones.habilitar("proyecto.cerrar", hay_proyecto)
+        acciones.habilitar("documento.configurar", hay_proyecto)
         acciones.habilitar("proyectos.detectar", not proyectos.enDeteccion)
         acciones.marcar("compilar.al_guardar", ajustes.compilarAlGuardar)
         acciones.marcar("ver.ajustar", visor.ajustarAncho)
@@ -329,13 +337,19 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
             if ajustes.compilarAlGuardar and not compilacion.enCurso:
                 compilacion.compilar()
 
+    def configurado(ruta: str):
+        if proyectos.hayAbierto and ruta == proyectos.principal:
+            proyectos.releerEstructura()
+
     proyectos.abiertoCambiado.connect(abierto_cambiado)
+    configuracion.aplicado.connect(configurado)
     compilacion.terminada.connect(terminada)
     editor.guardadoArchivo.connect(guardado)
     disponibilidad()
 
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
-                  editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones)
+                  editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
+                  configuracion=configuracion)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)

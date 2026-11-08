@@ -1,0 +1,24 @@
+# config/latex-studio.yml — el esquema del marco de muestra: qué puede configurar LaTeX Studio en sus documentos
+# (contrato: docs/configuracion-de-documentos.md). Lo usan las pruebas y las capturas; ningún dato real.
+version: 1
+marco: muestra
+documentos:
+  - nombre: Memoria
+    clases: [memoria]
+    secciones:
+      - titulo: Datos del documento
+        icono: document-properties
+        descripcion: Lo que imprime la cabecera de la memoria.
+        campos:
+          - {clave: organizacion, etiqueta: Organización, tipo: texto, destino: {orden: '\organizacion'}}
+          - {clave: responsable, etiqueta: Responsable, tipo: texto, ayuda: Nombre y cargo., destino: {orden: '\responsable'}}
+          - {clave: logo, etiqueta: Logo, tipo: archivo, destino: {orden: '\logo'}}
+      - titulo: Elementos visibles
+        icono: view-visible
+        campos:
+          - {clave: mostrarlogo, etiqueta: Mostrar el logo, tipo: interruptor, omision: true, destino: {lista: '\configuracion', clave: logo}}
+          - {clave: mostrarfecha, etiqueta: Mostrar la fecha, tipo: interruptor, omision: true, destino: {lista: '\configuracion', clave: fecha}}
+      - titulo: Salida
+        icono: document-print
+        campos:
+          - {clave: dos, etiqueta: Dos columnas, tipo: interruptor, omision: false, destino: {opcion_clase: twocolumn}}

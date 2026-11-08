@@ -105,6 +105,16 @@ de `studio/latex_app/visor.py` (que queda solo con SyncTeX); `tests/test_visor_q
 Una trampa de PySide: una propiedad de la subclase con la señal de la base como `notify` tumba QML al crear el
 metaobjeto (fallo de segmentación); `haySynctex` tiene su señal propia.
 
+### §1.14 Configurar el documento por el esquema de su marco (2026-11-08)
+
+El autor pidió controlar desde la ventana todo lo configurable de sus documentos (metadatos, elementos visibles,
+opciones), en docencia, escritura, los documentos legislativos y los demás marcos. Se decidió que **cada marco declara
+lo suyo en `latex-studio.yml`** y la ventana lo pinta de forma genérica (`docs/configuracion-de-documentos.md`): así lo
+configurable vive una sola vez, junto a las clases que lo implementan, y un marco nuevo no exige tocar la ventana.
+Descartado: campos fijos por marco dentro de LaTeX Studio (acoplaría la ventana a cada clase y se desfasaría). La
+escritura es la única excepción a «nunca se escriben fuentes» fuera de Ctrl+S: solo el preámbulo, con la diferencia a
+la vista y confirmación, y nunca sobre un archivo con cambios sin guardar en el editor.
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

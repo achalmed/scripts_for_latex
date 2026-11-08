@@ -85,6 +85,7 @@ VentanaStudio {
             case "compilar_marcados": studio.interfaz.fijarVista("proyectos"); paginaProyectos.compilarMarcados(); break
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
             case "atajos": dialogoAtajos.open(); break
+            case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
             case "salir": ventana.close(); break
             }
         }
@@ -268,5 +269,6 @@ VentanaStudio {
             }
         }
     }
+    DialogoConfigurarDocumento { id: dialogoConfigurar }
     dialogoAjustes: DialogoAjustesStudio {}
 }

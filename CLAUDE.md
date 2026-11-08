@@ -28,7 +28,11 @@ studios) y el compilador del `.tex` suelto (`script_compilar_latex/`, alias `com
   otro motor ni ofrece pdfLaTeX o XeLaTeX a quien no los declare (regla 6; `tests/test_studio.py` lo vigila). Una opción
   nueva de `main.sh` entra primero en la CLI.
 - **Nunca se escriben fuentes**: compilar no las toca y el editor escribe solo con Ctrl+S (`Editor.guardar`), sin pisar
-  un cambio externo sin confirmación. Limpiar muestra la lista y confirma.
+  un cambio externo sin confirmación. Limpiar muestra la lista y confirma. La única otra escritura es «Configurar el
+  documento» (Ctrl+Alt+D, `latex_app/configuracion.py`): toca solo el preámbulo, muestra la diferencia y escribe al
+  confirmar, y no pisa un archivo con cambios sin guardar en el editor.
+- **Lo configurable de un documento lo declara su marco** en `latex-studio.yml` (contrato:
+  `docs/configuracion-de-documentos.md`); la ventana no sabe nada de ningún marco ni añade campos propios de uno.
 - **Las carpetas de trabajo salen de `core/env.py`** (`WRITING_DIR`, `DESPACHO_DIR`; el entorno manda) y las del
   usuario van a QSettings: ninguna ruta de la máquina ni nombre del despacho en el repo, las pruebas o las capturas.
   **Ninguna prueba ni sesión abre, lee ni compila documentos del despacho**: las pruebas usan `studio/ejemplo/proyectos/`.
@@ -94,6 +98,7 @@ un PDF anterior en la carpeta.
 | manifiesto de la suite | `script_compilar_latex/suite.yml` · `studio/suite.yml` |
 | la ventana: acciones, controladores, QML | `studio/latex_app/aplicacion.py` · `studio/latex_app/controladores/` · `studio/latex_app/qml/` |
 | detección, estructura, diagnósticos, visor, recetas | `studio/latex_app/{proyectos,estructura,diagnostico,visor,compilador}.py` (sin Qt) |
+| configuración de documentos (esquema, lectura, diferencia, escritura) | `studio/latex_app/configuracion.py` (sin Qt) · `docs/configuracion-de-documentos.md` |
 | el alias `compilar` | `~/.dotfiles/shell/.zshrc` (ruta literal: no carga `core/`) |
 
 <!-- Notas para mantenedores: longitud y forma según la normativa documental 3.11; AGENTS.md es un enlace a este archivo. -->
