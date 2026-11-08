@@ -86,6 +86,7 @@ VentanaStudio {
             case "synctex": if (e) studio.visor.desdeCodigo(e.ruta, e.lineaActual, e.columnaActual); break
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
+            case "configurar_texstudio": dialogoTexstudio.abrir(); break
             case "texstudio":
                 if (e) studio.sistema.abrirEnTexstudio(e.ruta, e.lineaActual, p.hayAbierto ? p.principal : "")
                 else if (datos.ruta || p.hayAbierto) studio.sistema.abrirEnTexstudio(datos.ruta || p.principal, 1, datos.ruta || p.principal)
@@ -102,7 +103,14 @@ VentanaStudio {
     }
 
     Connections { target: studio.compilacion; function onIrA(archivo, linea) { ventana.irA(archivo, linea) } }
-    Connections { target: studio.visor; function onIrACodigo(archivo, linea) { ventana.irA(archivo, linea) } }
+    Connections {
+        target: studio.visor
+        // doble clic en el PDF (SyncTeX): al código aquí o, si se eligió en Ajustes, en TeXstudio
+        function onIrACodigo(archivo, linea) {
+            if (studio.ajustes.saltarATexstudio && studio.sistema.hayTexstudio) studio.sistema.abrirEnTexstudio(archivo, linea, p.hayAbierto ? p.principal : "")
+            else ventana.irA(archivo, linea)
+        }
+    }
     Connections {
         target: studio.compilacion
         function onTerminada(ruta, ok) { if (ruta === p.principal && !ok) ventana.mostrarPanel(0) }
@@ -274,5 +282,6 @@ VentanaStudio {
         }
     }
     DialogoConfigurarDocumento { id: dialogoConfigurar }
+    DialogoTexstudio { id: dialogoTexstudio }
     dialogoAjustes: DialogoAjustesStudio {}
 }

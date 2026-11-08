@@ -41,6 +41,7 @@ def main() -> int:
     parser.add_argument("--paleta", default=None, help="abre la paleta de órdenes con este texto")
     parser.add_argument("--configurar", action="store_true", help="abre «Configurar el documento» del proyecto")
     parser.add_argument("--modulo", type=int, default=0, help="la sección del diálogo de configuración que se muestra")
+    parser.add_argument("--texstudio", action="store_true", help="abre «Compilar desde TeXstudio con LaTeX Studio…» (sobre el .ini del HOME temporal)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
     args = parser.parse_args()
@@ -134,6 +135,8 @@ def main() -> int:
                         if hijo.property("moduloActual") is not None and hijo.property("c") is not None:
                             hijo.setProperty("moduloActual", args.modulo)
                 QTimer.singleShot(1500, modulo)
+        if args.texstudio:
+            QTimer.singleShot(900, lambda: interfaz.pedir.emit("configurar_texstudio", {}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
         app.capturar(args.salida, espera_ms=3500)

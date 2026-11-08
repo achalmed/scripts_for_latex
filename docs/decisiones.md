@@ -123,6 +123,15 @@ lo abierto en el editor: lo guardado fuera se recarga, el PDF compilado fuera se
 revisión ortográfica que KDE enciende sola en los campos de texto queda apagada (marcaba en rojo el LaTeX en el idioma
 de Sonnet) y el visor dibuja al doble de resolución (Pdfium a 1× empastaba el texto frente a Poppler).
 
+**Una receta, dos programas (2026-11-08).** TeXstudio no podía compilar los documentos de un marco: su «Compilar» es
+un motor a secas, sin las clases del marco ni Biber. Se decidió que la receta siga existiendo una sola vez
+(`compilador.receta`) y que TeXstudio la llame por un puente sin Qt, `studio/compilar.py`; LaTeX Studio ofrece
+escribir esa orden en la configuración de TeXstudio. Descartado: copiar la receta en un guion de TeXstudio (se
+desfasaría) o escribir su configuración con QSettings (perdería los valores de tipos propios de TeXstudio, que Qt no
+sabe leer): se edita el `.ini` como texto, solo cuatro claves, con TeXstudio cerrado (al salir lo reescribe), respaldo
+al lado y «Deshacer». Es configuración de otro programa, no una fuente: la escribe solo el autor, al confirmar. El
+SyncTeX inverso puede llevar a TeXstudio (ajuste), y el marco de docencia pasa `-synctex=1` desde este día.
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)

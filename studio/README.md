@@ -43,7 +43,8 @@ el `<marco>/scripts/build.sh` de su marco si la clase es de un marco (como `escr
 compilación nunca escribe fuentes; el editor escribe solo con Ctrl+S y avisa si el archivo cambió fuera. Los problemas
 llevan causa probable, acción recomendada y el detalle del registro (R9); F8 recorre y salta a la línea.
 
-**Configurar el documento** (Ctrl+Alt+D o «Configurar» en la ficha): lo que el marco del documento declara en su
+**Configurar el documento** (Ctrl+Alt+D, el botón «Configurar» de la barra de arriba, Herramientas › «Configurar el
+documento…» o «Configurar» en la ficha): lo que el marco del documento declara en su
 `latex-studio.yml` —metadatos (curso, estudiante, código, fecha, título, autor, logo…), elementos visibles (nivel,
 tiempo, puntaje, cajas, títulos de etapa, número y título de paso…) y opciones de la clase (tema, salida, modo…)—, una
 sección por grupo. Aceptar muestra la diferencia del preámbulo; «Aplicar» o «Aplicar y compilar» escriben. Sin
@@ -54,7 +55,22 @@ esquema, todo documento ofrece título, autor, fecha y opciones de la clase. Con
 documento maestro. Mientras un proyecto está abierto, la ventana vigila sus fuentes y su PDF
 (`latex_app/controladores/sincronizacion.py`): lo que se guarde en TeXstudio se recarga aquí (y la estructura se
 relee), el PDF que compile TeXstudio se ve aquí al instante, y con «Compilar cuando otro programa guarde» (Ajustes ›
-Compilación) la ventana compila sola. La revisión ortográfica del editor está apagada por omisión (Ajustes › Editor).
+Compilación) la ventana compila sola; tras una compilación de fuera, sus problemas se leen aquí (F8 los recorre).
+
+**Compilar desde TeXstudio con la receta de LaTeX Studio.** El «Compilar» de TeXstudio corre por omisión LuaLaTeX o
+pdfLaTeX a secas: no encuentra las clases de un marco (docencia, escritura, marco_documental…), no corre Biber y no usa
+el `<marco>/scripts/build.sh`. `studio/compilar.py ARCHIVO.tex` compila con la misma receta que la ventana (el
+compilador del marco, latexmk o `main.sh -k` con LuaLaTeX + Biber; un capítulo compila su principal), desde TeXstudio,
+Kate o la terminal; admite `--reconstruir`, `--limpiar` y `--simular`. Herramientas › «Compilar desde TeXstudio con
+LaTeX Studio…» (también en Ajustes › Compilación) muestra las cuatro claves de `~/.config/texstudio/texstudio.ini` que
+cambiarían (`compile` → `compilar.py %.tex`, `bibliography` → Biber, rutas de registro y de PDF → `.build`) y las
+escribe al confirmar, con TeXstudio cerrado y un respaldo al lado; «Deshacer» vuelve al respaldo. Lo mismo en la
+terminal: `python3 studio/latex_app/texstudio.py [--aplicar | --deshacer]` (simula sin opciones).
+
+**Lo que LaTeX Studio añade a TeXstudio**: la configuración por esquema de cada documento, la categoría y el compilador
+de cada proyecto, los problemas explicados con causa y acción, la cola de compilación y el historial. Con Ajustes ›
+Editor › «Doble clic en el PDF: ir al código en TeXstudio», el SyncTeX inverso abre TeXstudio en esa línea (para
+escribir en TeXstudio y leer el PDF aquí). La revisión ortográfica del editor está apagada por omisión (Ajustes › Editor).
 
 ## Atajos
 
@@ -70,7 +86,7 @@ Compilación) la ventana compila sola. La revisión ortográfica del editor est�
 | Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
 | Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+O · Ctrl+Mayús+O | abrir un `.tex` · carpetas de trabajo |
 | Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
-| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones) | Ctrl+Mayús+E | abrir en TeXstudio (archivo y línea actuales) |
+| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones; botón «Configurar» de la barra) | Ctrl+Mayús+E | abrir en TeXstudio (archivo y línea actuales; botón «TeXstudio» de la barra) |
 | Ctrl+Alt+F | buscar en el PDF (Intro · Mayús+Intro: siguiente · anterior) | arrastrar en el PDF · Ctrl+C · Ctrl+A | seleccionar · copiar · toda la página (con QtPdf) |
 
 La lista completa, generada de las acciones: Ayuda › Atajos de teclado.

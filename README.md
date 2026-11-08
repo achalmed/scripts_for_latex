@@ -52,6 +52,10 @@ En la ventana (QML + Kirigami sobre `gui-comun` 2.x; `studio/README.md` tiene la
 Proyectos, Ctrl+2 Escritura; F5 o Ctrl+B compila, F6 reconstruye, F8 va al siguiente problema, Ctrl+clic en el editor
 lleva al PDF y doble clic en el PDF vuelve al código. Corre con `/usr/bin/python3` (el Qt del sistema, que trae Kirigami).
 
+Junto a TeXstudio: `studio/compilar.py ARCHIVO.tex` compila cualquier documento con la receta de la ventana (su marco,
+latexmk o LuaLaTeX + Biber), y Herramientas › «Compilar desde TeXstudio con LaTeX Studio…» lo deja como el «Compilar»
+de TeXstudio (simula, respalda y se deshace; `studio/README.md` §Junto a TeXstudio).
+
 El manual (opciones, cómo se indica la ruta, qué borra la limpieza, problemas frecuentes) es
 `script_compilar_latex/README.md`; el porqué de cada elección, `docs/decisiones.md`; lo pendiente,
 `estado.md`.

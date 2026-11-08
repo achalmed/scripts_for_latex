@@ -59,6 +59,8 @@ DialogoAjustes {
             FormCard.FormCard {
                 FormCard.FormTextDelegate { text: "Cada proyecto se compila con su compilador y su motor: el de su marco (scripts/build.sh), latexmk si tiene latexmkrc, o script_compilar_latex con el motor que declare (% !TEX program, arara) y, sin declaración, LuaLaTeX + Biber." }
                 FormCard.FormSwitchDelegate { text: "Compilar al guardar"; description: "Ctrl+S guarda y compila el proyecto abierto"; checked: dialogo.a.compilarAlGuardar; onToggled: dialogo.a.compilarAlGuardar = checked }
+                FormCard.FormSwitchDelegate { text: "Doble clic en el PDF: ir al código en TeXstudio"; description: "SyncTeX hacia TeXstudio en vez de este editor (para quien escribe en TeXstudio y ve el PDF aquí)"; checked: dialogo.a.saltarATexstudio; onToggled: dialogo.a.saltarATexstudio = checked }
+                FormCard.FormButtonDelegate { text: "Compilar desde TeXstudio con LaTeX Studio…"; icon.name: "texstudio"; description: "Que «Compilar» de TeXstudio use la receta de esta ventana"; onClicked: studio.interfaz.pedir("configurar_texstudio", {}) }
                 FormCard.FormSwitchDelegate { text: "Compilar cuando otro programa guarde"; description: "Al trabajar con TeXstudio u otro editor: cuando un archivo del proyecto abierto cambia fuera de la ventana, se compila aquí (lo cambiado se recarga siempre)"; checked: dialogo.a.compilarAlCambiarFuera; onToggled: dialogo.a.compilarAlCambiarFuera = checked }
             }
             FormCard.FormHeader { title: "Rutas de TeX extra (TEXINPUTS)" }

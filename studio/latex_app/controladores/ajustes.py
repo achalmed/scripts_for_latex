@@ -176,6 +176,8 @@ class Ajustes(QObject):
     revisarOrtografia = Property(bool, lambda self: self._bool("editor/ortografia", False),
                                  lambda self, v: (self._s.setValue("editor/ortografia", bool(v)), self.cambiado.emit()), notify=cambiado)
     # Trabajo junto a TeXstudio (u otro editor): compilar cuando un archivo del proyecto abierto cambia fuera de la ventana.
+    saltarATexstudio = Property(bool, lambda self: self._bool("editor/saltar_a_texstudio", False),
+                                lambda self, v: (self._s.setValue("editor/saltar_a_texstudio", bool(v)), self.cambiado.emit()), notify=cambiado)
     compilarAlCambiarFuera = Property(bool, lambda self: self._bool("editor/compilar_al_cambiar_fuera", False),
                                       lambda self, v: (self._s.setValue("editor/compilar_al_cambiar_fuera", bool(v)), self.cambiado.emit()),
                                       notify=cambiado)

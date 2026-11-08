@@ -2,6 +2,7 @@
 tipo: doc
 titulo: 'Configuración de documentos: el esquema latex-studio.yml que cada marco publica'
 estado: activo
+forma: referencia
 ---
 # Configuración de documentos desde LaTeX Studio (`latex-studio.yml`)
 
@@ -17,7 +18,8 @@ vez, en su repo. Un marco nuevo solo tiene que escribir su `latex-studio.yml`.
 ## 1. Dónde vive el esquema
 
 LaTeX Studio busca, desde la carpeta del documento principal hacia arriba (hasta 10 niveles), el primer archivo de
-estos tres nombres: `latex-studio.yml`, `config/latex-studio.yml`, `core/config/latex-studio.yml`. El primero que
+estos tres nombres, relativos a cada carpeta: `latex-studio.yml`, el mismo dentro de `config/` y el mismo dentro
+de `config/` bajo `core/` (así lo publica escritura). El primero que
 encuentra es el esquema del marco del documento. Sin esquema, el documento recibe solo la sección genérica (§5).
 
 ## 2. Forma del esquema

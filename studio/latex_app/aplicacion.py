@@ -133,6 +133,31 @@ class Sistema(QObject):
         except OSError as e:
             self.aviso.emit(f"No se pudo abrir TeXstudio: {e.strerror}", "error")
 
+    @Slot(result="QVariantMap")
+    def estadoTexstudio(self) -> dict:
+        from latex_app import texstudio as txs
+        ini = txs.ruta_ini()
+        return {"instalado": shutil.which("texstudio") is not None, "abierto": txs.texstudio_abierto(),
+                "existe": ini.is_file(), "configurado": txs.configurado(), "ini": str(ini), "orden": str(txs.COMPILAR),
+                "enlace": str(ini.resolve()) if ini.is_symlink() else "",
+                "cambios": [{"clave": k.replace("%20", " "), "actual": a, "nuevo": n} for k, a, n in txs.cambios()]}
+
+    @Slot(result=str)
+    def configurarTexstudio(self) -> str:
+        from latex_app import texstudio as txs
+        error = txs.aplicar()
+        if not error:
+            self.consola.registrar("info", f"TeXstudio compila ahora con LaTeX Studio ({txs.ruta_ini()}; respaldo al lado)")
+        return error
+
+    @Slot(result=str)
+    def deshacerTexstudio(self) -> str:
+        from latex_app import texstudio as txs
+        error = txs.deshacer()
+        if not error:
+            self.consola.registrar("info", "TeXstudio: restaurada la configuración anterior")
+        return error
+
     def orden_editor(self, ruta: str, linea: int = 0) -> list[str]:
         preferido = self.ajustes.editor or "kate"
         for editor in (preferido, "kate", "kwrite", "code"):
@@ -209,6 +234,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        al_disparar=pedir("texstudio"),
                        descripcion="El archivo actual en TeXstudio, en la línea del cursor (o el principal del proyecto como "
                                    "documento maestro); lo que se guarde allí se recarga aquí y el PDF que compile se ve aquí")
+    acciones.registrar("texstudio.configurar", "Compilar desde TeXstudio con LaTeX Studio…", "configure", None, "Herramientas",
+                       al_disparar=pedir("configurar_texstudio"),
+                       descripcion="Que «Compilar» de TeXstudio use la misma receta que esta ventana (studio/compilar.py: el "
+                                   "compilador del marco, latexmk o LuaLaTeX + Biber); muestra el cambio y guarda respaldo")
     acciones.registrar("documento.configurar", "Configurar el &documento…", "document-properties", "Ctrl+Alt+D", "Archivo",
                        habilitada=False, al_disparar=lambda *_: interfaz.pedir.emit("configurar_documento", {"ruta": proyectos.principal}),
                        descripcion="Metadatos, elementos visibles y opciones del documento, según el latex-studio.yml de su marco; "
@@ -290,18 +319,18 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     acciones.definir_menus([
         ("&Archivo", ["archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "|", "archivo.guardar", "archivo.guardar_como", "archivo.guardar_todo",
                       "archivo.cerrar", "proyecto.cerrar", "|", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
-                      "escritorio.copiar", "escritorio.editor", "|", "archivo.salir"]),
+                      "escritorio.copiar", "escritorio.editor", "archivo.texstudio", "|", "archivo.salir"]),
         ("&Editar", ["editar.buscar", "editar.reemplazar", "editar.ir_linea", "|", "editar.completar", "editar.comentar"]),
         ("&Ver", ["ver.proyectos", "ver.escritura", "|", "ventana.navegacion", "ver.pdf", "ventana.inferior", "|",
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
         ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
                        "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
-        ("&Herramientas", ["ventana.paleta"]),
+        ("&Herramientas", ["documento.configurar", "|", "texstudio.configurar", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
     ])
     acciones.definir_barra(["compilar.compilar", "compilar.cancelar", "compilar.reconstruir", "|", "archivo.guardar", "editar.buscar", "|",
-                            "synctex.pdf", "escritorio.pdf"])
+                            "synctex.pdf", "escritorio.pdf", "|", "documento.configurar", "archivo.texstudio"])
 
     # la paleta: las vistas, las categorías y cada proyecto detectado
     def entradas_paleta(texto: str) -> list[dict]:
@@ -383,8 +412,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     def pdf_de_fuera(_pdf: str):
         if not compilacion.enCurso:
-            consola.registrar("info", "El PDF cambió fuera de la ventana: recargado.")
+            consola.registrar("info", "El PDF cambió fuera de la ventana (TeXstudio u otro): recargado.")
             abierto_cambiado()
+            if proyectos.hayAbierto:
+                compilacion.leerProblemas(proyectos.principal)      # los problemas de esa compilación, aquí
 
     sincronizacion.fuentesCambiadas.connect(fuentes_de_fuera)
     sincronizacion.pdfCambiado.connect(pdf_de_fuera)
