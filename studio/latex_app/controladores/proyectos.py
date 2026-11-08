@@ -146,7 +146,7 @@ class Proyectos(QObject):
         self._detectado = True
 
     def _poner(self, proyectos: list[pr.Proyecto]) -> None:
-        self._proyectos = sorted(proyectos, key=lambda p: (pr.CATEGORIAS.index(p.categoria), p.principal))
+        self._proyectos = sorted(proyectos, key=lambda p: (pr.orden_categoria(p.categoria), p.principal))
         self._por_ruta = {p.principal: p for p in self._proyectos}
         self._tabla.poner([fila_proyecto(p, self._en_curso) for p in self._proyectos])
         if self._abierto is not None and self._abierto.principal in self._por_ruta:
@@ -196,15 +196,20 @@ class Proyectos(QObject):
     def categorias(self) -> list:
         """Las filas de la navegación: Todas, Recientes y cada categoría con proyectos (ninguna vacía, R6)."""
         cuenta = {c: 0 for c in pr.CATEGORIAS}
+        iconos_extra: dict[str, str] = {}
         for p in self._proyectos:
-            cuenta[p.categoria] += 1
+            cuenta[p.categoria] = cuenta.get(p.categoria, 0) + 1
+            if p.categoria not in pr.CATEGORIAS:          # declarada por el esquema de un marco (con su icono)
+                iconos_extra.setdefault(p.categoria, p.categoria_icono or "folder-documents")
         recientes = set(self.historial.recientes())
         filas = [{"nombre": TODAS, "texto": "Todos los proyectos", "icono": "view-list-details", "contador": len(self._proyectos)},
                  {"nombre": RECIENTES, "texto": "Recientes", "icono": "document-open-recent",
                   "contador": sum(1 for p in self._proyectos if p.principal in recientes)}]
         iconos = ["document-edit", "school", "document-new", "view-pim-journal", "view-pim-mail", "view-calendar-tasks",
-                  "run-build-prune", "folder-documents"]
-        filas += [{"nombre": c, "texto": c, "icono": iconos[i], "contador": cuenta[c]} for i, c in enumerate(pr.CATEGORIAS) if cuenta[c]]
+                  "applications-internet", "view-pim-notes", "archive-extract", "run-build-prune", "folder-documents"]
+        icono = {c: iconos[i] for i, c in enumerate(pr.CATEGORIAS)} | iconos_extra
+        filas += [{"nombre": c, "texto": c, "icono": icono[c], "contador": cuenta[c]}
+                  for c in sorted((c for c in cuenta if cuenta[c]), key=pr.orden_categoria)]
         return filas
 
     @Property("QVariantMap", notify=cambiado)
@@ -259,7 +264,7 @@ class Proyectos(QObject):
         if p is None:
             return None
         nuevo = pr.construir(Path(p.principal), Path(p.raiz), self._cache, en_despacho=False)
-        nuevo.categoria, nuevo.categoria_motivo = p.categoria, p.categoria_motivo
+        nuevo.categoria, nuevo.categoria_motivo, nuevo.categoria_icono = p.categoria, p.categoria_motivo, p.categoria_icono
         pr.leer_estado(nuevo, self._cache, self.registro_de(Path(p.principal)))
         if ruta in self._por_ruta:
             i = self._proyectos.index(self._por_ruta[ruta])

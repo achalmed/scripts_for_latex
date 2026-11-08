@@ -29,6 +29,8 @@ marco: docencia
 documentos:                      # uno por familia de clases; se elige el primero cuya lista `clases` contiene la clase
   - nombre: Evaluación
     clases: [academic-exam]      # vacío u omitido: todas las clases
+    categoria: Docencia y evaluaciones   # opcional: la categoría de la barra lateral para estos documentos
+    icono: view-calendar-tasks           # opcional: su icono (Breeze)
     secciones:
       - titulo: Datos de la evaluación
         icono: document-properties          # nombre de icono de Breeze
@@ -43,6 +45,11 @@ documentos:                      # uno por familia de clases; se elige el primer
             opciones_desde: {carpeta: ../../sistema-editorial/temas, extension: .yml}  # alternativa a `opciones`
             destino: {orden: '\curso'}      # dónde se lee y se escribe (§3)
 ```
+
+`categoria` (y `icono`) dice en qué categoría de la ventana aparecen esos documentos; una categoría que no es de las
+fijas se crea sola. Así ningún documento de un marco con esquema cae en «Otros proyectos». Sin categoría declarada, la
+ventana decide por la clase y por la carpeta (reglas R6 de `proyectos.categorizar`: también reconoce la salida de Quarto
+junto a su `.qmd`, las plantillas de Pandoc, `vendor/`, `archivo/` y `notas/`).
 
 `opciones_desde` lista los nombres (sin extensión) de los archivos de una carpeta, relativa al archivo del esquema;
 sirve para valores que cambian con el marco (temas, formatos). `tipo: archivo` es una ruta (logo, imagen) relativa al
@@ -84,5 +91,6 @@ Sin esquema, o además del esquema, todo documento muestra «Documento»: títul
 | escritura | `escritura/core/config/latex-studio.yml` | opciones de clase (formato, tema, salida, modo, doblecara…) y metadatos `\setmeta` de `metadata.tex` |
 | qillqasqa (marco_documental) | `qillqasqa/marco_documental/config/latex-studio.yml` | los documentos institucionales y legislativos: sus metadatos y opciones |
 | yupay | `yupay/…/latex-studio.yml` | la rendición de viáticos |
-| cv | `cv/…/latex-studio.yml` | el CV multiperfil |
-| CampusTeX (`11 Book`) | `11 Book/config/latex-studio.yml` | los libros de curso |
+| cv | `cv/main/config/latex-studio.yml` | el CV multiperfil (categoría «Currículum vítae») |
+| CampusTeX (`11 Book`) | `11 Book/config/latex-studio.yml` | los libros de curso (categoría «Libros de curso») |
+| bookmarks | `bookmarks/config/latex-studio.yml` | solo la categoría del directorio institucional |

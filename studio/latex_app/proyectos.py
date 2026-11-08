@@ -28,8 +28,9 @@ LIMITE_LECTURA = 512 * 1024                  # un .tex más grande (tablas gener
 VERSION_CACHE = 4
 
 CATEGORIAS = ("Escritura académica", "Tesis y trabajos de investigación", "Artículos científicos",
-              "Documentos legislativos", "Documentos institucionales", "Docencia y evaluaciones", "Pruebas y plantillas",
-              "Otros proyectos")
+              "Documentos legislativos", "Documentos institucionales", "Docencia y evaluaciones", "Publicaciones (Quarto)",
+              "Notas y apuntes", "Archivo e histórico", "Pruebas y plantillas", "Otros proyectos")
+DOCENCIA, QUARTO, NOTAS, ARCHIVO, PRUEBAS, OTROS = CATEGORIAS[5:]
 NOMBRES_MOTOR = {"lualatex": "LuaLaTeX", "pdflatex": "pdfLaTeX", "xelatex": "XeLaTeX"}
 NOMBRES_BIB = {"biber": "Biber", "bibtex": "BibTeX", "ninguna": ""}
 NOMBRES_COMPILADOR = {"marco": "compilador del marco", "latexmk": "latexmk (latexmkrc)", "main.sh": "script_compilar_latex"}
@@ -64,8 +65,12 @@ _CATEGORIA_POR_CARPETA = {
     "theses": 1, "tesis": 1, "thesis": 1, "articles": 2, "articulos": 2, "articulo": 2, "papers": 2,
     "essays": 0, "ensayos": 0, "monographs": 0, "monografias": 0, "reports": 0, "informes": 0, "books": 0, "libros": 0,
     "legislativo": 3, "proyectos-de-ley": 3, "dictamenes": 3,
+    "sesiones": 5, "sessions": 5, "_ediciones": 5, "ediciones": 5, "diapositivas": 5, "slides": 5, "evaluaciones": 5,
+    "notas": 7, "notes": 7, "apuntes": 7,
+    "archivo": 8, "archive": 8, "_archive": 8, "historico": 8, "legado": 8, "legacy": 8,
 }
 _CARPETAS_PRUEBA = {"pruebas", "prueba", "tests", "test", "plantillas", "templates", "ejemplos", "examples", "muestras",
+                    "ejemplo", "example", "vendor", "scaffolds", "_extensions", "_plantillas",
                     "galeria", "deben-compilar", "deben-fallar"}
 _ESQUEMAS_LEGISLATIVOS = ("legislativ", "dictamen", "mocion", "pedido-de-informacion", "analisis-normativo", "proyecto-de-ley")
 
@@ -217,6 +222,7 @@ class Proyecto:
     indice: bool = False                  # \makeindex: main.sh -i
     glosarios: bool = False               # \makeglossaries: main.sh -g
     categoria: str = "Otros proyectos"
+    categoria_icono: str = ""            # el icono de una categoría declarada por el esquema del marco
     categoria_motivo: str = ""
     # estado (del disco)
     estado: str = "sin_compilar"
@@ -469,15 +475,57 @@ def _proyecto_yaml(carpeta: Path) -> dict:
     return salida
 
 
+_ESQUEMA_DE_CARPETA: dict[str, str] = {}
+_DATOS_ESQUEMA: dict[str, tuple[float, dict]] = {}
+
+
+def categoria_de_esquema(principal: Path, clase: str) -> tuple[str, str, str] | None:
+    """(categoría, icono, marco) que declara el `latex-studio.yml` del marco del documento para su clase
+    (`documentos[i].categoria`, `docs/configuracion-de-documentos.md` §2), o None. Se guarda por carpeta y por fecha."""
+    from latex_app import configuracion as cf
+    carpeta = str(principal.parent)
+    if carpeta not in _ESQUEMA_DE_CARPETA:
+        hallado = cf.buscar_esquema(principal)
+        _ESQUEMA_DE_CARPETA[carpeta] = str(hallado) if hallado else ""
+    ruta = _ESQUEMA_DE_CARPETA[carpeta]
+    if not ruta:
+        return None
+    try:
+        fecha = os.stat(ruta).st_mtime
+        if ruta not in _DATOS_ESQUEMA or _DATOS_ESQUEMA[ruta][0] != fecha:
+            _DATOS_ESQUEMA[ruta] = (fecha, cf.cargar_esquema(Path(ruta)))
+    except (OSError, cf.ErrorEsquema):
+        return None
+    datos = _DATOS_ESQUEMA[ruta][1]
+    for doc in datos.get("documentos") or []:
+        clases = doc.get("clases") or []
+        if (not clases or clase in clases) and doc.get("categoria"):
+            return str(doc["categoria"]), str(doc.get("icono") or "folder-documents"), str(datos.get("marco", ""))
+    return None
+
+
+def orden_categoria(nombre: str) -> tuple[int, str]:
+    """Cómo se ordenan las categorías: las fijas en su orden, las que declaran los marcos antes de «Pruebas y plantillas»
+    y «Otros proyectos» (por nombre)."""
+    if nombre in CATEGORIAS:
+        i = CATEGORIAS.index(nombre)
+        return (i + 1000 if nombre in (CATEGORIAS[-2], CATEGORIAS[-1]) else i, "")
+    return (500, nombre)
+
+
 def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = False) -> tuple[str, str]:
     """(categoría, motivo) con la regla R6; «Otros proyectos» si no hay información."""
     try:
-        partes = [p.lower() for p in principal.parent.relative_to(raiz).parts]
+        partes = [raiz.name.lower()] + [p.lower() for p in principal.parent.relative_to(raiz).parts]   # la raíz también cuenta
     except ValueError:
         partes = [p.lower() for p in principal.parent.parts[-3:]]
     prueba = next((p for p in partes if p in _CARPETAS_PRUEBA), "")
     if prueba:
-        return CATEGORIAS[6], f"carpeta «{prueba}»"
+        return PRUEBAS, f"carpeta «{prueba}»"
+    if "$" in clase:                                    # plantilla de Pandoc ($documentclass$)
+        return PRUEBAS, "plantilla de Pandoc"
+    if principal.with_suffix(".qmd").is_file():        # el .tex que Quarto deja junto a su .qmd (keep-tex)
+        return QUARTO, f"salida de Quarto de {principal.with_suffix('.qmd').name}"
     yaml = _proyecto_yaml(principal.parent)
     if yaml:
         esquema, tipo, tema = yaml.get("esquema", "").lower(), yaml.get("tipo", "").lower(), yaml.get("tema", "").lower()
@@ -489,6 +537,9 @@ def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = Fal
             return CATEGORIAS[2], "proyecto.yaml (tipo: articulo)"
         if tipo in ("monografia", "ensayo", "informe", "libro", "presentacion", "lamina"):
             return CATEGORIAS[0], f"proyecto.yaml (tipo: {tipo})"
+    declarada = categoria_de_esquema(principal, clase)
+    if declarada:
+        return declarada[0], f"el esquema del marco {declarada[2]}".rstrip()
     if clase in _CATEGORIA_POR_CLASE:
         indice = _CATEGORIA_POR_CLASE[clase]
         if en_despacho and indice == 0:
@@ -499,7 +550,7 @@ def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = Fal
         return CATEGORIAS[_CATEGORIA_POR_CARPETA[carpeta]], f"carpeta «{carpeta}»"
     if (principal.parent / "fuentes.yml").is_file() or (principal.parent / "fuentes" / "fuentes.yml").is_file():
         return CATEGORIAS[0], "fuentes.yml (Método Documental)"
-    return CATEGORIAS[7], ""
+    return OTROS, ""
 
 
 # ----------------------------------------------------------------------------------------------------- estado
@@ -592,6 +643,10 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
     configuracion = [str(q) for q in (rc, principal.parent / "proyecto.yaml", principal.parent / "fuentes.yml",
                                       principal.parent / "fuentes" / "fuentes.yml") if q is not None and q.is_file()]
     categoria, motivo = categorizar(principal, raiz, datos["clase"], en_despacho)
+    icono = ""
+    if categoria not in CATEGORIAS:
+        declarada = categoria_de_esquema(principal, datos["clase"])
+        icono = declarada[1] if declarada else ""
     yaml = _proyecto_yaml(principal.parent)
     return Proyecto(principal=str(principal), raiz=str(raiz), clase=datos["clase"],
                     titulo=datos["titulo"] or yaml.get("titulo", ""), motor=motor, motor_origen=origen,
@@ -600,7 +655,7 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
                     no_encontrados=faltan, bibs=bibs, bibs_no_encontradas=bibs_faltan,
                     paquetes=sorted({q for a in analisis for q in a["paquetes"]}), configuracion=configuracion,
                     indice=any(a.get("indice") for a in analisis), glosarios=any(a.get("glosarios") for a in analisis),
-                    categoria=categoria, categoria_motivo=motivo)
+                    categoria=categoria, categoria_motivo=motivo, categoria_icono=icono)
 
 
 def detectar(raices: list[tuple[str, Path]] | list[Path], profundidad: int = PROFUNDIDAD, cache: Cache | None = None,

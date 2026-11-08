@@ -390,3 +390,32 @@ def test_expedientes_de_docencia_profundos_y_su_categoria(tmp_path):
     ps = pr.detectar([tmp_path])
     assert [p.nombre for p in ps] == ["2026_pr_02.tex"]
     assert ps[0].categoria == "Docencia y evaluaciones"
+
+
+def test_categorias_por_quarto_pandoc_archivo_y_esquema(tmp_path):
+    """Nada cae en «Otros» si se puede saber qué es (2026-11-08): la salida que Quarto deja junto a su .qmd, una
+    plantilla de Pandoc, una carpeta de archivo y la categoría que declara el latex-studio.yml del marco."""
+    doc = "\\documentclass{%s}\n\\begin{document}x\\end{document}\n"
+    blog = tmp_path / "web" / "posts" / "p1"
+    blog.mkdir(parents=True)
+    (blog / "index.qmd").write_text("---\ntitle: x\n---\n")
+    (blog / "index.tex").write_text(doc % "apa7")
+    plantilla = tmp_path / "web" / "_extensions" / "x"
+    plantilla.mkdir(parents=True)
+    (plantilla / "doc-class.tex").write_text(doc % "$documentclass$")
+    viejo = tmp_path / "archivo" / "2026" / "a"
+    viejo.mkdir(parents=True)
+    (viejo / "viejo.tex").write_text(doc % "article")
+    cv = tmp_path / "cv" / "main"
+    (cv.parent / "config").mkdir(parents=True)
+    (cv.parent / "config" / "latex-studio.yml").write_text(
+        "version: 1\nmarco: cv\ndocumentos:\n  - nombre: CV\n    categoria: Currículum vítae\n    icono: user-identity\n"
+        "    secciones: []\n")
+    cv.mkdir()
+    (cv / "cv.tex").write_text(doc % "micv")
+    ps = {p.nombre: p for p in pr.detectar([tmp_path])}
+    assert ps["index.tex"].categoria == "Publicaciones (Quarto)"
+    assert ps["doc-class.tex"].categoria == "Pruebas y plantillas"
+    assert ps["viejo.tex"].categoria == "Archivo e histórico"
+    assert (ps["cv.tex"].categoria, ps["cv.tex"].categoria_icono) == ("Currículum vítae", "user-identity")
+    assert all(p.categoria != "Otros proyectos" for p in ps.values())
