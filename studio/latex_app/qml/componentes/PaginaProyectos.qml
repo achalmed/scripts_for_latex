@@ -155,7 +155,7 @@ QQC2.SplitView {
                 visible: raiz.actual !== ""
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
-                Kirigami.Heading { level: 2; text: raiz.datos.titulo || raiz.datos.nombre || ""; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Kirigami.Heading { level: 2; text: raiz.datos.titulo || raiz.datos.relativa || ""; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 QQC2.Label { text: raiz.datos.carpeta || ""; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
                 RowLayout {
                     spacing: Kirigami.Units.smallSpacing
@@ -166,7 +166,7 @@ QQC2.SplitView {
             Kirigami.FormLayout {
                 visible: raiz.actual !== ""
                 Layout.fillWidth: true
-                QQC2.Label { Kirigami.FormData.label: "Principal:"; text: raiz.datos.nombre || ""; Layout.fillWidth: true; wrapMode: Text.WrapAnywhere }
+                QQC2.Label { Kirigami.FormData.label: "Principal:"; text: raiz.datos.relativa || ""; Layout.fillWidth: true; wrapMode: Text.WrapAnywhere }
                 QQC2.Label { Kirigami.FormData.label: "Clase:"; text: raiz.datos.clase || "—" }
                 QQC2.Label { Kirigami.FormData.label: "Motor:"; text: (raiz.datos.texto_motor || "") + " (" + (raiz.datos.motor_origen || "") + ")"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
                 QQC2.Label { Kirigami.FormData.label: "Compilador:"; text: raiz.datos.compilador_texto || ""; Layout.fillWidth: true; wrapMode: Text.WordWrap }

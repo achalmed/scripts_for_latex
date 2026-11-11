@@ -147,9 +147,10 @@ def test_categorias_en_arbol_y_filtro_por_rama(app, piezas):
     p = piezas["proyectos"]
     inst = "Documentos institucionales"
     def proyecto(ruta, cat, subs):
-        return pr.Proyecto(principal="/x/" + ruta, raiz="/x", categoria=cat, subcategorias=subs)
-    p._poner([proyecto("of/a.tex", inst, ["Oficios", "2026"]), proyecto("of/b.tex", inst, ["Oficios", "2025"]),
-              proyecto("of/c.tex", inst, ["Oficios", "2026"]), proyecto("ca/d.tex", inst, ["Cartas", "2026"]),
+        carpetas = ["/".join(ruta.split("/")[:2]), ""] if subs else []
+        return pr.Proyecto(principal="/x/" + ruta, raiz="/x", categoria=cat, subcategorias=subs, subcarpetas=carpetas[:len(subs)])
+    p._poner([proyecto("documentos/oficios/OF-1/a.tex", inst, ["Oficios", "2026"]), proyecto("documentos/oficios/OF-2/b.tex", inst, ["Oficios", "2025"]),
+              proyecto("documentos/oficios/OF-3/c.tex", inst, ["Oficios", "2026"]), proyecto("documentos/cartas/CA-1/d.tex", inst, ["Cartas", "2026"]),
               proyecto("e.tex", "Otros proyectos", [])])
     filas = {f["nombre"]: f for f in p.categorias}
     assert filas[inst]["plegable"] and filas[inst]["nivel"] == 0 and filas[inst]["contador"] == 4
@@ -162,6 +163,16 @@ def test_categorias_en_arbol_y_filtro_por_rama(app, piezas):
     assert orden.index(inst + " › Oficios › 2026") < orden.index(inst + " › Oficios › 2025")   # el año más reciente arriba
     p.fijarCategoria(inst + " › Oficios")
     assert p.modelo.filas == 3
+    # el nombre, sin las carpetas que la rama ya dice (2026-11-10)
+    nombres = sorted(p._tabla.fila(p._modelo.filaOrigen(i))["nombre"] for i in range(p.modelo.filas))
+    assert nombres == ["OF-1/a.tex", "OF-2/b.tex", "OF-3/c.tex"]
+    assert p.datos(p.rutaDeFila(0))["relativa"].startswith("documentos/oficios/")
+    p.fijarCategoria(inst)
+    assert sorted(p._tabla.fila(i)["nombre"] for i in range(4)) == ["cartas/CA-1/d.tex", "oficios/OF-1/a.tex",
+                                                                      "oficios/OF-2/b.tex", "oficios/OF-3/c.tex"]
+    p.fijarCategoria("Todas")
+    assert p._tabla.fila(0)["nombre"].startswith("documentos/")
+    p.fijarCategoria(inst + " › Oficios")
     p.fijarCategoria(inst + " › Oficios › 2025")
     assert p.modelo.filas == 1 and p.datos(p.rutaDeFila(0))["categoria"] == inst + " › Oficios › 2025"
     p.fijarCategoria(inst)

@@ -139,6 +139,9 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   repiten la categoría (`documentos`, `docencia`, `04-evaluaciones`); la del proyecto cuenta solo por su año; una
   carpeta con `curso.yml` o `proyecto.yaml` se nombra por su `titulo`. Un nivel solo se abre si separa en dos o más (lo
   que no lo tiene va a «Otros»): ninguna rama con un único hijo (`proyectos.subclasificar` y `proyectos.agrupar`).
+  Con una rama elegida, la columna Proyecto nombra cada uno sin las carpetas que la rama ya dice (en Oficios,
+  `OF-0005-…/oficio.tex` y no `documentos/oficios/OF-0005-…/oficio.tex`; `proyectos.nombre_en_rama`); en «Todos» y
+  «Recientes», y en la ficha, la ruta entera.
 - **R7. La compilación nunca toca las fuentes**; el editor escribe solo al guardar (Ctrl+S), y si el archivo cambió en
   disco desde que se abrió, avisa y ofrece recargar o sobrescribir.
 - **R8. La CLI gana `-k` (`--conservar`)**: no borra los auxiliares al terminar bien. La ventana la usa siempre: SyncTeX

@@ -254,6 +254,7 @@ class Proyecto:
     categoria_icono: str = ""            # el icono de una categoría declarada por el esquema del marco
     categoria_motivo: str = ""
     subcategorias: list = field(default_factory=list)   # hasta dos niveles bajo la categoría, de las carpetas (tipo · grupo)
+    subcarpetas: list = field(default_factory=list)     # la carpeta de cada nivel, relativa a `raiz` ("" si es la del proyecto)
     # estado (del disco)
     estado: str = "sin_compilar"
     errores: int = 0
@@ -768,11 +769,17 @@ def _repite_categoria(nombre: str, categoria: str) -> bool:
 
 def subclasificar(principal: Path, raiz: Path, categoria: str) -> list[str]:
     """Hasta `NIVELES_SUBCATEGORIA` niveles bajo la categoría para un proyecto, de sus carpetas (ver arriba)."""
+    return [etiqueta for etiqueta, _carpeta in subclasificar_con_carpetas(principal, raiz, categoria)]
+
+
+def subclasificar_con_carpetas(principal: Path, raiz: Path, categoria: str) -> list[tuple[str, str]]:
+    """Los niveles de `subclasificar` con la carpeta de la que sale cada uno (relativa a la carpeta de trabajo; "" si
+    sale de la carpeta del propio proyecto, su año): la tabla nombra los proyectos desde la carpeta de la rama elegida."""
     try:
         partes = list(principal.parent.relative_to(raiz).parts)
     except ValueError:
         return []
-    niveles: list[str] = []
+    niveles: list[tuple[str, str]] = []
     carpeta = raiz
     for i, nombre in enumerate(partes):
         carpeta = carpeta / nombre
@@ -786,11 +793,33 @@ def subclasificar(principal: Path, raiz: Path, categoria: str) -> list[str]:
             continue
         else:
             etiqueta = _titulo_declarado(carpeta) or etiqueta_de_carpeta(nombre)
-        if not niveles or niveles[-1] != etiqueta:
-            niveles.append(etiqueta)
+        if not niveles or niveles[-1][0] != etiqueta:
+            niveles.append((etiqueta, "" if propia else "/".join(partes[:i + 1])))
         if len(niveles) == NIVELES_SUBCATEGORIA:
             break
     return niveles
+
+
+def nombre_en_rama(relativa: str, subcarpetas: list[str], profundidad: int | None) -> str:
+    """El nombre de un proyecto visto desde una rama de la barra lateral: su ruta sin las carpetas que la rama ya dice
+    («documentos/oficios/OF-0005-…/oficio.tex» en Documentos institucionales › Oficios → «OF-0005-…/oficio.tex»; en
+    Documentos institucionales → «oficios/OF-0005-…/oficio.tex»). `profundidad`: 0 la categoría, 1 y 2 sus niveles;
+    None (todos, recientes) deja la ruta entera."""
+    if profundidad is None:
+        return relativa
+    ancla = ""
+    if profundidad == 0:
+        primera = subcarpetas[0] if subcarpetas else ""
+        ancla = primera.rpartition("/")[0] if primera else ""
+    else:
+        for k in range(min(profundidad, len(subcarpetas)) - 1, -1, -1):
+            if subcarpetas[k]:                          # un año de la carpeta del proyecto no se quita: vale el nivel de arriba
+                ancla = subcarpetas[k]
+                break
+        else:
+            primera = subcarpetas[0] if subcarpetas else ""
+            ancla = primera.rpartition("/")[0] if primera else ""
+    return relativa[len(ancla) + 1:] if ancla and relativa.startswith(ancla + "/") else relativa
 
 
 OTROS_GRUPO = "Otros"
@@ -926,7 +955,8 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
     configuracion = [str(q) for q in (rc, principal.parent / "proyecto.yaml", principal.parent / "fuentes.yml",
                                       principal.parent / "fuentes" / "fuentes.yml") if q is not None and q.is_file()]
     categoria, motivo = categorizar(principal, raiz, datos["clase"], en_despacho)
-    subcategorias = subclasificar(principal, raiz, categoria)
+    niveles = subclasificar_con_carpetas(principal, raiz, categoria)
+    subcategorias, subcarpetas = [e for e, _c in niveles], [c for _e, c in niveles]
     icono = ""
     if categoria not in CATEGORIAS:
         declarada = categoria_de_esquema(principal, datos["clase"])
@@ -947,7 +977,8 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
                     no_encontrados=faltan, bibs=bibs, bibs_no_encontradas=bibs_faltan,
                     paquetes=sorted({q for a in analisis for q in a["paquetes"]}), configuracion=configuracion,
                     indice=any(a.get("indice") for a in analisis), glosarios=any(a.get("glosarios") for a in analisis),
-                    categoria=categoria, categoria_motivo=motivo, categoria_icono=icono, subcategorias=subcategorias)
+                    categoria=categoria, categoria_motivo=motivo, categoria_icono=icono, subcategorias=subcategorias,
+                    subcarpetas=subcarpetas)
 
 
 def detectar(raices: list[tuple[str, Path]] | list[Path], profundidad: int = PROFUNDIDAD, cache: Cache | None = None,

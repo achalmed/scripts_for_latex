@@ -40,7 +40,7 @@ def texto_problemas(p: pr.Proyecto) -> str:
     return " · ".join(x for x in partes if x) or ("—" if not p.log else "ninguno")
 
 
-def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None) -> dict:
+def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None, profundidad: int | None = None) -> dict:
     """Una fila de la tabla de proyectos (columnas y roles para `TablaDatos`). `grupo`: su rama en la barra lateral
     ([categoría, tipo?, grupo?], de `proyectos.agrupar`); la columna Categoría la muestra entera."""
     grupo = grupo or [p.categoria]
@@ -51,7 +51,8 @@ def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None)
     except ValueError:
         relativa = p.principal
     motor = p.texto_motor() + ("" if p.compilador == "main.sh" else " · " + ("marco" if p.compilador == "marco" else "latexmk"))
-    return {"nombre": relativa, "estado": texto, "motor": motor,
+    return {"nombre": pr.nombre_en_rama(relativa.replace("\\", "/"), p.subcarpetas, profundidad), "relativa": relativa,
+            "estado": texto, "motor": motor,
             "ultima": svc.fecha_legible(p.pdf_mtime) if p.pdf_mtime else "nunca",
             "problemas": texto_problemas(p), "bib": str(len(p.bibs)) if p.bibs else "—",
             "aux": str(p.auxiliares) if p.auxiliares else "—", "categoria": pr.SEPARADOR_GRUPO.join(grupo),
@@ -189,8 +190,14 @@ class Proyectos(QObject):
     def todos(self) -> list[pr.Proyecto]:
         return list(self._proyectos)
 
+    def _profundidad(self) -> int | None:
+        """La de la rama elegida (0 la categoría, 1 y 2 sus niveles); None en todos y en recientes."""
+        if self._categoria in (TODAS, RECIENTES):
+            return None
+        return self._categoria.count(pr.SEPARADOR_GRUPO)
+
     def _fila(self, p: pr.Proyecto) -> dict:
-        return fila_proyecto(p, self._en_curso, self._grupos.get(p.principal))
+        return fila_proyecto(p, self._en_curso, self._grupos.get(p.principal), self._profundidad())
 
     # ---------------------------------------------------------------------------------------------------- categorías
     # La navegación es un árbol de tres niveles como mucho: categoría › tipo › grupo (`proyectos.agrupar`). Su nombre
@@ -215,7 +222,10 @@ class Proyectos(QObject):
     @Slot(str)
     def fijarCategoria(self, categoria: str) -> None:
         if categoria != self._categoria:
+            antes = self._profundidad()
             self._categoria = categoria
+            if self._profundidad() != antes:              # el nombre se ve desde la rama: sin las carpetas que ella dice
+                self._tabla.poner([self._fila(p) for p in self._proyectos])
             self._modelo.aceptar_con(self._acepta)
             self.cambiado.emit()
 
@@ -311,7 +321,7 @@ class Proyectos(QObject):
             return None
         nuevo = pr.construir(Path(p.principal), Path(p.raiz), self._cache, en_despacho=False)
         nuevo.categoria, nuevo.categoria_motivo, nuevo.categoria_icono = p.categoria, p.categoria_motivo, p.categoria_icono
-        nuevo.subcategorias = list(p.subcategorias)
+        nuevo.subcategorias, nuevo.subcarpetas = list(p.subcategorias), list(p.subcarpetas)
         elegida = self._elegidas.get(nuevo.principal)
         if elegida:
             nuevo.elegir_version(elegida)
