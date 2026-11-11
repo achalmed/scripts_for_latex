@@ -30,7 +30,7 @@ Diseño y decisiones: `docs/reingenieria.md`.
 elige el motor (`auto` = LuaLaTeX salvo `% !TEX program`), encadena pasadas fijas con Biber o BibTeX, makeindex y
 makeglossaries, informa del PDF y borra los auxiliares (salvo con `-k`). Es para el `.tex` que no pertenece a un
 framework: `escritura`, `11 Book`, el marco documental y los `academic-*` de `docencia` compilan con su propio build. No
-trae clases ni plantillas (eso es `sistema-editorial`). Quién la llama por código y qué no se puede cambiar sin avisar:
+trae clases ni plantillas (eso es `estilos-visuales`). Quién la llama por código y qué no se puede cambiar sin avisar:
 `docs/arquitectura.md` §Consumidores.
 
 ![LaTeX Studio, vista Escritura (Lliphi Oscuro): el proyecto de muestra con el editor, el PDF y la marca de SyncTeX](docs/figuras/latex-studio-oscuro.png)

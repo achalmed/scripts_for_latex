@@ -44,7 +44,7 @@ documentos:                      # uno por familia de clases; se elige el primer
             ayuda: Nombre del curso tal como sale en el membrete.   # opcional
             omision: ""                     # el valor cuando el documento no lo escribe (opcional)
             opciones: [a, b]                # solo tipo opcion
-            opciones_desde: {carpeta: ../../sistema-editorial/temas, extension: .yml}  # alternativa a `opciones`
+            opciones_desde: {carpeta: ../../estilos-visuales/temas, extension: .yml}  # alternativa a `opciones`
             destino: {orden: '\curso'}      # dónde se lee y se escribe (§3)
 ```
 

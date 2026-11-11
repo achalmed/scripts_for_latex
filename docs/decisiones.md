@@ -27,7 +27,7 @@ aquí; un cambio en este repo no puede romperlos. El único consumidor por códi
 
 ### §1.3 No trae diseño (2026-09-20)
 
-Ni clases, ni plantillas, ni preámbulos: eso es de `sistema-editorial` y de cada framework.
+Ni clases, ni plantillas, ni preámbulos: eso es de `estilos-visuales` y de cada framework.
 
 ### §1.4 Sin latexmk (2026-06-22)
 
