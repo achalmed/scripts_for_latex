@@ -1,5 +1,6 @@
 // PaginaProyectos — la vista inicial, al estilo de la página de proyectos de Overleaf: los proyectos detectados en las
-// carpetas de trabajo (la categoría se elige a la izquierda) con proyecto, estado, motor, última compilación,
+// carpetas de trabajo (la categoría, o su tipo y su grupo, se elige a la izquierda; el nombre del proyecto se parte en
+// hasta tres líneas; las columnas se ensanchan arrastrando el borde de su cabecera) con proyecto, estado, motor, última compilación,
 // problemas, bibliografía, auxiliares, categoría y carpeta; selección múltiple para compilar en cola; y la ficha del
 // proyecto actual a la derecha (carpeta, principal, motor y de dónde sale, compilador, categoría y su motivo, archivos,
 // configuración, la orden exacta) con Abrir, Compilar, Mostrar en Dolphin y Abrir el PDF.
@@ -101,7 +102,7 @@ QQC2.SplitView {
                           : "Ningún proyecto coincide"
             iconoVacio: raiz.p.enDeteccion ? "view-refresh" : "text-x-tex"
             columnas: [
-                { ancho: 0, minimo: 14, conIcono: true },
+                { ancho: 0, minimo: 14, conIcono: true, lineas: 3, cortarTras: "/" },   // la ruta entera, en hasta tres líneas
                 { ancho: 8, semantica: true, conIcono: true },
                 { ancho: 10, secundaria: true },
                 { ancho: 8, secundaria: true },

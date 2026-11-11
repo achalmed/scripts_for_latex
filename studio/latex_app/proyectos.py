@@ -228,6 +228,7 @@ class Proyecto:
     categoria: str = "Otros proyectos"
     categoria_icono: str = ""            # el icono de una categoría declarada por el esquema del marco
     categoria_motivo: str = ""
+    subcategorias: list = field(default_factory=list)   # hasta dos niveles bajo la categoría, de las carpetas (tipo · grupo)
     # estado (del disco)
     estado: str = "sin_compilar"
     errores: int = 0
@@ -601,6 +602,166 @@ def categorizar(principal: Path, raiz: Path, clase: str, en_despacho: bool = Fal
     return OTROS, ""
 
 
+# ----------------------------------------------------------------------------------------------------- subcategorías
+# Bajo cada categoría, hasta dos niveles más (la barra lateral tiene como mucho tres): salen de las carpetas entre la
+# carpeta de trabajo y la del proyecto, que en el workspace dicen el tipo de documento y su grupo
+# («documentos/oficios/OF-2026-…» → Oficios › 2026; «cursos/econometria-i/04-evaluaciones/examen_parcial/2021_ep» →
+# Econometría I › Examen parcial). Se saltan las carpetas de estructura y las que repiten la categoría; la carpeta del
+# propio proyecto solo cuenta por su año; una carpeta con `curso.yml` o `proyecto.yaml` se nombra por su `titulo`.
+
+NIVELES_SUBCATEGORIA = 2
+_CARPETAS_ESTRUCTURA = {"contenido", "content", "cursos", "courses", "src", "fuentes", "editables", "vista-previa",
+                        "latex", "tex", "main", "preliminares", "tables", "tablas", "salidas", "generado", "plan"}
+_NOMBRES_CARPETA = {
+    "monographs": "Monografías", "reports": "Informes", "articles": "Artículos", "papers": "Artículos",
+    "theses": "Tesis", "thesis": "Tesis", "essays": "Ensayos", "books": "Libros", "slides": "Diapositivas",
+    "sessions": "Sesiones", "notes": "Notas", "templates": "Plantillas", "examples": "Ejemplos", "tests": "Pruebas",
+    "archive": "Archivo", "legacy": "Legado", "pubs": "Publicaciones",
+}
+# las tildes que los nombres de carpeta (ASCII) pierden; palabras sueltas, en minúscula
+_TILDES = {
+    "economia": "economía", "econometria": "econometría", "estadistica": "estadística", "matematicas": "matemáticas",
+    "matematica": "matemática", "macroeconomia": "macroeconomía", "microeconomia": "microeconomía",
+    "organizacion": "organización", "evaluacion": "evaluación", "formulacion": "formulación",
+    "investigacion": "investigación", "publica": "pública", "publico": "público", "representacion": "representación",
+    "diseno": "diseño", "dinamica": "dinámica", "monografias": "monografías", "monografia": "monografía",
+    "articulos": "artículos", "articulo": "artículo", "laminas": "láminas", "lamina": "lámina", "graficos": "gráficos",
+    "rendicion": "rendición", "metodos": "métodos", "metodo": "método", "teoria": "teoría", "analisis": "análisis",
+    "politica": "política", "economica": "económica", "economico": "económico", "historico": "histórico",
+    "galeria": "galería", "practicas": "prácticas", "practica": "práctica", "sesion": "sesión", "educacion": "educación",
+    "programacion": "programación", "presentacion": "presentación",
+    "comunicacion": "comunicación", "gestion": "gestión", "informacion": "información", "regresion": "regresión",
+    "cientifico": "científico", "cientificos": "científicos", "academico": "académico", "academica": "académica",
+}
+_ROMANOS = {"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"}
+# un año al comienzo, quizá tras un código en mayúsculas: «2026-11_SR-04_…», «OF-2026-0012», «OF-BORRADOR-2026», «2021_ep»
+_ANIO = re.compile(r"^(?:[A-Z]{1,12}[-_])*(20\d{2})(?=[-_.\s]|$)")
+_TITULOS_CARPETA: dict[str, str] = {}
+
+
+def _normalizar(texto: str) -> str:
+    import unicodedata
+    sin = "".join(c for c in unicodedata.normalize("NFD", texto.lower()) if unicodedata.category(c) != "Mn")
+    return re.sub(r"[-_.\s]+", " ", re.sub(r"^\d+[-_.\s]+", "", sin)).strip()
+
+
+def _titulo_declarado(carpeta: Path) -> str:
+    """El `titulo:` del `curso.yml` o del `proyecto.yaml` de una carpeta (sin PyYAML), o ""."""
+    clave = str(carpeta)
+    if clave not in _TITULOS_CARPETA:
+        titulo = ""
+        for nombre in ("curso.yml", "proyecto.yaml"):
+            f = carpeta / nombre
+            if f.is_file():
+                m = re.search(r"^titulo\s*:\s*['\"]?(.*?)['\"]?\s*(?:#.*)?$", _leer(f, 16 * 1024), re.M)
+                if m and m.group(1).strip():
+                    titulo = m.group(1).strip()
+                    break
+        _TITULOS_CARPETA[clave] = titulo
+    return _TITULOS_CARPETA[clave]
+
+
+def etiqueta_de_carpeta(nombre: str) -> str:
+    """El nombre legible de una carpeta: el de `_NOMBRES_CARPETA`, o sin el número de orden («04-»), con espacios,
+    tildes, romanos en mayúscula y la primera en mayúscula («econometria-i» → «Econometría I»)."""
+    if nombre.lower() in _NOMBRES_CARPETA:
+        return _NOMBRES_CARPETA[nombre.lower()]
+    limpio = re.sub(r"^\d+[-_.\s]+", "", nombre.lstrip("_")) or nombre
+    palabras = []
+    for i, w in enumerate(re.split(r"[-_\s]+", limpio)):
+        if not w:
+            continue
+        bajo = w.lower()
+        if bajo in _ROMANOS and i > 0:
+            palabras.append(bajo.upper())
+        elif w != bajo and w != w.capitalize():          # siglas y nombres con mayúsculas propias: tal cual
+            palabras.append(w)
+        else:
+            palabras.append(_TILDES.get(bajo, bajo))
+    texto = " ".join(palabras)
+    return texto[:1].upper() + texto[1:]
+
+
+def _repite_categoria(nombre: str, categoria: str) -> bool:
+    """La carpeta dice lo mismo que la categoría («documentos» en Documentos institucionales, «docencia» y
+    «04-evaluaciones» en Docencia y evaluaciones): no aporta un nivel."""
+    palabras = _normalizar(categoria).split()
+    for n in {_normalizar(nombre), _normalizar(_NOMBRES_CARPETA.get(nombre.lower().lstrip("_"), ""))} - {""}:
+        if n in palabras or any(len(w) >= 5 and len(n) >= 5 and (w.startswith(n) or n.startswith(w)) for w in palabras):
+            return True
+    return not _normalizar(nombre)
+
+
+def subclasificar(principal: Path, raiz: Path, categoria: str) -> list[str]:
+    """Hasta `NIVELES_SUBCATEGORIA` niveles bajo la categoría para un proyecto, de sus carpetas (ver arriba)."""
+    try:
+        partes = list(principal.parent.relative_to(raiz).parts)
+    except ValueError:
+        return []
+    niveles: list[str] = []
+    carpeta = raiz
+    for i, nombre in enumerate(partes):
+        carpeta = carpeta / nombre
+        propia = i == len(partes) - 1                      # la carpeta del proyecto: solo su año
+        anio = _ANIO.match(nombre)
+        if anio:
+            etiqueta = anio.group(1)
+        elif propia:
+            continue
+        elif nombre.startswith(".") or _normalizar(nombre) in _CARPETAS_ESTRUCTURA or _repite_categoria(nombre, categoria):
+            continue
+        else:
+            etiqueta = _titulo_declarado(carpeta) or etiqueta_de_carpeta(nombre)
+        if not niveles or niveles[-1] != etiqueta:
+            niveles.append(etiqueta)
+        if len(niveles) == NIVELES_SUBCATEGORIA:
+            break
+    return niveles
+
+
+OTROS_GRUPO = "Otros"
+SEPARADOR_GRUPO = " › "
+
+
+def _orden_grupo(etiqueta: str) -> tuple:
+    """Los años primero y del más reciente al más antiguo; luego por nombre; «Otros» al final."""
+    if etiqueta == OTROS_GRUPO:
+        return (2, 0, "")
+    if re.fullmatch(r"20\d{2}", etiqueta):
+        return (0, -int(etiqueta), "")
+    return (1, 0, _normalizar(etiqueta))
+
+
+def agrupar(proyectos: Iterable[Proyecto]) -> dict[str, list[str]]:
+    """El grupo de cada proyecto en la barra lateral (principal → [categoría, tipo?, grupo?]): un nivel solo se abre
+    si separa en dos o más (lo que no tiene ese nivel va a «Otros»); así ninguna rama tiene un único hijo."""
+    por_categoria: dict[str, list[Proyecto]] = {}
+    for p in proyectos:
+        por_categoria.setdefault(p.categoria, []).append(p)
+    salida: dict[str, list[str]] = {}
+
+    def repartir(lista: list[Proyecto], prefijo: list[str], nivel: int) -> None:
+        if nivel >= NIVELES_SUBCATEGORIA:
+            for p in lista:
+                salida[p.principal] = prefijo
+            return
+        valores = {(p.subcategorias[nivel] if len(p.subcategorias) > nivel else None) for p in lista}
+        if len(valores - {None}) < 2:
+            for p in lista:
+                salida[p.principal] = prefijo
+            return
+        grupos: dict[str, list[Proyecto]] = {}
+        for p in lista:
+            v = p.subcategorias[nivel] if len(p.subcategorias) > nivel else OTROS_GRUPO
+            grupos.setdefault(v, []).append(p)
+        for v, sub in grupos.items():
+            repartir(sub, prefijo + [v], nivel + 1)
+
+    for categoria, lista in por_categoria.items():
+        repartir(lista, [categoria], 0)
+    return salida
+
+
 # ----------------------------------------------------------------------------------------------------- estado
 
 def _mtime(ruta: str | Path) -> float:
@@ -691,6 +852,7 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
     configuracion = [str(q) for q in (rc, principal.parent / "proyecto.yaml", principal.parent / "fuentes.yml",
                                       principal.parent / "fuentes" / "fuentes.yml") if q is not None and q.is_file()]
     categoria, motivo = categorizar(principal, raiz, datos["clase"], en_despacho)
+    subcategorias = subclasificar(principal, raiz, categoria)
     icono = ""
     if categoria not in CATEGORIAS:
         declarada = categoria_de_esquema(principal, datos["clase"])
@@ -711,7 +873,7 @@ def construir(principal: Path, raiz: Path, cache: Cache, marcos: _Marcos | None 
                     no_encontrados=faltan, bibs=bibs, bibs_no_encontradas=bibs_faltan,
                     paquetes=sorted({q for a in analisis for q in a["paquetes"]}), configuracion=configuracion,
                     indice=any(a.get("indice") for a in analisis), glosarios=any(a.get("glosarios") for a in analisis),
-                    categoria=categoria, categoria_motivo=motivo, categoria_icono=icono)
+                    categoria=categoria, categoria_motivo=motivo, categoria_icono=icono, subcategorias=subcategorias)
 
 
 def detectar(raices: list[tuple[str, Path]] | list[Path], profundidad: int = PROFUNDIDAD, cache: Cache | None = None,

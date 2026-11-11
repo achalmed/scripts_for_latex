@@ -419,3 +419,42 @@ def test_categorias_por_quarto_pandoc_archivo_y_esquema(tmp_path):
     assert ps["viejo.tex"].categoria == "Archivo e histórico"
     assert (ps["cv.tex"].categoria, ps["cv.tex"].categoria_icono) == ("Currículum vítae", "user-identity")
     assert all(p.categoria != "Otros proyectos" for p in ps.values())
+
+
+def test_subcategorias_de_las_carpetas_y_su_agrupacion(tmp_path):
+    """Bajo cada categoría, hasta dos niveles más de las carpetas (2026-11-10): el tipo de documento y su grupo (el año
+    de un expediente, la sección de un curso); se saltan las carpetas de estructura y las que repiten la categoría; el
+    título de un `curso.yml` nombra su carpeta; un nivel solo se abre si separa en dos o más (lo demás va a «Otros»)."""
+    doc = "\\documentclass{%s}\n\\begin{document}x\\end{document}\n"
+    despacho = tmp_path / "despacho"
+    for ruta in ("documentos/oficios/OF-2026-0001-a", "documentos/oficios/OF-2025-0101-b", "documentos/cartas/CARTA-2026-0001-c",
+                 "representacion/2026-11_SR-04_d"):
+        (despacho / ruta).mkdir(parents=True)
+        (despacho / ruta / "main.tex").write_text(doc % "oficio")
+    curso = tmp_path / "docencia" / "contenido" / "cursos" / "econometria-i"
+    for sub in ("04-evaluaciones/examen_parcial/2021_ep", "04-evaluaciones/practicas/2026_pr_01"):
+        (curso / sub).mkdir(parents=True)
+        (curso / sub / (Path(sub).name + ".tex")).write_text(doc % "academic-exam")
+    (curso / "curso.yml").write_text("version: 1\ntitulo: Econometría I\n")
+    otro = tmp_path / "docencia" / "contenido" / "cursos" / "estadistica-para-economistas" / "04-evaluaciones" / "practicas" / "2026_p"
+    otro.mkdir(parents=True)
+    (otro / "2026_p.tex").write_text(doc % "academic-exam")
+
+    ps = pr.detectar([("Despacho", despacho), ("Documentos", tmp_path)], despacho=despacho)
+    sub = {Path(p.principal).relative_to(tmp_path).as_posix(): (p.categoria, p.subcategorias) for p in ps}
+    assert sub["despacho/documentos/oficios/OF-2026-0001-a/main.tex"] == ("Documentos institucionales", ["Oficios", "2026"])
+    assert sub["despacho/documentos/cartas/CARTA-2026-0001-c/main.tex"] == ("Documentos institucionales", ["Cartas", "2026"])
+    assert sub["despacho/representacion/2026-11_SR-04_d/main.tex"] == ("Documentos institucionales", ["Representación", "2026"])
+    assert sub["docencia/contenido/cursos/econometria-i/04-evaluaciones/examen_parcial/2021_ep/2021_ep.tex"] == \
+        ("Docencia y evaluaciones", ["Econometría I", "Examen parcial"])
+    assert sub["docencia/contenido/cursos/estadistica-para-economistas/04-evaluaciones/practicas/2026_p/2026_p.tex"] == \
+        ("Docencia y evaluaciones", ["Estadística para economistas", "Prácticas"])
+
+    grupos = {Path(k).name if Path(k).name != "main.tex" else Path(k).parent.name: v for k, v in pr.agrupar(ps).items()}
+    assert grupos["OF-2026-0001-a"] == ["Documentos institucionales", "Oficios", "2026"]
+    assert grupos["OF-2025-0101-b"] == ["Documentos institucionales", "Oficios", "2025"]
+    assert grupos["CARTA-2026-0001-c"] == ["Documentos institucionales", "Cartas"]          # un solo año: no se abre
+    assert grupos["2021_ep.tex"] == ["Docencia y evaluaciones", "Econometría I", "Examen parcial"]
+    assert grupos["2026_p.tex"] == ["Docencia y evaluaciones", "Estadística para economistas"]
+    assert pr.etiqueta_de_carpeta("economia-recursos-naturales-ambientales") == "Economía recursos naturales ambientales"
+    assert pr.etiqueta_de_carpeta("03-sesiones") == "Sesiones" and pr.etiqueta_de_carpeta("monographs") == "Monografías"

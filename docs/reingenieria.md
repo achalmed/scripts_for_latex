@@ -132,6 +132,13 @@ selección múltiple para la cola de compilación. Con los nombres ocultos, la v
   `agenda` institucionales); la carpeta (`theses`, `articles`, `essays`, `monographs`, `reports`); `fuentes.yml` →
   Escritura académica. Sin nada de eso, «Otros proyectos». La séptima categoría (pruebas) sale del nombre de la carpeta:
   sin ella, 220 pruebas del marco taparían los documentos.
+  **Subcategorías (2026-11-10)**: bajo cada categoría, hasta dos niveles más (tres en total en la barra lateral, en
+  árbol plegable) que salen de las carpetas entre la carpeta de trabajo y la del proyecto: el tipo de documento y su
+  grupo (`documentos/oficios/OF-2026-…` → Oficios › 2026; `cursos/econometria-i/04-evaluaciones/examen_parcial/…` →
+  Econometría I › Examen parcial). Se saltan las carpetas de estructura (`contenido`, `cursos`, `content`…) y las que
+  repiten la categoría (`documentos`, `docencia`, `04-evaluaciones`); la del proyecto cuenta solo por su año; una
+  carpeta con `curso.yml` o `proyecto.yaml` se nombra por su `titulo`. Un nivel solo se abre si separa en dos o más (lo
+  que no lo tiene va a «Otros»): ninguna rama con un único hijo (`proyectos.subclasificar` y `proyectos.agrupar`).
 - **R7. La compilación nunca toca las fuentes**; el editor escribe solo al guardar (Ctrl+S), y si el archivo cambió en
   disco desde que se abrió, avisa y ofrece recargar o sobrescribir.
 - **R8. La CLI gana `-k` (`--conservar`)**: no borra los auxiliares al terminar bien. La ventana la usa siempre: SyncTeX

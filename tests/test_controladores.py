@@ -134,6 +134,37 @@ def test_deteccion_en_tarea_categorias_y_filtro(app, piezas):
 
 
 @requiere_binding
+def test_categorias_en_arbol_y_filtro_por_rama(app, piezas):
+    """La navegación es un árbol de tres niveles como mucho (categoría › tipo › grupo; 2026-11-10): cada rama dice su
+    nivel, sus ancestros y si se despliega; elegir una rama filtra sus proyectos y los de sus hijas; la columna
+    Categoría muestra la rama entera."""
+    from latex_app import proyectos as pr
+    p = piezas["proyectos"]
+    inst = "Documentos institucionales"
+    def proyecto(ruta, cat, subs):
+        return pr.Proyecto(principal="/x/" + ruta, raiz="/x", categoria=cat, subcategorias=subs)
+    p._poner([proyecto("of/a.tex", inst, ["Oficios", "2026"]), proyecto("of/b.tex", inst, ["Oficios", "2025"]),
+              proyecto("of/c.tex", inst, ["Oficios", "2026"]), proyecto("ca/d.tex", inst, ["Cartas", "2026"]),
+              proyecto("e.tex", "Otros proyectos", [])])
+    filas = {f["nombre"]: f for f in p.categorias}
+    assert filas[inst]["plegable"] and filas[inst]["nivel"] == 0 and filas[inst]["contador"] == 4
+    oficios = filas[inst + " › Oficios"]
+    assert (oficios["texto"], oficios["nivel"], oficios["ancestros"], oficios["plegable"], oficios["contador"]) == \
+        ("Oficios", 1, [inst], True, 3)
+    assert filas[inst + " › Oficios › 2026"]["ancestros"] == [inst, inst + " › Oficios"]
+    assert not filas[inst + " › Cartas"]["plegable"] and not filas["Otros proyectos"]["plegable"]
+    orden = [f["nombre"] for f in p.categorias]
+    assert orden.index(inst + " › Oficios › 2026") < orden.index(inst + " › Oficios › 2025")   # el año más reciente arriba
+    p.fijarCategoria(inst + " › Oficios")
+    assert p.modelo.filas == 3
+    p.fijarCategoria(inst + " › Oficios › 2025")
+    assert p.modelo.filas == 1 and p.datos(p.rutaDeFila(0))["categoria"] == inst + " › Oficios › 2025"
+    p.fijarCategoria(inst)
+    assert p.modelo.filas == 4
+    p._poner([proyecto("e.tex", "Otros proyectos", [])])             # la rama ya no existe: vuelve a Todas
+    assert p.categoria == "Todas" and p.modelo.filas == 1
+
+@requiere_binding
 def test_abrir_un_capitulo_abre_su_proyecto_con_estructura_y_autocompletado(app, piezas):
     p, muestra = piezas["proyectos"], piezas["muestra"]
     p.detectar_ya()

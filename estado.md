@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-03
+actualizado: 2026-11-10
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-03
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-10 | **Proyectos, a pedido del autor**: las categorías se subclasifican en árbol (categoría › tipo › grupo, tres niveles como mucho, de las carpetas: Documentos institucionales › Oficios › 2026, Docencia › Econometría I › Examen parcial; R6); la columna Categoría y la ficha muestran la rama; el nombre del proyecto se parte en hasta tres líneas (por carpetas); las columnas se ensanchan desde la cabecera y la barra de desplazamiento ya no tapa los contadores (los dos arreglos, en `gui-comun`, `[Unreleased]`); `capturar.py --arbol --categoria` | `docs/reingenieria.md` R6; `tests/test_proyectos.py`, `tests/test_controladores.py` |
 | 2026-11-03 | **gui-comun 3.2 adoptado**: el visor PDF es `VistaPdf` de la base (con la selección, los enlaces y la búsqueda que nacieron aquí); `controladores/visor.py` hereda de `VisorPdf` y solo añade SyncTeX; retiradas las copias del visor; el cursor de una sugerencia queda dentro de la llave (`\frac{|}{}`, con su prueba) | `decisiones.md` §1.13 |
 | 2026-11-03 | **gui-comun 3.1 adoptado**: `EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores` y `ControladorEditor` de la base en lugar de las copias propias (retiradas); el autocompletado, SyncTeX con Ctrl+clic y los filtros de problemas, como ganchos; una prueba nueva acepta sugerencias en la ventana real | `decisiones.md` §1.13; `tests/test_studio.py` |
 | 2026-11-03 | **Visor**: con QtPdf se selecciona texto arrastrando (Ctrl+C, Ctrl+A, menú del clic derecho), se siguen los enlaces del PDF (internos a su página; externos solo http, https y mailto) y se busca (Ctrl+Alt+F, resultados resaltados, Intro y Mayús+Intro), sin perder la marca de SyncTeX ni el doble clic | `decisiones.md` §1.11; `tests/test_visor_qtpdf.py` |
@@ -44,6 +45,9 @@ nada en curso
   si se marca); el registro de cada corrida de `main.sh` queda en la caché del studio (uno por proyecto, se reemplaza);
   la caché de páginas del visor se poda a 200 MB; la selección de texto del PDF es de una página a la vez. Ninguno es un
   defecto: son límites elegidos.
+- 2026-11-10 · dueño: **el autor** · ver en la sesión real el árbol de categorías sobre el despacho y docencia (la sesión
+  no los abre: se probó con carpetas inventadas) y decir si algún tipo o grupo sale mal nombrado o sobra un nivel;
+  arrastrar el borde de una cabecera y el clic derecho en ella. Requiere el `gui-comun` de `main` con lo de `[Unreleased]`.
 - 2026-11-03 · dueño: **el autor** · probar en la sesión real la selección, los enlaces y la búsqueda del PDF (Ctrl+Alt+F)
   y el autocompletado de argumentos; las pruebas los ejercitan con eventos de ratón sin pantalla.
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el

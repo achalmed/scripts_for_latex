@@ -40,8 +40,10 @@ def texto_problemas(p: pr.Proyecto) -> str:
     return " · ".join(x for x in partes if x) or ("—" if not p.log else "ninguno")
 
 
-def fila_proyecto(p: pr.Proyecto, en_curso: str = "") -> dict:
-    """Una fila de la tabla de proyectos (columnas y roles para `TablaDatos`)."""
+def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None) -> dict:
+    """Una fila de la tabla de proyectos (columnas y roles para `TablaDatos`). `grupo`: su rama en la barra lateral
+    ([categoría, tipo?, grupo?], de `proyectos.agrupar`); la columna Categoría la muestra entera."""
+    grupo = grupo or [p.categoria]
     clave = "compilando" if p.principal == en_curso else p.estado
     texto, nivel = svc.ESTADOS[clave]
     try:
@@ -52,7 +54,8 @@ def fila_proyecto(p: pr.Proyecto, en_curso: str = "") -> dict:
     return {"nombre": relativa, "estado": texto, "motor": motor,
             "ultima": svc.fecha_legible(p.pdf_mtime) if p.pdf_mtime else "nunca",
             "problemas": texto_problemas(p), "bib": str(len(p.bibs)) if p.bibs else "—",
-            "aux": str(p.auxiliares) if p.auxiliares else "—", "categoria": p.categoria, "carpeta": p.carpeta,
+            "aux": str(p.auxiliares) if p.auxiliares else "—", "categoria": pr.SEPARADOR_GRUPO.join(grupo),
+            "grupo": pr.SEPARADOR_GRUPO.join(grupo), "carpeta": p.carpeta,
             "ruta": p.principal, "titulo": p.titulo, "clave": clave, "nivel": nivel, "habilitado": True,
             "icono": {"nombre": "text-x-tex", "estado": ICONOS_ESTADO[clave]},
             "crudo": {"estado": ORDEN_ESTADO[clave], "ultima": p.pdf_mtime, "problemas": p.errores * 1000 + p.avisos,
@@ -73,6 +76,7 @@ class Proyectos(QObject):
         self._cache = pr.Cache(self._cache_dir / "proyectos.json")
         self._proyectos: list[pr.Proyecto] = []
         self._por_ruta: dict[str, pr.Proyecto] = {}
+        self._grupos: dict[str, list[str]] = {}       # principal → [categoría, tipo?, grupo?] (la barra lateral)
         self._tabla = ModeloTabla(COLUMNAS, parent=self)
         self._modelo = ModeloFiltrado(self._tabla, parent=self)
         self._categoria = TODAS
@@ -157,7 +161,11 @@ class Proyectos(QObject):
         proyectos = [self._con_eleccion(p) for p in proyectos]
         self._proyectos = sorted(proyectos, key=lambda p: (pr.orden_categoria(p.categoria), p.principal))
         self._por_ruta = {p.principal: p for p in self._proyectos}
-        self._tabla.poner([fila_proyecto(p, self._en_curso) for p in self._proyectos])
+        self._grupos = pr.agrupar(self._proyectos)
+        if self._categoria not in (TODAS, RECIENTES) and not any(self._en_rama(g) for g in self._grupos.values()):
+            self._categoria = TODAS                    # la rama elegida ya no existe (otra detección)
+            self._modelo.aceptar_con(self._acepta)
+        self._tabla.poner([self._fila(p) for p in self._proyectos])
         if self._abierto is not None and self._abierto.principal in self._por_ruta:
             self._abierto = self._por_ruta[self._abierto.principal]
             self.abiertoCambiado.emit()
@@ -181,14 +189,24 @@ class Proyectos(QObject):
     def todos(self) -> list[pr.Proyecto]:
         return list(self._proyectos)
 
+    def _fila(self, p: pr.Proyecto) -> dict:
+        return fila_proyecto(p, self._en_curso, self._grupos.get(p.principal))
+
     # ---------------------------------------------------------------------------------------------------- categorías
+    # La navegación es un árbol de tres niveles como mucho: categoría › tipo › grupo (`proyectos.agrupar`). Su nombre
+    # es la rama unida con « › »; elegir una rama muestra sus proyectos y los de sus hijas.
+    def _en_rama(self, grupo: list[str]) -> bool:
+        rama = pr.SEPARADOR_GRUPO.join(grupo)
+        return rama == self._categoria or rama.startswith(self._categoria + pr.SEPARADOR_GRUPO)
+
     def _acepta(self, fila: int) -> bool:
         if self._categoria == TODAS:
             return True
         f = self._tabla.fila(fila)
         if self._categoria == RECIENTES:
             return f.get("ruta") in set(self.historial.recientes())
-        return f.get("categoria") == self._categoria
+        grupo = f.get("grupo", "")
+        return grupo == self._categoria or grupo.startswith(self._categoria + pr.SEPARADOR_GRUPO)
 
     @Property(str, notify=cambiado)
     def categoria(self) -> str:
@@ -203,13 +221,18 @@ class Proyectos(QObject):
 
     @Property("QVariantList", notify=cambiado)
     def categorias(self) -> list:
-        """Las filas de la navegación: Todas, Recientes y cada categoría con proyectos (ninguna vacía, R6)."""
+        """Las filas de la navegación: Todas, Recientes y cada categoría con proyectos (ninguna vacía, R6), con sus
+        ramas (tipo y grupo) debajo: `nivel`, `ancestros` y `plegable` para el árbol de `PanelNavegacion`."""
         cuenta = {c: 0 for c in pr.CATEGORIAS}
         iconos_extra: dict[str, str] = {}
+        ramas: dict[tuple, int] = {}                      # (categoría, tipo[, grupo]) → proyectos
         for p in self._proyectos:
             cuenta[p.categoria] = cuenta.get(p.categoria, 0) + 1
             if p.categoria not in pr.CATEGORIAS:          # declarada por el esquema de un marco (con su icono)
                 iconos_extra.setdefault(p.categoria, p.categoria_icono or "folder-documents")
+            grupo = self._grupos.get(p.principal) or [p.categoria]
+            for n in range(2, len(grupo) + 1):
+                ramas[tuple(grupo[:n])] = ramas.get(tuple(grupo[:n]), 0) + 1
         recientes = set(self.historial.recientes())
         filas = [{"nombre": TODAS, "texto": "Todos los proyectos", "icono": "view-list-details", "contador": len(self._proyectos)},
                  {"nombre": RECIENTES, "texto": "Recientes", "icono": "document-open-recent",
@@ -217,8 +240,22 @@ class Proyectos(QObject):
         iconos = ["document-edit", "school", "document-new", "view-pim-journal", "view-pim-mail", "view-calendar-tasks",
                   "applications-internet", "view-pim-notes", "archive-extract", "run-build-prune", "folder-documents"]
         icono = {c: iconos[i] for i, c in enumerate(pr.CATEGORIAS)} | iconos_extra
-        filas += [{"nombre": c, "texto": c, "icono": icono[c], "contador": cuenta[c]}
-                  for c in sorted((c for c in cuenta if cuenta[c]), key=pr.orden_categoria)]
+        hijas: dict[tuple, list[tuple]] = {}
+        for r in ramas:
+            hijas.setdefault(r[:-1], []).append(r)
+
+        def poner(rama: tuple, icono_rama: str) -> None:
+            nombre = pr.SEPARADOR_GRUPO.join(rama)
+            debajo = sorted(hijas.get(rama, []), key=lambda h: pr._orden_grupo(h[-1]))
+            ancestros = [pr.SEPARADOR_GRUPO.join(rama[:k]) for k in range(1, len(rama))]
+            filas.append({"nombre": nombre, "texto": rama[-1], "icono": icono_rama, "nivel": len(rama) - 1,
+                          "ancestros": ancestros, "plegable": bool(debajo),
+                          "contador": cuenta[rama[0]] if len(rama) == 1 else ramas[rama]})
+            for h in debajo:
+                poner(h, "folder-open" if hijas.get(h) else "folder")
+
+        for c in sorted((c for c in cuenta if cuenta[c]), key=pr.orden_categoria):
+            poner((c,), icono[c])
         return filas
 
     @Property("QVariantMap", notify=cambiado)
@@ -259,7 +296,7 @@ class Proyectos(QObject):
         if p is None:
             return {}
         d = p.a_dict()
-        d.update(fila_proyecto(p, self._en_curso))
+        d.update(self._fila(p))
         d["compilador_texto"] = pr.NOMBRES_COMPILADOR.get(p.compilador, p.compilador)
         d["orden"] = svc.orden_legible(svc.receta(p, "compilar", self.registro_de(Path(p.principal)), self.ajustes.rutasTex))
         d["n_archivos"] = len(p.archivos) + 1
@@ -274,6 +311,7 @@ class Proyectos(QObject):
             return None
         nuevo = pr.construir(Path(p.principal), Path(p.raiz), self._cache, en_despacho=False)
         nuevo.categoria, nuevo.categoria_motivo, nuevo.categoria_icono = p.categoria, p.categoria_motivo, p.categoria_icono
+        nuevo.subcategorias = list(p.subcategorias)
         elegida = self._elegidas.get(nuevo.principal)
         if elegida:
             nuevo.elegir_version(elegida)
@@ -284,7 +322,7 @@ class Proyectos(QObject):
             self._por_ruta[ruta] = nuevo
             for j, f in enumerate(self._tabla.todas()):
                 if f.get("ruta") == ruta:
-                    self._tabla.actualizar(j, **fila_proyecto(nuevo, self._en_curso))
+                    self._tabla.actualizar(j, **self._fila(nuevo))
         if self._abierto is not None and self._abierto.principal == ruta:
             self._abierto = nuevo
             self._cargar_abierto(estructura=False)

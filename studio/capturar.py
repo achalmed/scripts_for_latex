@@ -27,6 +27,31 @@ sys.path.insert(0, str(AQUI))
 MUESTRA = AQUI / "ejemplo" / "proyectos"
 
 
+def arbol_de_muestra(documentos: Path) -> None:
+    """Expedientes inventados (sin compilar) en el despacho y un curso de docencia temporales, para que la barra lateral
+    muestre categoría › tipo › grupo y la tabla nombres largos en varias líneas."""
+    doc = "\\documentclass{%s}\n\\begin{document}\nMuestra.\n\\end{document}\n"
+    expedientes = {
+        "despacho/documentos/oficios": ["OF-2026-0001-solicitud-de-informacion-sobre-el-presupuesto-institucional",
+                                        "OF-2026-0002-invitacion", "OF-2025-0140-respuesta-a-la-consulta"],
+        "despacho/documentos/cartas": ["CARTA-2026-0001-agradecimiento", "CARTA-2025-0007-saludo"],
+        "despacho/documentos/memorandos": ["MEM-2026-0003-coordinacion"],
+        "despacho/representacion": ["2026-11_SR-04_semana-de-representacion-en-la-provincia", "2026-10_SR-03_semana"],
+    }
+    for carpeta, nombres in expedientes.items():
+        for nombre in nombres:
+            destino = documentos / carpeta / nombre
+            destino.mkdir(parents=True, exist_ok=True)
+            (destino / "main.tex").write_text(doc % ("informe-sr" if "representacion" in carpeta else "oficio"))
+    for curso, titulo in (("econometria-i", "Econometría I"), ("estadistica-para-economistas", "Estadística para economistas")):
+        base = documentos / "docencia" / "contenido" / "cursos" / curso
+        for sub, exp in (("examen_parcial", "2025_ep"), ("practicas", "2026_pr_01"), ("practicas", "2026_pr_02")):
+            destino = base / "04-evaluaciones" / sub / exp
+            destino.mkdir(parents=True, exist_ok=True)
+            (destino / f"{exp}.tex").write_text(doc % "academic-exam")
+        (base / "curso.yml").write_text(f"version: 1\ntitulo: {titulo}\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Captura de LaTeX Studio sobre los proyectos de muestra del repo")
     parser.add_argument("salida")
@@ -44,6 +69,9 @@ def main() -> int:
     parser.add_argument("--version", default="", help="elige esta versión del proyecto abierto (si su marco declara versiones)")
     parser.add_argument("--compilar-abierto", action="store_true", help="compila el proyecto abierto (tras elegir --version)")
     parser.add_argument("--texstudio", action="store_true", help="abre «Compilar desde TeXstudio con LaTeX Studio…» (sobre el .ini del HOME temporal)")
+    parser.add_argument("--arbol", action="store_true",
+                        help="añade expedientes de muestra (oficios, cartas, cursos) para ver las subcategorías del árbol")
+    parser.add_argument("--categoria", default="", help="la rama elegida a la izquierda (p. ej. «Documentos institucionales › Oficios»)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
     args = parser.parse_args()
@@ -69,6 +97,8 @@ def main() -> int:
         trabajo = casa / "Documentos" / "escritura"
         shutil.copytree(MUESTRA, trabajo)
         (casa / "Documentos" / "despacho").mkdir(parents=True)              # vacía: nunca la del autor
+        if args.arbol:
+            arbol_de_muestra(casa / "Documentos")
         datos = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
         env.update(HOME=str(casa), XDG_CACHE_HOME=str(casa / ".cache"), XDG_DATA_HOME=str(datos),
                    WRITING_DIR=str(trabajo), DESPACHO_DIR=str(casa / "Documentos" / "despacho"),
@@ -95,6 +125,8 @@ def main() -> int:
     piezas = aplicacion.construir(app)
     proyectos, compilacion, tareas, interfaz, visor = (piezas[k] for k in ("proyectos", "compilacion", "tareas", "interfaz", "visor"))
     proyectos.detectar_ya()
+    if args.categoria:
+        proyectos.fijarCategoria(args.categoria)
     if not app.cargar(aplicacion.QML_DIR / "Main.qml"):
         return 1
     raiz = app.motor.rootObjects()[0]
