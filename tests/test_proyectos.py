@@ -458,3 +458,30 @@ def test_subcategorias_de_las_carpetas_y_su_agrupacion(tmp_path):
     assert grupos["2026_p.tex"] == ["Docencia y evaluaciones", "Estadística para economistas"]
     assert pr.etiqueta_de_carpeta("economia-recursos-naturales-ambientales") == "Economía recursos naturales ambientales"
     assert pr.etiqueta_de_carpeta("03-sesiones") == "Sesiones" and pr.etiqueta_de_carpeta("monographs") == "Monografías"
+
+
+def test_inclusiones_con_macros_en_la_ruta_y_ordenes_propias(tmp_path):
+    """Lo que el CV hace (2026-11-10): `\\input{perfiles/\\perfil}` con la macro definida por omisión
+    (`\\ifdefined\\perfil\\else\\def\\perfil{a}\\fi`) y una orden propia que envuelve un `\\input`
+    (`\\newcommand{\\inputAnexos}[1]{…\\input{#1}…}`), usada desde un archivo incluido. Entran el perfil de omisión
+    primero, los demás perfiles después, y lo que cada uno incluye; nada falta y el cuerpo de la envoltura (#1) no
+    cuenta como archivo."""
+    (tmp_path / "perfiles").mkdir()
+    (tmp_path / "secciones").mkdir()
+    (tmp_path / "cv.tex").write_text(
+        "% lualatex \"\\def\\perfil{b}\\input{cv.tex}\"\n"
+        "\\ifdefined\\perfil\\else\\def\\perfil{a}\\fi\n"
+        "\\documentclass{article}\n"
+        "\\newcommand{\\inputAnexos}[1]{\\ifdefined\\sinAnexos\\else\\input{#1}\\fi}\n"
+        "\\begin{document}\n\\input{perfiles/\\perfil}\n\\end{document}\n")
+    (tmp_path / "perfiles" / "a.tex").write_text("\\input{secciones/uno}\n\\inputAnexos{secciones/anexos_a}\n")
+    (tmp_path / "perfiles" / "b.tex").write_text("\\input{secciones/dos}\n")
+    for nombre in ("uno", "dos", "anexos_a"):
+        (tmp_path / "secciones" / f"{nombre}.tex").write_text("x\n")
+    archivos, faltan, _ = pr.resolver_inclusiones(tmp_path / "cv.tex", pr.Cache())
+    relativas = [a.relative_to(tmp_path.resolve()).as_posix() for a in archivos]
+    assert relativas == ["perfiles/a.tex", "secciones/uno.tex", "secciones/anexos_a.tex", "perfiles/b.tex", "secciones/dos.tex"]
+    assert faltan == []
+    d = pr.analizar_tex((tmp_path / "cv.tex").read_text())
+    assert d["macros"] == {"perfil": "a"} and d["envolturas"] == ["inputAnexos"]
+    assert pr.rutas_con_macros("perfiles/\\perfil", {"perfil": "b"}, tmp_path) == ["perfiles/b", "perfiles/a"]

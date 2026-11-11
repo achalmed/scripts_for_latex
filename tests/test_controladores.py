@@ -110,6 +110,11 @@ def test_carpetas_de_trabajo_por_omision_y_del_usuario(app, piezas, tmp_path):
     assert [r for _n, r in a.raices()] == [muestra]
     a.profundidad = 99
     assert a.profundidad == 12
+    # el PDF a la derecha del código por omisión; Okular en su ventana solo si se elige (2026-11-10)
+    assert a.visorOkular is False
+    a.visorOkular = True
+    assert a.visorOkular is True
+    a.visorOkular = False
 
 
 @requiere_binding

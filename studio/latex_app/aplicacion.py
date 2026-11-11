@@ -562,9 +562,18 @@ def main(argv: list[str]) -> int:
             if ir:
                 piezas["interfaz"].pedir.emit("ir_a", {"archivo": ir[0], "linea": ir[1]})
     elif not humo:
+        # sin archivo pedido, la ventana arranca en la página de proyectos (2026-11-10): el último abierto no se reabre,
+        # queda marcado en la tabla en cuanto termina la detección (Intro lo abre)
         ultimo = piezas["proyectos"].ultimo_abierto()
-        if ultimo and Path(ultimo).is_file() and not piezas["proyectos"].abrir(ultimo):
-            piezas["interfaz"].fijarVista("escritura")
+        if ultimo:
+            def marcar_ultimo(en_curso: bool) -> None:
+                if en_curso:
+                    return
+                piezas["proyectos"].detectando.disconnect(marcar_ultimo)
+                fila = piezas["proyectos"].filaDe(ultimo)
+                if fila >= 0 and piezas["interfaz"].vista == "proyectos":
+                    piezas["interfaz"].pedir.emit("seleccionar_proyecto", {"fila": fila})
+            piezas["proyectos"].detectando.connect(marcar_ultimo)
     if not humo:
         piezas["proyectos"].detectar()
     try:

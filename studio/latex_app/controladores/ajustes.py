@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 from pathlib import Path
 
 from gui_comun.qt import QObject, QSettings, Property, Signal, Slot
@@ -177,10 +176,11 @@ class Ajustes(QObject):
     revisarOrtografia = Property(bool, lambda self: self._bool("editor/ortografia", False),
                                  lambda self, v: (self._s.setValue("editor/ortografia", bool(v)), self.cambiado.emit()), notify=cambiado)
     # Trabajo junto a TeXstudio (u otro editor): compilar cuando un archivo del proyecto abierto cambia fuera de la ventana.
-    # el PDF en Okular (por omisión si está instalado, 2026-11-08): recarga solo al compilar y hace SyncTeX en los dos
-    # sentidos; el visor integrado queda como alternativa (F7)
-    visorOkular = Property(bool, lambda self: self._bool("visor/okular", shutil.which("okular") is not None),
-                           lambda self, v: (self._s.setValue("visor/okular", bool(v)), self.cambiado.emit()), notify=cambiado)
+    # el PDF en Okular, en su ventana (2026-11-10: solo si se elige aquí): recarga solo al compilar y hace SyncTeX en los
+    # dos sentidos. Por omisión, el visor integrado a la derecha del código (decisiones §1.16). Clave nueva: la de
+    # 2026-11-08 («visor/okular») valía por omisión «sí» y no se arrastra.
+    visorOkular = Property(bool, lambda self: self._bool("visor/okular_ventana", False),
+                           lambda self, v: (self._s.setValue("visor/okular_ventana", bool(v)), self.cambiado.emit()), notify=cambiado)
     saltarATexstudio = Property(bool, lambda self: self._bool("editor/saltar_a_texstudio", False),
                                 lambda self, v: (self._s.setValue("editor/saltar_a_texstudio", bool(v)), self.cambiado.emit()), notify=cambiado)
     compilarAlCambiarFuera = Property(bool, lambda self: self._bool("editor/compilar_al_cambiar_fuera", False),

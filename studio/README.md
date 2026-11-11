@@ -58,8 +58,11 @@ lo que compile se ve aquí con sus problemas y, si se pide (Ajustes › Compilac
 `--version`, `--reconstruir`, `--limpiar`, `--simular`): lo deja así Herramientas › «Compilar desde TeXstudio con LaTeX
 Studio…» (cuatro claves de su `.ini`, con TeXstudio cerrado, respaldo y deshacer; `latex_app/texstudio.py`).
 
-**El PDF en Okular (por omisión, 2026-11-08).** Con Okular instalado el PDF se ve en Okular, que lo recarga solo al
-compilar; el visor integrado queda en F7 y en Ajustes. Ctrl+clic en el editor (o Ctrl+Alt+J) lleva al punto del PDF;
+**El PDF a la derecha del código; Okular, si se elige (2026-11-10).** Por omisión el PDF se ve en el visor integrado,
+junto al editor (F7 lo oculta o lo muestra), recargado en cada compilación y con SyncTeX en los dos sentidos. Ajustes ›
+«Ver el PDF en Okular, en una ventana aparte» lo pasa a Okular, que lo recarga solo al compilar; «Ver el PDF en Okular»
+(barra, Ctrl+Alt+O) lo abre ahí una vez sin cambiar el ajuste. Okular no se puede incrustar (decisiones §1.15). La
+ventana arranca en la página de proyectos, con el último abierto marcado (Intro lo abre). Con Okular, Ctrl+clic en el editor (o Ctrl+Alt+J) lleva al punto del PDF;
 Ctrl+Alt+O lo trae al frente; Mayús+clic en Okular vuelve al código aquí una vez fijado su editor externo
 (Herramientas › «Volver del PDF al código desde Okular…»: `main.py --ir %f %l`; `latex_app/okular.py`, `instancia.py`).
 

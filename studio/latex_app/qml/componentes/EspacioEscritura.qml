@@ -11,7 +11,7 @@ import GuiComun
 QQC2.SplitView {
     id: raiz
 
-    property bool mostrarPdf: !studio.ajustes.visorOkular       // con Okular (por omisión) el visor integrado queda en F7
+    property bool mostrarPdf: !studio.ajustes.visorOkular       // a la derecha del código, salvo con Okular en su ventana (Ajustes); F7 lo alterna
     readonly property var editorActual: editores.count > 0 && studio.editor.indiceActual >= 0 ? editores.itemAt(studio.editor.indiceActual) : null
 
     orientation: Qt.Horizontal

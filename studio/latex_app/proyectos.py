@@ -25,7 +25,7 @@ from latex_app import compilador as svc
 PROFUNDIDAD = 12                             # el máximo de los ajustes: ~/Documents entero cuesta < 1 s y llega a docencia/contenido/cursos/<c>/04-evaluaciones/<sub>/<expediente>
 CARPETAS_SALTADAS = {"node_modules", "_site", "_freeze", ".quarto", "site_libs", ".build", "build", "__pycache__"}
 LIMITE_LECTURA = 512 * 1024                  # un .tex más grande (tablas generadas) se lee hasta aquí
-VERSION_CACHE = 5
+VERSION_CACHE = 6                            # 6: macros, envolturas de \input y sus llamadas (2026-11-10)
 
 CATEGORIAS = ("Escritura académica", "Tesis y trabajos de investigación", "Artículos científicos",
               "Documentos legislativos", "Documentos institucionales", "Docencia y evaluaciones", "Publicaciones (Quarto)",
@@ -48,6 +48,15 @@ _RECURSO_BIB = re.compile(r"\\addbibresource\s*(?:\[[^\]]*\])?\s*\{(?P<a>[^}]+)\
 _BIBLIOGRAFIA = re.compile(r"\\bibliography\s*\{(?P<a>[^}]+)\}")
 _BIBLATEX = re.compile(r"\\usepackage\s*(?:\[(?P<op>[^\]]*)\])?\s*\{[^}]*\bbiblatex\b[^}]*\}")
 _PAQUETES = re.compile(r"\\(?:usepackage|RequirePackage)\s*(?:\[[^\]]*\])?\s*\{(?P<a>[^}]+)\}")
+# una macro simple (\def\X{valor}, \newcommand{\X}{valor}): la que se usa en una ruta, \input{profiles/\CVprofile}
+_MACRO_SIMPLE = re.compile(r"\\(?:[gex]?def\s*\\(?P<n1>[A-Za-z@]+)|(?:re|provide)?newcommand\*?\s*\{?\s*\\(?P<n2>[A-Za-z@]+)\s*\}?)"
+                           r"\s*\{(?P<v>[^{}\\#]*)\}")
+# una orden propia que incluye su argumento: \newcommand{\inputAnexos}[1]{\ifdefined\X\else\input{#1}\fi}, \def\Y#1{\input{#1}}
+_ENVOLTURA = re.compile(r"\\(?:(?:re|provide)?newcommand\*?\s*\{?\s*\\(?P<n1>[A-Za-z@]+)\s*\}?\s*\[\d\](?:\[[^\]]*\])?"
+                        r"|[gex]?def\s*\\(?P<n2>[A-Za-z@]+)\s*#1)\s*\{")
+_INCLUYE_ARGUMENTO = re.compile(r"\\(?:input|include|subfile)\s*\{\s*#1\s*\}")
+# una llamada cuyo argumento parece una ruta (se resuelve solo si la orden es una envoltura del proyecto)
+_LLAMADA_RUTA = re.compile(r"\\(?P<orden>[A-Za-z@]+)\*?\s*\{(?P<a>[^{}\\#\s]*(?:/|\.tex)[^{}\\#\s]*)\}")
 _TITULO = re.compile(r"\\title\s*(?:\[[^\]]*\])?\s*\{(?P<t>(?:[^{}]|\{[^{}]*\})*)\}")
 _PDF_MODE = re.compile(r"^\s*\$pdf_mode\s*=\s*(\d)", re.M)
 _SALIDA_LATEXMK = re.compile(r"^\s*\$(?:out_dir|aux_dir)\s*=\s*['\"]([^'\"]+)['\"]", re.M)
@@ -105,14 +114,28 @@ def analizar_tex(texto: str) -> dict:
         magicos.setdefault(m["que"].upper(), m["valor"].strip())
     arara = [(m["regla"].lower(), m["resto"].strip()) for m in _ARARA.finditer(texto[:8000])]
     m = _CLASE.search(limpio)
-    inclusiones = []
+    con_posicion = []
     for mi in _INCLUSION.finditer(limpio):
         orden, a, b = mi["orden"], (mi["a"] or "").strip(), (mi["b"] or "").strip()
+        if "#" in a or "#" in b:                       # el cuerpo de una envoltura (\input{#1}): no es un archivo
+            continue
         if orden in ("import", "subimport", "includefrom", "subincludefrom"):
-            inclusiones.append((orden, a, b))
+            con_posicion.append((mi.start(), (orden, a, b)))
         elif a:
-            inclusiones.append((orden, a, ""))
-    inclusiones += [("input", mi["a"], "") for mi in _INPUT_SUELTO.finditer(limpio)]
+            con_posicion.append((mi.start(), (orden, a, "")))
+    con_posicion += [(mi.start(), ("input", mi["a"], "")) for mi in _INPUT_SUELTO.finditer(limpio)]
+    # las llamadas a órdenes que podrían ser envolturas, en su sitio (`("llamada", orden, ruta)`)
+    no_envolturas = {"input", "include", "subfile", "import", "subimport", "includefrom", "subincludefrom", "includegraphics",
+                     "addbibresource", "bibliography", "usepackage", "RequirePackage", "documentclass", "url", "href",
+                     "includepdf", "lstinputlisting", "inputminted", "graphicspath", "IfFileExists", "InputIfFileExists"}
+    con_posicion += [(mi.start(), ("llamada", mi["orden"], mi["a"].strip())) for mi in _LLAMADA_RUTA.finditer(limpio)
+                     if mi["orden"] not in no_envolturas]
+    inclusiones = [t for _pos, t in sorted(con_posicion, key=lambda x: x[0])]
+    macros: dict[str, str] = {}
+    for mm in _MACRO_SIMPLE.finditer(limpio):           # la primera definición es la de omisión (\ifdefined\X\else\def…)
+        macros.setdefault(mm["n1"] or mm["n2"], mm["v"].strip())
+    envolturas = sorted({me["n1"] or me["n2"] for me in _ENVOLTURA.finditer(limpio)
+                         if _INCLUYE_ARGUMENTO.search(limpio, me.end(), me.end() + 400)})
     bib_recursos = [a.strip() for m2 in _RECURSO_BIB.finditer(limpio) for a in [m2["a"]]]
     bib_antiguas = [a.strip() for m2 in _BIBLIOGRAFIA.finditer(limpio) for a in m2["a"].split(",") if a.strip()]
     mb = _BIBLATEX.search(limpio)
@@ -128,6 +151,8 @@ def analizar_tex(texto: str) -> dict:
         "magicos": magicos,
         "arara": arara,
         "inclusiones": inclusiones,
+        "macros": macros,
+        "envolturas": envolturas,
         "bib_recursos": bib_recursos,
         "bib_antiguas": bib_antiguas,
         "biblatex": bool(mb) or "\\printbibliography" in limpio,
@@ -338,6 +363,29 @@ def _resolver(base: Path, nombre: str, extension: str = ".tex") -> Path | None:
     return None
 
 
+def rutas_con_macros(nombre: str, macros: dict[str, str], base: Path) -> list[str]:
+    """Las rutas a que puede llevar `\\input{profiles/\\CVprofile}`: primero la del valor que el documento da a cada
+    macro (la de omisión) y después las demás que existen con cualquier valor (`profiles/*.tex`), porque una macro en
+    una ruta es un parámetro (el perfil, el capítulo) y todas sus variantes son archivos del proyecto."""
+    salida: list[str] = []
+    expandido = re.sub(r"\\([A-Za-z@]+)\s*", lambda m: macros.get(m.group(1), m.group(0)), nombre)
+    if "\\" not in expandido:
+        salida.append(expandido)
+    patron = re.sub(r"\\[A-Za-z@]+\s*", "*", nombre)
+    if "\\" not in patron and patron.strip("*/"):
+        if not patron.endswith(".tex"):
+            patron += ".tex"
+        try:
+            for hallado in sorted(base.glob(patron)):
+                if hallado.is_file():
+                    relativa = str(hallado.relative_to(base))[:-4]
+                    if relativa not in salida and relativa + ".tex" not in salida:
+                        salida.append(relativa)
+        except (OSError, ValueError, NotImplementedError):
+            pass
+    return salida
+
+
 def resolver_inclusiones(principal: Path, cache: Cache, limite: int = 400) -> tuple[list[Path], list[str], list[dict]]:
     """Los archivos que el principal incluye, recursivamente y en orden (sin repetir ni entrar en bucle); los que no se
     encuentran (con la carpeta del documento, como TeX: `\\input` es relativo a la carpeta del principal, `\\import` y
@@ -346,11 +394,37 @@ def resolver_inclusiones(principal: Path, cache: Cache, limite: int = 400) -> tu
     vistos: list[Path] = [principal.resolve()]
     faltan: list[str] = []
     analisis = [cache.tex(principal)]
+    macros: dict[str, str] = {}
+    envolturas: set[str] = set()
 
     def visitar(archivo: Path, dir_actual: Path, datos: dict) -> None:
+        for k, v in (datos.get("macros") or {}).items():
+            macros.setdefault(k, v)
+        envolturas.update(datos.get("envolturas") or ())
         for orden, a, b in datos["inclusiones"]:
             if len(vistos) >= limite:
                 return
+            if orden == "llamada":                        # \inputAnexos{ruta}: cuenta si la orden envuelve un \input
+                if a not in envolturas:
+                    continue
+                orden, a, b = "input", b, ""
+            nombre_crudo = b if orden in ("import", "subimport", "includefrom", "subincludefrom") else a
+            if "\\" in nombre_crudo:                       # una macro en la ruta: su valor primero y las demás que casan
+                variantes = rutas_con_macros(nombre_crudo, macros, dir_actual if orden.startswith("sub") else base)
+                if not variantes:
+                    if nombre_crudo not in faltan:
+                        faltan.append(nombre_crudo)
+                    continue
+                for v in variantes:
+                    if len(vistos) >= limite:
+                        return
+                    hallado = _resolver(base, v) or _resolver(dir_actual, v)
+                    if hallado is not None and hallado not in vistos:
+                        vistos.append(hallado)
+                        sub = cache.tex(hallado)
+                        analisis.append(sub)
+                        visitar(hallado, dir_actual, sub)
+                continue
             if orden in ("import", "includefrom"):
                 destino_dir = Path(a) if os.path.isabs(a) else base / a
                 hallado, nuevo_dir = _resolver(destino_dir, b), destino_dir

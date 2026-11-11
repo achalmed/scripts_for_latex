@@ -148,6 +148,21 @@ todo lo de Okular (búsqueda, anotaciones, presentación). El integrado queda en
 Okular (KParts es C++/Widgets; la ventana es QML). Los avisos sin decisión pasan a las notificaciones de KDE (gui-comun
 4.1), que no ocupan la ventana.
 
+**Superada en parte (2026-11-10): el PDF a la derecha del código por omisión.** El autor pidió ver el PDF junto al
+código y Okular en ventana aparte solo si lo elige. Incrustar Okular sigue descartado (KParts no tiene enlace para
+Python ni cabe en una escena QML; reparentar su ventana no funciona en Wayland). Lo que motivó el cambio del 08-11 ya no
+vale: el integrado sigue a la versión elegida (`p.job`, desde las versiones del mismo día) y pinta sobremuestreado
+(gui-comun 4.1). El ajuste pasa a una clave nueva (`visor/okular_ventana`, falso por omisión) para que quien nunca lo
+tocó vea el cambio; «Ver el PDF en Okular» (Ctrl+Alt+O) sigue abriéndolo allí a mano. Además, sin archivo en la orden,
+la ventana arranca en la página de proyectos: el último abierto ya no se reabre solo, queda marcado en la tabla.
+
+**Inclusiones con macros y órdenes propias (2026-11-10).** El CV incluye su cuerpo con `\input{profiles/\CVprofile}`
+y sus anexos con `\inputAnexos{…}`, una orden suya que envuelve un `\input`: el detector veía 2 de sus 36 archivos. Ahora
+el análisis guarda las macros simples (la primera definición, que es la de omisión en `\ifdefined\X\else\def\X{…}\fi`),
+las órdenes cuyo cuerpo hace `\input{#1}` y las llamadas con una ruta por argumento; una macro en una ruta da primero su
+valor y después todas las variantes que existen (`profiles/*.tex`), porque es un parámetro y cada variante es un archivo
+del proyecto (caché versión 6).
+
 ## 2. Motor
 
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)
