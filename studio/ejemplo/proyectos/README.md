@@ -13,4 +13,4 @@ carpeta temporal y se compila allí.
 | `articulo-bibtex/` | `% !TEX program` y `% !BIB program = bibtex`, `\bibliography` |
 | `con-error/` | un documento que no compila (orden no definida) |
 | `con-latexmkrc/` | un `latexmkrc` con `$pdf_mode = 4`: se compila con latexmk |
-| `marco/` | un marco con compilador propio (`marco/scripts/build.sh`, `marco/classes/`): sus documentos se compilan con él; `pruebas/` es «Pruebas y plantillas» |
+| `marco/` | un marco con compilador propio (`marco/scripts/build.sh`, `marco/classes/`): sus documentos se compilan con él; `pruebas/` es «Pruebas y plantillas»; declara `datos:` (§8): `marco/informes/informe-anual/datos.yml` y `marco/scripts/datos_muestra.py` llenan la pestaña «Datos» |

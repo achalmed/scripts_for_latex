@@ -22,6 +22,8 @@ QQC2.Control {
 
     signal abrirArchivo(string ruta, int linea)
     signal citar(string clave)
+    signal insertarDatos(string texto)                 // una figura, tabla o cifra del paquete en el cursor
+    signal actualizarDatos()                           // «Actualizar» de la pestaña Datos (la ventana confirma)
 
     Kirigami.Theme.colorSet: Kirigami.Theme.View
     Kirigami.Theme.inherit: false
@@ -105,10 +107,13 @@ QQC2.Control {
             }
             QQC2.TabBar {
                 id: pestanas
+                objectName: "pestanasLaterales"
                 Layout.fillWidth: true
-                QQC2.TabButton { text: "Archivos" }
-                QQC2.TabButton { text: "Estructura" }
-                QQC2.TabButton { text: "Bibliografía" }
+                // las cuatro a lo ancho (con cuatro, la barra se desplazaba y «Archivos» quedaba fuera de la vista)
+                QQC2.TabButton { text: "Archivos"; width: pestanas.width / 4 }
+                QQC2.TabButton { text: "Estructura"; width: pestanas.width / 4 }
+                QQC2.TabButton { text: "Bibliografía"; width: pestanas.width / 4 }
+                QQC2.TabButton { text: "Datos"; width: pestanas.width / 4 }
             }
             StackLayout {
                 Layout.fillWidth: true
@@ -221,6 +226,119 @@ QQC2.Control {
                             width: parent.width - Kirigami.Units.gridUnit * 2
                             visible: bib.count === 0
                             text: raiz.p.hayAbierto ? "El proyecto no tiene .bib (o están vacíos)" : "Ningún proyecto"
+                        }
+                    }
+                }
+
+                // datos del proyecto: lo que declara su marco (latex-studio.yml, sección datos; §8 del contrato)
+                ColumnLayout {
+                    id: pestanaDatos
+                    readonly property var d: studio.datos
+                    property string filtro: ""
+                    readonly property var lista: d.elementos.filter(e => !filtro || (e.id + " " + e.titulo).toLowerCase().includes(filtro.toLowerCase()))
+                    spacing: 0
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Kirigami.Units.smallSpacing
+                        visible: pestanaDatos.d.disponible
+                        spacing: Kirigami.Units.smallSpacing
+                        Repeater {
+                            model: pestanaDatos.d.paquetes
+                            QQC2.Label {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                text: modelData.estudio + "@" + modelData.usada + (modelData.nueva ? "  ·  hay " + modelData.ultima : "  ·  al día")
+                                color: modelData.nueva ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.disabledTextColor
+                                font: Kirigami.Theme.smallFont
+                                elide: Text.ElideMiddle
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            QQC2.Button {
+                                text: pestanaDatos.d.hayNueva ? "Traer la versión nueva" : "Actualizar"
+                                icon.name: "view-refresh"
+                                highlighted: pestanaDatos.d.hayNueva
+                                enabled: !pestanaDatos.d.cargando && !studio.tareas.activa
+                                onClicked: raiz.actualizarDatos()
+                                QQC2.ToolTip.text: "Lleva el proyecto a la última versión de sus paquetes y vuelve a dibujar figuras, tablas y cifras"
+                                QQC2.ToolTip.visible: hovered
+                                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                            }
+                            QQC2.Button {
+                                visible: pestanaDatos.d.productor !== ""
+                                text: pestanaDatos.d.productor
+                                icon.name: "office-chart-bar"
+                                onClicked: pestanaDatos.d.abrirProductor()
+                                QQC2.ToolTip.text: "Hacer o rehacer figuras y tablas para este proyecto en " + pestanaDatos.d.productor
+                                QQC2.ToolTip.visible: hovered
+                                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                            }
+                        }
+                    }
+                    Kirigami.SearchField {
+                        Layout.fillWidth: true
+                        Layout.margins: Kirigami.Units.smallSpacing
+                        visible: pestanaDatos.d.disponible
+                        placeholderText: "Filtrar " + pestanaDatos.d.elementos.length + " figuras, tablas y cifras"
+                        onTextChanged: pestanaDatos.filtro = text
+                    }
+                    ListView {
+                        id: listaDatos
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: pestanaDatos.lista
+                        Accessible.name: "Figuras, tablas y cifras del proyecto"
+                        QQC2.ScrollBar.vertical: QQC2.ScrollBar {}
+                        delegate: QQC2.ItemDelegate {
+                            id: filaDato
+                            required property var modelData
+                            required property int index
+                            readonly property bool primera: index === 0 || pestanaDatos.lista[index - 1].tipo !== modelData.tipo
+                            width: listaDatos.width
+                            onDoubleClicked: raiz.insertarDatos(modelData.insertar)
+                            contentItem: ColumnLayout {
+                                spacing: 0
+                                QQC2.Label {
+                                    visible: filaDato.primera
+                                    Layout.topMargin: filaDato.index === 0 ? 0 : Kirigami.Units.smallSpacing
+                                    text: filaDato.modelData.tipo
+                                    font.weight: Font.DemiBold
+                                    color: Kirigami.Theme.disabledTextColor
+                                }
+                                QQC2.Label {
+                                    Layout.fillWidth: true
+                                    text: filaDato.modelData.tipo === "Cifras" ? filaDato.modelData.id + "  =  " + filaDato.modelData.titulo
+                                                                               : (filaDato.modelData.titulo || filaDato.modelData.id)
+                                    font.family: filaDato.modelData.tipo === "Cifras" ? Kirigami.Theme.fixedWidthFont.family : Kirigami.Theme.defaultFont.family
+                                    elide: Text.ElideRight
+                                    color: filaDato.modelData.existe ? Kirigami.Theme.textColor : Kirigami.Theme.neutralTextColor
+                                }
+                                QQC2.Label {
+                                    visible: filaDato.modelData.tipo !== "Cifras"
+                                    Layout.fillWidth: true
+                                    text: filaDato.modelData.id + (filaDato.modelData.existe ? "" : "  ·  sin importar: Actualizar")
+                                    font: Kirigami.Theme.smallFont
+                                    color: Kirigami.Theme.disabledTextColor
+                                    elide: Text.ElideRight
+                                }
+                            }
+                            QQC2.ToolTip.text: "Doble clic: " + filaDato.modelData.insertar + " en el cursor"
+                            QQC2.ToolTip.visible: hovered
+                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        }
+                        Kirigami.PlaceholderMessage {
+                            anchors.centerIn: parent
+                            width: parent.width - Kirigami.Units.gridUnit * 2
+                            visible: listaDatos.count === 0
+                            text: !raiz.p.hayAbierto ? "Ningún proyecto"
+                                  : !pestanaDatos.d.disponible ? "Este documento no tiene datos declarados"
+                                  : pestanaDatos.d.cargando ? "Leyendo los paquetes…"
+                                  : pestanaDatos.d.error ? "No se pudieron leer los datos" : "El proyecto no cita paquetes"
+                            explanation: !pestanaDatos.d.disponible && raiz.p.hayAbierto
+                                         ? "Su marco no declara una sección «datos» en su latex-studio.yml, o el proyecto no tiene la ficha que la activa."
+                                         : pestanaDatos.d.error
                         }
                     }
                 }

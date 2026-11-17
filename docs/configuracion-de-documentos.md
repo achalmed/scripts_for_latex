@@ -90,7 +90,7 @@ Sin esquema, o además del esquema, todo documento muestra «Documento»: títul
 | marco | esquema | qué expone |
 |---|---|---|
 | docencia | `docencia/config/latex-studio.yml` | `academic-exam`: datos de la evaluación, presentación de preguntas, solución, cajas, membrete y salida (`\configuracion{…}` de la clase, 2026-11-08); `academic-report`, `academic-beamer`: sus metadatos |
-| escritura | `escritura/core/config/latex-studio.yml` | opciones de clase (formato, tema, salida, modo, doblecara…) y metadatos `\setmeta` de `metadata.tex` |
+| escritura | `escritura/core/config/latex-studio.yml` | opciones de clase (formato, tema, salida, modo, doblecara…), metadatos `\setmeta` de `metadata.tex` y los datos de sus paquetes (§8) |
 | qillqasqa (marco_documental) | `qillqasqa/marco_documental/config/latex-studio.yml` | los documentos institucionales y legislativos: sus metadatos y opciones |
 | yupay | `yupay/…/latex-studio.yml` | la rendición de viáticos |
 | cv | `cv/main/config/latex-studio.yml` | el CV multiperfil (categoría «Currículum vítae») |
@@ -132,4 +132,25 @@ documento. Con eso:
 
 La muestra (`studio/ejemplo/proyectos/marco`) declara `completa` y `resumen` con `--version` y `% !VERSION`; docencia,
 las cuatro de `academic-exam` con `--modo` y `% !MODO`. Pruebas: `tests/test_versiones.py`.
+
+## 8. Datos del proyecto (`datos:`)
+
+Un marco cuyos documentos citan datos producidos fuera (figuras, tablas y cifras de un paquete) lo declara al nivel
+del esquema; la pestaña «Datos» de la vista Escritura lo muestra (decisiones §1.16):
+
+```yaml
+datos:
+  nombre: Datos de datafw          # el título de la pestaña y de sus avisos
+  marcador: proyecto.yaml          # {proyecto} = la carpeta más cercana al principal que lo tiene (sin él: la del principal)
+  recursos: [../../scripts/datos.sh, recursos, '{proyecto}', --json]   # imprime el JSON de abajo (60 s como mucho)
+  actualizar: [../../scripts/datos.sh, importar, '{proyecto}', --actualizar]   # trae la última versión (se confirma)
+  productor: {nombre: Datafw Studio, orden: [/usr/bin/python3, ../../../datafw/studio/main.py, --publicacion, '{proyecto}']}
+```
+
+Un argumento que empieza con «.» es una ruta relativa al esquema. `recursos` imprime
+`{"paquetes": [{estudio, usada, ultima, nueva}], "figuras": [{id, titulo, insertar, existe}], "tablas": [{id, titulo,
+insertar, existe, variantes}], "cifras": [{macro, valor}]}`; `insertar` es el texto que el doble clic pone en el
+cursor. Lo declara escritura (`escritura/core/config/latex-studio.yml`, con `reporting/main.py recursos` e `importar
+--actualizar`); la muestra, `studio/ejemplo/proyectos/marco` (su `datos.yml` y `studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`). Pruebas:
+`tests/test_datos.py`.
 

@@ -25,6 +25,7 @@ from latex_app import compilador as svc
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
 from latex_app.controladores.configuracion import ConfiguracionDocumento
+from latex_app.controladores.datos import DatosProyecto
 from latex_app.controladores.sincronizacion import Sincronizacion
 from gui_comun.editor import ControladorEditor
 from latex_app.controladores.historial import Historial
@@ -241,6 +242,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     proyectos = Proyectos(ajustes, historial, consola, tareas, cache=cache)
     editor = ControladorEditor(consola)
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
+    datos = DatosProyecto(proyectos, tareas, consola)   # la pestaña «Datos» (lo que declara el marco, §8 del contrato)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)
     sincronizacion = Sincronizacion()
@@ -530,7 +532,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     servidor.irA.connect(ir_desde_fuera)
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
                   editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
-                  configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor)
+                  configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor, datos=datos)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)

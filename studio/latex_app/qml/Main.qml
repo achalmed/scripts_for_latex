@@ -170,6 +170,11 @@ VentanaStudio {
     navegacion: BarraLateral {
         onAbrirArchivo: (ruta, linea) => ventana.irA(ruta, linea)
         onCitar: clave => ventana.insertar("\\cite{" + clave + "}")
+        onInsertarDatos: texto => ventana.insertar(texto)
+        onActualizarDatos: ventana.confirmacion.pedir({ titulo: "Actualizar los datos del proyecto",
+                                                        consecuencias: "Lleva el proyecto a la última versión de sus paquetes (su ficha) y vuelve a escribir sus figuras, tablas y cifras importadas. El texto del documento no se toca.",
+                                                        operacionTexto: "actualización", textoAceptar: "Actualizar", icono: "view-refresh" },
+                                                      () => studio.datos.actualizar())
     }
 
     centro: StackLayout {

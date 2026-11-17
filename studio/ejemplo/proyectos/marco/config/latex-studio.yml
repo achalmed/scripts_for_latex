@@ -2,6 +2,11 @@
 # (contrato: docs/configuracion-de-documentos.md). Lo usan las pruebas y las capturas; ningún dato real.
 version: 1
 marco: muestra
+datos:                             # §8 del contrato: lo que los informes del marco pueden citar de sus paquetes de datos
+  nombre: Datos de muestra
+  marcador: datos.yml
+  recursos: [python3, ../scripts/datos_muestra.py, recursos, '{proyecto}']
+  actualizar: [python3, ../scripts/datos_muestra.py, actualizar, '{proyecto}']
 documentos:
   - nombre: Memoria
     clases: [memoria]

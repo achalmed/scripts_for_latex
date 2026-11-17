@@ -72,6 +72,7 @@ def main() -> int:
     parser.add_argument("--arbol", action="store_true",
                         help="añade expedientes de muestra (oficios, cartas, cursos) para ver las subcategorías del árbol")
     parser.add_argument("--categoria", default="", help="la rama elegida a la izquierda (p. ej. «Documentos institucionales › Oficios»)")
+    parser.add_argument("--lateral", type=int, default=-1, help="pestaña de la barra lateral de Escritura (0 Archivos · 1 Estructura · 2 Bibliografía · 3 Datos)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
     args = parser.parse_args()
@@ -175,6 +176,12 @@ def main() -> int:
                 QTimer.singleShot(1500, modulo)
         if args.texstudio:
             QTimer.singleShot(900, lambda: interfaz.pedir.emit("configurar_texstudio", {}))
+        if args.lateral >= 0:
+            def lateral():
+                pestanas = raiz.findChild(QObject, "pestanasLaterales")
+                if pestanas is not None:
+                    pestanas.setProperty("currentIndex", args.lateral)
+            QTimer.singleShot(1200, lateral)
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
         app.capturar(args.salida, espera_ms=9000 if args.compilar_abierto else 3500)

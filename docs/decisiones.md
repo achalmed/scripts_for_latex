@@ -165,6 +165,21 @@ del proyecto (caché versión 6).
 
 ## 2. Motor
 
+### §1.16 Los datos del proyecto los declara su marco: la pestaña «Datos» (2026-11-17)
+
+La vista Escritura suma una pestaña «Datos» junto a Archivos, Estructura y Bibliografía: las figuras, tablas y cifras
+que el proyecto puede citar, con la orden LaTeX que las inserta (doble clic, en el cursor, como `\cite` desde la
+bibliografía), si su paquete tiene una versión más nueva y un botón para traerla, y otro para abrir el programa que las
+produce. La ventana no sabe qué es un paquete: corre las tres órdenes de la sección `datos:` del `latex-studio.yml` del
+marco (`recursos` devuelve JSON, `actualizar`, `productor.orden`; contrato §8 de `configuracion-de-documentos.md`), en
+un hilo y con `{proyecto}` = la carpeta más cercana con el `marcador` del marco. Escritura la declara para sus informes
+(los paquetes de datafw; abre Datafw Studio); un marco sin `datos:` deja la pestaña vacía con su explicación. «Actualizar»
+escribe en el proyecto (figuras, tablas, cifras, su ficha), nunca en el texto, y se confirma. Se descartó leer los
+paquetes desde aquí: el repo es público y autónomo, y docencia o el CV no deben cargar nada de datafw. Las cuatro
+pestañas van a lo ancho de la barra (con su ancho natural se desplazaba y «Archivos» quedaba fuera de la vista).
+Pruebas: `tests/test_datos.py`, sobre el marco de muestra (`studio/ejemplo/proyectos/marco`, su `datos.yml` y
+`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`).
+
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)
 
 El autor instaló `qml6-module-qtquick-pdf` y `python3-pyside6.qtpdf`. Cada página la pinta ahora Qt con `PdfPageImage`

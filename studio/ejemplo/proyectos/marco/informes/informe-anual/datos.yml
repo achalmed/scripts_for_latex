@@ -1,0 +1,12 @@
+# datos.yml — la ficha de datos del informe de muestra (la activa `marcador` del latex-studio.yml del marco)
+paquete: indicadores-muestra
+usada: v1
+ultima: v2
+figuras:
+  serie_anual: Serie anual de muestra
+  barras_region: Valores por región
+tablas:
+  resumen: Resumen de la muestra
+cifras:
+  \cifraTotal: 1 234
+  \cifraTasa: 12,5
