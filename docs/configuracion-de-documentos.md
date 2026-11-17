@@ -171,7 +171,44 @@ biblioteca:
 
 `buscar` imprime `[{calibre_id, clave, titulo, autores, anio, pdf, portada, insertar}]`; `fichas`, `[{archivo, nombre,
 tipo, clave, pagina, verificacion, texto, insertar}]`; `citar`, `{clave, nueva, escrito, insertar}`: con `nueva` la
-ventana pide confirmación y la repite con `--aplicar`. La declara escritura (`escritura/core/config/latex-studio.yml`); la
-muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`). Pruebas:
-`tests/test_datos.py`.
+ventana pide confirmación y la repite con `--aplicar`.
+
+Fichar desde la pestaña (decisiones §1.19; opcional: sin estas cuatro, la pestaña solo lista las fichas):
+
+```yaml
+  formulario:    [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, formulario]
+  ficha:         [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, ficha, '{proyecto}', '{archivo}']
+  nueva_ficha:   [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, nueva_ficha, '{proyecto}', '{datos}']   # + --aplicar al guardar
+  guardar_ficha: [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, guardar_ficha, '{proyecto}', '{archivo}', '{huella}', '{datos}']   # + --aplicar
+```
+
+`formulario` imprime `{tipos: [{clave, nombre, secciones, literal, pagina, categoria, libro}], categorias}`: la ventana
+pinta el formulario con eso. `ficha` (`{archivo}` es el nombre del archivo de la ficha) imprime `{archivo, huella, tipo,
+calibre_id, clave, pagina, categoria, uso, verificacion, secciones: [{titulo, texto}], problemas}`. `{datos}` es un JSON
+`{tipo, calibre_id, pagina, categoria, tema, uso, secciones: {título: texto}}`; las dos órdenes de escribir imprimen
+`{archivo, verificacion: {estado, metodo, fecha}, detalle, problemas, nueva_fuente, renombra, antes, escrito}` (sin
+`--aplicar`, `escrito` es falso: nada se escribió), `{codigo: "ficha_cambiada", error, actual}` si la ficha cambió desde
+que se leyó con esa `huella`, o `{error}`.
+
+## 10. La ayuda de la IA de una parte (`ayuda:`)
+
+Un marco cuyos documentos tienen prompts por parte lo declara al nivel del esquema; la ventana lo ofrece en Herramientas ›
+«Ayuda de la IA para esta parte…» (Ctrl+Alt+I; decisiones §1.19):
+
+```yaml
+ayuda:
+  nombre: Ayuda de la IA
+  marcador: proyecto.yaml
+  prompt: [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, prompt_parte, '{proyecto}', '{archivo}']   # + --componente c
+  pegar:  [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, pegar_parte, '{proyecto}', '{archivo}', '{pegado}', --tex, '{tex}']
+```
+
+`{archivo}` es el archivo abierto, relativo a `{proyecto}`. `prompt` imprime `{prompt, componente, titulo, componentes:
+[{clave, titulo}], fuente: {ruta, titulo, version}, aviso, largo, contexto: {fichas, obras}}` o `{error}`; la ventana copia
+`prompt` al portapapeles. `pegar` recibe dos rutas de archivos de la caché de la ventana: `{pegado}` (lo que respondió el
+chat) y `{tex}` (el texto del editor, que puede tener cambios sin guardar), e imprime `{ok, errores, avisos, componente,
+antes, despues, diff}`: si `ok` y el autor acepta, la ventana reemplaza `antes` por `despues` en el editor. Ninguna de las
+dos escribe nada ni llama a un modelo. Las declara escritura (`escritura/core/config/latex-studio.yml`);
+la muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`), las §9 y §10.
+Pruebas: `tests/test_datos.py`.
 

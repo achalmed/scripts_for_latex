@@ -25,6 +25,7 @@ from latex_app import compilador as svc
 from latex_app.controladores.ajustes import Ajustes
 from latex_app.controladores.compilacion import Compilacion
 from latex_app.controladores.configuracion import ConfiguracionDocumento
+from latex_app.controladores.ayuda import AyudaParte
 from latex_app.controladores.biblioteca import BibliotecaProyecto
 from latex_app.controladores.datos import DatosProyecto
 from latex_app.controladores.miniaturas import Miniaturas
@@ -109,6 +110,11 @@ class Sistema(QObject):
     def copiarRuta(self, ruta: str) -> None:
         QGuiApplication.clipboard().setText(ruta)
         self.consola.registrar("info", f"Ruta copiada: {ruta}")
+
+    @Slot(str)
+    def copiarTexto(self, texto: str) -> None:
+        """Un texto al portapapeles (el prompt de la ayuda de la IA, §1.19)."""
+        QGuiApplication.clipboard().setText(texto)
 
     @staticmethod
     def orden_texstudio(ruta: str, linea: int = 0, principal: str = "") -> list[str]:
@@ -246,6 +252,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     compilacion = Compilacion(proyectos, historial, ajustes, consola, tareas)
     datos = DatosProyecto(proyectos, tareas, consola)   # la pestaña «Datos» (lo que declara el marco, §8 del contrato)
     biblioteca = BibliotecaProyecto(proyectos, tareas, consola)   # la pestaña «Citas»: la biblioteca del marco (§9)
+    ayuda = AyudaParte(proyectos, tareas, consola)               # la ayuda de la IA de la parte abierta (§10 del contrato)
     miniaturas = Miniaturas(cache or cache_del_studio())   # la primera página de cada PDF (tarjetas y figuras, §1.17)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)
@@ -308,6 +315,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        habilitada=False, al_disparar=lambda *_: interfaz.pedir.emit("configurar_documento", {"ruta": proyectos.principal}),
                        descripcion="Metadatos, elementos visibles y opciones del documento, según el latex-studio.yml de su marco; "
                                    "muestra la diferencia y escribe solo al confirmar")
+    acciones.registrar("escritura.ayuda_ia", "&Ayuda de la IA para esta parte…", "tools-wizard", "Ctrl+Alt+I", "Herramientas",
+                       habilitada=False, al_disparar=pedir("ayuda_ia"),
+                       descripcion="Copia el prompt que el marco arma para la parte abierta (con su entrada rellena) y lee la "
+                                   "respuesta del chat que pegues: la muestra como cambio sugerido y la pone en el editor si la aceptas")
     acciones.registrar("proyecto.cerrar", "Cerrar el &proyecto", "project-development-close", None, "Archivo", habilitada=False, al_disparar=pedir("cerrar_proyecto"))
     acciones.registrar("escritorio.pdf", "Abrir el PDF con su &aplicación", "application-pdf", "Ctrl+Shift+P", "Archivo", habilitada=False,
                        al_disparar=lambda *_: escritorio.abrirConAplicacion(pdf_abierto()), descripcion="El PDF en Okular (o la aplicación de KDE para PDF)")
@@ -391,7 +402,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
         ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
                        "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
-        ("&Herramientas", ["documento.configurar", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
+        ("&Herramientas", ["documento.configurar", "escritura.ayuda_ia", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
     ])
@@ -436,6 +447,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("archivo.guardar_todo", editor.hayModificados)
         acciones.habilitar("proyecto.cerrar", hay_proyecto)
         acciones.habilitar("documento.configurar", hay_proyecto)
+        acciones.habilitar("escritura.ayuda_ia", hay_archivo and ayuda.disponible)
         acciones.habilitar("archivo.texstudio", (hay_proyecto or hay_archivo) and sistema.hayTexstudio)
         acciones.habilitar("proyectos.detectar", not proyectos.enDeteccion)
         acciones.marcar("compilar.al_guardar", ajustes.compilarAlGuardar)
@@ -444,7 +456,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
             acciones.marcar(f"ver.{n}", interfaz.vista == n)
 
     for senal in (proyectos.cambiado, proyectos.abiertoCambiado, editor.cambiado, editor.actualCambiado, compilacion.cambiado,
-                  compilacion.problemasCambiados, interfaz.vistaCambiada, ajustes.cambiado, visor.zoomCambiado, historial.cambiado):
+                  compilacion.problemasCambiados, interfaz.vistaCambiada, ajustes.cambiado, visor.zoomCambiado, historial.cambiado,
+                  ayuda.cambiado):
         senal.connect(disponibilidad)
 
     # ------------------------------------------------- lo que encadena a los controladores
@@ -536,7 +549,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     servidor.irA.connect(ir_desde_fuera)
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
                   editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
-                  configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor, datos=datos, miniaturas=miniaturas, biblioteca=biblioteca)
+                  configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor, datos=datos, miniaturas=miniaturas, biblioteca=biblioteca,
+                  ayuda=ayuda)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)

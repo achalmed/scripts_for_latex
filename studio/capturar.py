@@ -74,6 +74,8 @@ def main() -> int:
     parser.add_argument("--categoria", default="", help="la rama elegida a la izquierda (p. ej. «Documentos institucionales › Oficios»)")
     parser.add_argument("--lateral", type=int, default=-1, help="pestaña de la barra lateral de Escritura (0 Archivos · 1 Estructura · 2 Bibliografía · 3 Datos)")
     parser.add_argument("--citas", type=int, default=-1, help="en la pestaña Citas: 0 del proyecto · 1 biblioteca · 2 fichas")
+    parser.add_argument("--ficha", action="store_true", help="abre «Nueva ficha» con una textual de muestra ya revisada (Citas › Fichas)")
+    parser.add_argument("--ayuda-ia", default=None, help="abre «Ayuda de la IA» de la parte abierta; con texto, lo pega y lo comprueba")
     parser.add_argument("--insertar", default="", help="abre el diálogo de insertar de este tipo (seccion, figura, tabla, cita, ecuacion, referencia, lista)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -192,6 +194,14 @@ def main() -> int:
                 if args.citas == 1:
                     piezas["biblioteca"].buscar("")
             QTimer.singleShot(1800, citas)
+        if args.ficha:
+            libro = {"calibre_id": 1, "clave": "quispe2021ciudades", "titulo": "Economía de las ciudades pequeñas", "autores": ["Rosa Quispe"]}
+            valores = {"pagina": "12", "tema": "escala urbana", "categoria": "Idea principal", "uso": "introduccion", "revisar": True,
+                       "textos": {"Cita exacta": "Las ciudades pequeñas crecen cuando se integran a su región.",
+                                  "Análisis": "La tesis del capítulo: la escala importa menos que la integración regional."}}
+            QTimer.singleShot(2200, lambda: interfaz.pedir.emit("nueva_ficha", {"libro": libro, **valores}))
+        if args.ayuda_ia is not None:
+            QTimer.singleShot(2200, lambda: interfaz.pedir.emit("ayuda_ia", {"pegado": args.ayuda_ia.replace("\\n", "\n")}))
         if args.insertar:
             def insertar():
                 interfaz.pedir.emit("insertar", {"tipo": args.insertar})

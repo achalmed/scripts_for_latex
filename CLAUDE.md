@@ -25,9 +25,9 @@ studios) y el compilador del `.tex` suelto (`script_compilar_latex/`, alias `com
   no elige otro motor ni ofrece pdfLaTeX o XeLaTeX a quien no los declare (regla 6; `tests/test_studio.py` lo vigila).
   Una opción nueva de `main.sh` entra primero en la CLI.
 - **Nunca se escriben fuentes**: compilar no las toca y el editor escribe solo con Ctrl+S (`Editor.guardar`), sin pisar
-  un cambio externo sin confirmación. Limpiar muestra la lista y confirma. La única otra escritura es «Configurar el
-  documento» (Ctrl+Alt+D, `studio/latex_app/configuracion.py`): toca solo el preámbulo, muestra la diferencia y escribe
-  al confirmar, y no pisa un archivo con cambios sin guardar en el editor.
+  un cambio externo sin confirmación. Limpiar muestra la lista y confirma. «Configurar el documento» (Ctrl+Alt+D,
+  `studio/latex_app/configuracion.py`) toca solo el preámbulo y escribe tras mostrar la diferencia, sin pisar cambios
+  sin guardar; citar un libro nuevo y guardar una ficha los declara el marco y van tras confirmar (§1.18, §1.19).
 - **TeXstudio compila con la misma receta** (`studio/compilar.py`, sin Qt; decisiones §1.15). Su `texstudio.ini` lo toca
   solo `studio/latex_app/texstudio.py`: como texto (QSettings pierde sus tipos), las claves de `deseado()`, con TeXstudio
   cerrado, respaldo y deshacer; las pruebas, en un `.ini` temporal; ninguna sesión lo aplica sin el sí del autor.

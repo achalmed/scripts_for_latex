@@ -70,7 +70,34 @@ def declaracion_biblioteca(principal: str | Path) -> dict | None:
     if proyecto is None:
         return None
     return {"nombre": str(b.get("nombre") or "Biblioteca"), "proyecto": str(proyecto),
-            **{k: _resolver(b.get(k) or [], esquema, proyecto) for k in ("buscar", "fichas", "citar", "abrir")}}
+            **{k: _resolver(b.get(k) or [], esquema, proyecto) for k in ORDENES_BIBLIOTECA}}
+
+
+# Las órdenes de `biblioteca:` (§9): buscar, fichas, citar y abrir (§1.18); fichar desde la ventana (§1.19): el formulario
+# de una ficha, leer una para editarla, simular o escribir una nueva y corregir una con su huella.
+ORDENES_BIBLIOTECA = ("buscar", "fichas", "citar", "abrir", "formulario", "ficha", "nueva_ficha", "guardar_ficha")
+
+
+def declaracion_ayuda(principal: str | Path) -> dict | None:
+    """La sección `ayuda:` del esquema del marco (contrato §10: el prompt de la parte abierta y la lectura de lo que el
+    chat devolvió), con sus órdenes resueltas; None si no la declara o no aplica."""
+    if not principal:
+        return None
+    esquema = configuracion.buscar_esquema(Path(principal))
+    if esquema is None:
+        return None
+    try:
+        import yaml
+        a = (yaml.safe_load(esquema.read_text(encoding="utf-8")) or {}).get("ayuda")
+    except Exception:
+        return None
+    if not isinstance(a, dict) or not a.get("prompt"):
+        return None
+    proyecto = _proyecto(Path(principal), str(a.get("marcador") or "")) if a.get("marcador") else Path(principal).resolve().parent
+    if proyecto is None:
+        return None
+    return {"nombre": str(a.get("nombre") or "Ayuda de la IA"), "proyecto": str(proyecto),
+            **{k: _resolver(a.get(k) or [], esquema, proyecto) for k in ("prompt", "pegar")}}
 
 
 def _proyecto(principal: Path, marcador: str) -> Path | None:

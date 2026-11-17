@@ -190,6 +190,32 @@ página). La ventana no sabe qué es Calibre ni Zotero: corre las órdenes que e
 dos tiempos (primero sin aplicar). Escritura la sirve con `biblioteca-studio/lib/consulta.py`. Pruebas: la biblioteca
 de muestra del marco de ejemplo en `tests/test_datos.py`.
 
+### §1.19 Fichar y la ayuda de la IA, como en Yachay (2026-11-17)
+
+Dos capacidades de Yachay llegan a la vista Escritura, siempre por lo que el marco declara (la ventana no sabe nada de
+la norma de fichas, de Calibre, de Zotero ni de qué prompt sirve a qué parte):
+
+- **Fichar** (contrato §9 ampliado: `formulario`, `ficha`, `nueva_ficha`, `guardar_ficha`). En Citas › Fichas, el chip
+  «Nueva ficha» (y «Fichar este libro…» en el menú de un libro de la biblioteca) abre un formulario que describe el marco:
+  los tipos (textual, paráfrasis, síntesis, fuente), sus secciones, si llevan página y categoría, y los rótulos. Clic
+  derecho en una ficha, «Editar la ficha…»: se lee con su **huella** y se guarda con ella; si cambió fuera desde que se abrió
+  (en Yachay, en Biblioteca Studio, a mano), la orden responde `ficha_cambiada` y el diálogo la recarga sin pisarla.
+  Guardar va en dos tiempos, como citar: «Revisar» simula (el nombre del archivo, el cotejo contra el PDF, lo que la norma
+  objeta, si el libro se suma a las fuentes) y «Guardar la ficha» escribe lo revisado con `--aplicar`: esa es la
+  confirmación (regla de las fuentes: solo lo que el marco declara y se confirma). El texto del documento no se toca.
+- **La ayuda de la IA de la parte abierta** (contrato §10, nuevo: `ayuda:` con `prompt` y `pegar`; Herramientas, Ctrl+Alt+I).
+  «Copiar el prompt» pone en el portapapeles el que el marco arma para la parte (escritura: el prompt del ecosistema que
+  le toca a su `\componente`, traducido para un chat externo, con su entrada rellena). La respuesta del chat se pega en el
+  diálogo y «Comprobar lo pegado» la pasa a la orden `pegar` junto con el texto del editor (dos archivos en la caché):
+  vuelve el cambio sugerido (o lo que no va: una sección, una clave que el escrito no tiene) y «Poner en el editor»
+  reemplaza el tramo en el editor, seleccionado y con Ctrl+Z para deshacer. **La ventana no llama a ningún modelo ni
+  escribe el archivo**: el autor lo revisa y guarda con Ctrl+S.
+
+Escritura las sirve con `biblioteca-studio/lib/consulta.py` (decisiones §9.4 y §9.5 de biblioteca-studio). La muestra
+(`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`) declara las seis órdenes sin datos reales; pruebas en
+`tests/test_datos.py`, capturas en `docs/figuras/latex-studio-ficha.png` y `latex-studio-ayuda-ia.png`
+(`studio/capturar.py --ficha`, `--ayuda-ia`).
+
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 
 El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e

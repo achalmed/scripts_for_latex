@@ -13,6 +13,15 @@ biblioteca:                        # §9 del contrato: buscar y citar libros, la
   buscar: [python3, ../scripts/datos_muestra.py, buscar, '{texto}']
   fichas: [python3, ../scripts/datos_muestra.py, fichas, '{proyecto}']
   citar: [python3, ../scripts/datos_muestra.py, citar, '{proyecto}', '{id}']
+  formulario: [python3, ../scripts/datos_muestra.py, formulario]
+  ficha: [python3, ../scripts/datos_muestra.py, ficha, '{proyecto}', '{archivo}']
+  nueva_ficha: [python3, ../scripts/datos_muestra.py, nueva_ficha, '{proyecto}', '{datos}']
+  guardar_ficha: [python3, ../scripts/datos_muestra.py, guardar_ficha, '{proyecto}', '{archivo}', '{huella}', '{datos}']
+ayuda:                             # §10 del contrato: el prompt de la parte abierta y lo que respondió el chat
+  nombre: Ayuda de la IA (muestra)
+  marcador: datos.yml
+  prompt: [python3, ../scripts/datos_muestra.py, prompt, '{proyecto}', '{archivo}']
+  pegar: [python3, ../scripts/datos_muestra.py, pegar, '{proyecto}', '{archivo}', '{pegado}', --tex, '{tex}']
 documentos:
   - nombre: Memoria
     clases: [memoria]

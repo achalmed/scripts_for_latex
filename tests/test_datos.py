@@ -73,3 +73,44 @@ def test_biblioteca_del_marco_buscar_fichas_y_citar(marco):
     assert aplicado["escrito"] and aplicado["insertar"] == "\\parencite{quispe2021ciudades}"
     assert not datos._json(datos.con(d["citar"], id="1"), d["proyecto"])[0]["nueva"]   # ya es fuente: se cita en el acto
     assert datos.declaracion_biblioteca(marco / "pruebas" / "caso.tex") is None
+
+
+def test_fichar_desde_la_ventana_simula_escribe_y_respeta_la_huella(marco):
+    """Fichar (§9 ampliado, decisiones §1.19): el formulario lo describe el marco; nueva_ficha simula y escribe con
+    --aplicar; guardar_ficha exige la huella con que se abrió (ficha_cambiada si no)."""
+    import json
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_biblioteca(principal)
+    formulario, _ = datos._json(d["formulario"], d["proyecto"])
+    assert [t["clave"] for t in formulario["tipos"]][:2] == ["textual", "parafrasis"] and formulario["categorias"]
+    campos = {"tipo": "textual", "calibre_id": 1, "pagina": "12", "categoria": "Cita clave", "tema": "escala",
+              "secciones": {"Cita exacta": "Las ciudades pequeñas crecen cuando se integran a su región.", "Análisis": "", "Observaciones": ""}}
+    sim, _ = datos._json(datos.con(d["nueva_ficha"], datos=json.dumps(campos)), d["proyecto"])
+    assert sim["archivo"] == "quispe2021ciudades-p012-textual-escala.md" and not sim["escrito"]
+    assert not (principal.parent / "fichas").exists(), "simular no escribe"
+    hecho, _ = datos._json(datos.con(d["nueva_ficha"], datos=json.dumps(campos)) + ["--aplicar"], d["proyecto"])
+    assert hecho["escrito"] and (principal.parent / "fichas" / hecho["archivo"]).is_file()
+    leida, _ = datos._json(datos.con(d["ficha"], archivo=hecho["archivo"]), d["proyecto"])
+    assert leida["secciones"][0]["texto"].startswith("Las ciudades") and len(leida["huella"]) == 64
+    viejo, _ = datos._json(datos.con(d["guardar_ficha"], archivo=hecho["archivo"], huella="0" * 64, datos="{}") + ["--aplicar"], d["proyecto"])
+    assert viejo["codigo"] == "ficha_cambiada"
+    bien, _ = datos._json(datos.con(d["guardar_ficha"], archivo=hecho["archivo"], huella=leida["huella"],
+                                    datos=json.dumps({"secciones": {"Cita exacta": "Otra.", "Análisis": "Nuevo."}})) + ["--aplicar"], d["proyecto"])
+    assert bien["escrito"] and "Nuevo." in (principal.parent / "fichas" / hecho["archivo"]).read_text(encoding="utf-8")
+
+
+def test_ayuda_del_marco_prompt_y_pegado_sin_escribir(marco, tmp_path):
+    """La sección `ayuda:` (contrato §10): el prompt de la parte y lo pegado como cambio sugerido; nada se escribe."""
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    a = datos.declaracion_ayuda(principal)
+    assert a["nombre"].startswith("Ayuda de la IA") and a["proyecto"] == str(principal.parent.resolve())
+    p, error = datos._json(datos.con(a["prompt"], archivo="informe.tex"), a["proyecto"])
+    assert not error and "<entrada>" in p["prompt"] and p["componente"] == "informe"
+    pegado, editor = tmp_path / "pegado.txt", tmp_path / "editor.tex"
+    pegado.write_text("```latex\nUn párrafo nuevo.\n```", encoding="utf-8")
+    antes = principal.read_text(encoding="utf-8")
+    editor.write_text(antes, encoding="utf-8")
+    r, _ = datos._json(datos.con(a["pegar"], archivo="informe.tex", pegado=str(pegado), tex=str(editor)), a["proyecto"])
+    assert r["ok"] and r["despues"] == "Un párrafo nuevo.\n" and r["antes"] in antes
+    assert principal.read_text(encoding="utf-8") == antes, "comprobar no escribe el documento"
+    assert datos.declaracion_ayuda(marco / "pruebas" / "caso.tex") is None

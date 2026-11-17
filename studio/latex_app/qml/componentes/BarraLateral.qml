@@ -190,6 +190,20 @@ QQC2.Control {
                             }
                         }
                     }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
+                        visible: pestanaCitas.modo === 2 && pestanaCitas.b.puedeFichar
+                        Chip {
+                            objectName: "nuevaFicha"
+                            text: "Nueva ficha"
+                            icono: "document-new"
+                            ayuda: "Una ficha textual, de paráfrasis, de síntesis o de fuente, con la norma de fichas y su cotejo contra el PDF"
+                            onClicked: dialogoFicha.nuevaPara(null)
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
                     Kirigami.SearchField {
                         Layout.fillWidth: true
                         Layout.margins: Kirigami.Units.smallSpacing
@@ -274,6 +288,8 @@ QQC2.Control {
                                     QQC2.MenuItem { text: "Citar en el cursor"; icon.name: "format-text-blockquote"; onTriggered: pestanaCitas.b.citar(filaLibro.modelData.calibre_id, filaLibro.modelData.titulo) }
                                     QQC2.MenuItem { text: "Abrir el PDF"; icon.name: "application-pdf"; enabled: !!filaLibro.modelData.pdf; onTriggered: studio.escritorio.abrirConAplicacion(filaLibro.modelData.pdf) }
                                     QQC2.MenuItem { text: "Abrir en Biblioteca Studio"; icon.name: "bookcase"; onTriggered: pestanaCitas.b.abrirLibro(filaLibro.modelData.calibre_id) }
+                                    QQC2.MenuItem { text: "Fichar este libro…"; icon.name: "document-new"; visible: pestanaCitas.b.puedeFichar; height: visible ? implicitHeight : 0
+                                                    onTriggered: dialogoFicha.nuevaPara(filaLibro.modelData) }
                                 }
                                 QQC2.ToolTip.text: "Doble clic: citarlo en el cursor (si aún no es fuente del proyecto, se añade tras confirmar) · clic derecho: más"
                                 QQC2.ToolTip.visible: hovered
@@ -312,7 +328,16 @@ QQC2.Control {
                                     }
                                     QQC2.Label { Layout.fillWidth: true; text: filaFicha.modelData.texto || filaFicha.modelData.nombre; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight }
                                 }
-                                QQC2.ToolTip.text: "Clic: abrir la ficha · doble clic: " + (filaFicha.modelData.insertar || "—") + " en el cursor"
+                                TapHandler { acceptedButtons: Qt.RightButton; onTapped: menuFicha.popup() }
+                                QQC2.Menu {
+                                    id: menuFicha
+                                    QQC2.MenuItem { text: "Insertar en el cursor"; icon.name: "format-text-blockquote"; enabled: !!filaFicha.modelData.insertar
+                                                    onTriggered: raiz.insertarDatos(filaFicha.modelData.insertar) }
+                                    QQC2.MenuItem { text: "Editar la ficha…"; icon.name: "document-edit"; enabled: pestanaCitas.b.puedeEditar
+                                                    onTriggered: dialogoFicha.editar(filaFicha.modelData.archivo.split("/").pop()) }
+                                    QQC2.MenuItem { text: "Abrir el archivo"; icon.name: "document-open"; onTriggered: raiz.abrirArchivo(filaFicha.modelData.archivo, 0) }
+                                }
+                                QQC2.ToolTip.text: "Clic: abrir la ficha · doble clic: " + (filaFicha.modelData.insertar || "—") + " en el cursor · clic derecho: editarla"
                                 QQC2.ToolTip.visible: hovered
                                 QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay * 2
                             }

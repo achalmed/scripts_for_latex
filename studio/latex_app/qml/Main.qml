@@ -106,6 +106,8 @@ VentanaStudio {
             case "configurar_okular": dialogoOkular.abrir(); break
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
+            case "ayuda_ia": dialogoAyuda.abrirPara(e, datos.pegado || ""); break
+            case "nueva_ficha": dialogoFicha.nuevaPara(datos.libro || null, datos); break
             case "insertar": ventana.pedirInsertar(datos.tipo || "seccion"); break
             case "configurar_texstudio": dialogoTexstudio.abrir(); break
             case "texstudio":
@@ -429,6 +431,8 @@ VentanaStudio {
     }
     DialogoInsertar { id: dialogoInsertar; onInsertar: texto => ventana.insertar(texto) }
     DialogoConfigurarDocumento { id: dialogoConfigurar }
+    DialogoFicha { id: dialogoFicha }                  // Citas › Fichas: nueva y editar (§1.19)
+    DialogoAyudaIA { id: dialogoAyuda }                // la ayuda de la IA de la parte abierta (§1.19)
     DialogoTexstudio { id: dialogoTexstudio }
     DialogoTexstudio {
         id: dialogoOkular
