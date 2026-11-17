@@ -180,6 +180,26 @@ pestañas van a lo ancho de la barra (con su ancho natural se desplazaba y «Arc
 Pruebas: `tests/test_datos.py`, sobre el marco de muestra (`studio/ejemplo/proyectos/marco`, su `datos.yml` y
 `studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`).
 
+### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
+
+El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e
+igual de completo. Se aprobó una maqueta y se rehizo la piel, no la mecánica: la ventana sigue sobre `VentanaStudio`,
+con sus menús, su paleta, sus paneles y sus pruebas, y la barra de herramientas larga se cambió por una **barra ligera**
+(en Proyectos, «Tus documentos»; en Escritura, el documento, el estado de su última compilación en una línea y tres
+acciones: Compilar o Detener, Configurar y el programa de sus datos si el marco lo declara; ⋮ abre todas las órdenes).
+**Proyectos** son tarjetas con la **miniatura de la primera página** (`pdftoppm` en un hilo, a la caché, con nombre
+por ruta y fecha del PDF y escrita entera antes de que QML la lea: `studio/latex_app/miniaturas.py`), su tipo, «hace 2 h»
+(`compilador.hace`) y un punto con su estado; «Lista» vuelve a la tabla de columnas y la ficha deja lo técnico (motor,
+compilador, la orden exacta) bajo «Detalles técnicos». **Escritura** suma la **barra de insertar**: sección, figura,
+tabla (una rejilla celda por celda, booktabs), cita (las entradas de los `.bib`, por `proyectos.completar`), ecuación,
+referencia (las `\label` del proyecto), lista, y negrita, énfasis y nota al pie sobre lo elegido; cada diálogo muestra
+el LaTeX antes de escribirlo y solo escribe en el cursor (`DialogoInsertar.qml`). Debajo del editor, la **franja del
+primer problema** con su causa, su arreglo, «Ir a la línea», «Siguiente» y «Ver todos», y en el pie las palabras del
+archivo (sin órdenes ni comentarios). La barra lateral pierde la cabecera del proyecto (está arriba) y sus pestañas se
+llaman Archivos, Esquema, Citas y Datos; las figuras de Datos llevan su miniatura. El `Chip` es el de Datafw Studio,
+para que los dos studios se lean como familia. Sin colores propios, sin marca dentro de la ventana y sin QtWidgets,
+como antes. Pruebas: `tests/test_rediseno.py` y las tarjetas en `tests/test_controladores.py`.
+
 ### §1.10 El visor pinta con QtPdf cuando está; `pdftoppm` queda de respaldo (2026-11-03)
 
 El autor instaló `qml6-module-qtquick-pdf` y `python3-pyside6.qtpdf`. Cada página la pinta ahora Qt con `PdfPageImage`

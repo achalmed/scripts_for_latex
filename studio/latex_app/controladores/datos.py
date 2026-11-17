@@ -46,12 +46,14 @@ class DatosProyecto(QObject):
 
     def _get_elementos(self):
         """Figuras, tablas y cifras en una lista (tipo, id, titulo, insertar, existe), en ese orden."""
+        carpeta = self._decl["proyecto"] if self._decl else ""
         f = [{"tipo": "Figuras", "id": x["id"], "titulo": x.get("titulo", ""), "insertar": x.get("insertar", ""),
-              "existe": bool(x.get("existe", True)), "detalle": x.get("paquete", "")} for x in self._rec["figuras"]]
+              "existe": bool(x.get("existe", True)), "detalle": x.get("paquete", ""),
+              "archivo": f"{carpeta}/{x['archivo']}" if carpeta and x.get("archivo") else ""} for x in self._rec["figuras"]]
         t = [{"tipo": "Tablas", "id": x["id"], "titulo": x.get("titulo", ""), "insertar": x.get("insertar", ""),
-              "existe": bool(x.get("existe", True)), "detalle": ", ".join(x.get("variantes") or []) or x.get("paquete", "")}
+              "existe": bool(x.get("existe", True)), "detalle": ", ".join(x.get("variantes") or []) or x.get("paquete", ""), "archivo": ""}
              for x in self._rec["tablas"]]
-        c = [{"tipo": "Cifras", "id": x["macro"], "titulo": x.get("valor", ""), "insertar": x["macro"], "existe": True, "detalle": ""}
+        c = [{"tipo": "Cifras", "id": x["macro"], "titulo": x.get("valor", ""), "insertar": x["macro"], "existe": True, "detalle": "", "archivo": ""}
              for x in self._rec["cifras"]]
         return f + t + c
     elementos = Property("QVariantList", _get_elementos, notify=cambiado)

@@ -59,6 +59,17 @@ VentanaStudio {
         e.area.forceActiveFocus()
     }
     function mostrarPanel(indice) { ventana.mostrarInferior = true; panelInferior.mostrarExtra(indice) }
+    function pedirInsertar(tipo) { if (ventana.editor()) dialogoInsertar.abrir(tipo) }
+    // envuelve lo elegido (o deja el cursor dentro) con una orden: negrita, énfasis, nota al pie
+    function envolver(antes, despues) {
+        const e = editor()
+        if (!e || e.soloLectura) return
+        const a = e.area, i = a.selectionStart, f = a.selectionEnd, elegido = a.selectedText
+        a.remove(i, f)
+        a.insert(i, antes + elegido + despues)
+        a.cursorPosition = elegido ? i + antes.length + elegido.length + despues.length : i + antes.length
+        a.forceActiveFocus()
+    }
 
     onClosing: close => {
         if (studio.editor.hayModificados && !permitirCierre) { close.accepted = false; dialogoSalir.open() }
@@ -95,6 +106,7 @@ VentanaStudio {
             case "configurar_okular": dialogoOkular.abrir(); break
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
+            case "insertar": ventana.pedirInsertar(datos.tipo || "seccion"); break
             case "configurar_texstudio": dialogoTexstudio.abrir(); break
             case "texstudio":
                 if (e) studio.sistema.abrirEnTexstudio(e.ruta, e.lineaActual, p.hayAbierto ? p.principal : "")
@@ -145,26 +157,134 @@ VentanaStudio {
         }
     }
 
-    // ------------------------------------------------------------------ la barra de compilación: el proyecto abierto
-    herramientasExtra: [
+    // ------------------------------------------------------------------ la barra de arriba (rediseño del 2026-11-17, §1.17)
+    // Ligera, como la de Datafw Studio: en Proyectos, «Tus documentos» y sus acciones; en Escritura, el documento, el
+    // estado de su última compilación en una línea y tres acciones (Compilar, Configurar y, si el marco lo declara, el
+    // programa de sus datos). Todo lo demás sigue en los menús, en ⋮ (todas las órdenes) y en la paleta (Ctrl+K).
+    readonly property bool escribiendo: vista === "escritura" && p.hayAbierto
+    readonly property var fichaAbierta: { p.tarjetas; studio.compilacion.enCurso; return p.hayAbierto ? p.datos(p.principal) : ({}) }
+    readonly property bool compilando: studio.compilacion.enCurso && studio.compilacion.rutaEnCurso === p.principal
+    header: ColumnLayout {
+        spacing: 0
         RowLayout {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.smallSpacing
-            visible: p.hayAbierto
-            Kirigami.Icon { source: p.hayAbierto && p.abierto.icono ? p.abierto.icono.estado : ""; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth }
-            QQC2.Label {
-                text: p.hayAbierto ? p.nombreAbierto : ""
-                elide: Text.ElideMiddle
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+
+            // --- Proyectos
+            QQC2.Label { visible: !ventana.escribiendo; text: "Tus documentos"; font.weight: Font.Medium }
+            QQC2.Label { visible: !ventana.escribiendo; text: ventana.resumen; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
+
+            // --- Escritura
+            QQC2.ToolButton {
+                visible: ventana.escribiendo
+                icon.name: "go-previous"
+                display: QQC2.AbstractButton.IconOnly
+                text: "Tus documentos (Ctrl+1)"
+                Accessible.name: text
+                onClicked: studio.interfaz.fijarVista("proyectos")
+                QQC2.ToolTip.text: text
+                QQC2.ToolTip.visible: hovered
             }
-            QQC2.Label {
-                text: p.hayAbierto ? p.abierto.texto_motor : ""
-                color: Kirigami.Theme.disabledTextColor
-                QQC2.ToolTip.text: p.hayAbierto ? "Motor: " + p.abierto.motor_origen + " · compilador: " + p.abierto.compilador_texto : ""
-                QQC2.ToolTip.visible: zonaMotor.hovered
-                HoverHandler { id: zonaMotor }
+            ColumnLayout {
+                visible: ventana.escribiendo
+                spacing: 0
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 26
+                QQC2.Label {
+                    Layout.fillWidth: true
+                    text: p.hayAbierto ? (p.abierto.titulo || p.nombreAbierto) : ""
+                    font.weight: Font.Medium
+                    elide: Text.ElideRight
+                }
+                QQC2.Label {
+                    Layout.fillWidth: true
+                    text: p.hayAbierto ? (ventana.fichaAbierta.tipo || p.abierto.clase || "") + " · " + p.abierto.texto_motor : ""
+                    font: Kirigami.Theme.smallFont
+                    color: Kirigami.Theme.disabledTextColor
+                    elide: Text.ElideRight
+                    QQC2.ToolTip.text: p.hayAbierto ? "Motor: " + p.abierto.motor_origen + " · compilador: " + p.abierto.compilador_texto : ""
+                    QQC2.ToolTip.visible: zonaMotor.hovered
+                    HoverHandler { id: zonaMotor }
+                }
+            }
+            Item { Layout.fillWidth: true }
+
+            // el estado de la última compilación, en una línea
+            RowLayout {
+                visible: ventana.escribiendo
+                spacing: Kirigami.Units.smallSpacing
+                Rectangle {
+                    implicitWidth: Kirigami.Units.smallSpacing * 2; implicitHeight: implicitWidth; radius: width / 2
+                    color: ventana.compilando ? Kirigami.Theme.activeTextColor
+                         : ventana.fichaAbierta.nivel === "negativo" ? Kirigami.Theme.negativeTextColor
+                         : ventana.fichaAbierta.nivel === "neutro" ? Kirigami.Theme.neutralTextColor
+                         : ventana.fichaAbierta.nivel === "positivo" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.disabledTextColor
+                }
+                QQC2.Label {
+                    text: ventana.compilando ? "Compilando…"
+                          : (ventana.fichaAbierta.estado || "") + (ventana.fichaAbierta.hace && ventana.fichaAbierta.hace !== "nunca" ? " " + ventana.fichaAbierta.hace : "")
+                            + (ventana.fichaAbierta.problemas && ventana.fichaAbierta.problemas !== "—" && ventana.fichaAbierta.problemas !== "ninguno" ? " · " + ventana.fichaAbierta.problemas : "")
+                    font: Kirigami.Theme.smallFont
+                    color: Kirigami.Theme.disabledTextColor
+                }
+                Item { implicitWidth: Kirigami.Units.smallSpacing }
+            }
+            QQC2.BusyIndicator { running: studio.tareas.activa; visible: running; implicitWidth: Kirigami.Units.iconSizes.smallMedium; implicitHeight: implicitWidth }
+
+            Chip {
+                visible: ventana.escribiendo
+                text: ventana.compilando ? "Detener" : "Compilar"
+                icono: ventana.compilando ? "process-stop" : "run-build"
+                destacado: !ventana.compilando
+                ayuda: ventana.compilando ? "Detener la compilación (Esc)" : "Compilar con su compilador y su motor (F5 o Ctrl+B)"
+                onClicked: ventana.accion(ventana.compilando ? "compilar.cancelar" : "compilar.compilar").disparar()
+            }
+            Chip {
+                visible: ventana.escribiendo
+                text: "Configurar"
+                icono: "document-properties"
+                ayuda: "Título, autor, tema y opciones de la clase (Ctrl+Alt+D)"
+                onClicked: studio.interfaz.pedir("configurar_documento", { ruta: p.principal })
+            }
+            Chip {
+                visible: ventana.escribiendo && studio.datos.productor !== ""
+                text: studio.datos.productor
+                icono: "office-chart-bar"
+                ayuda: "Hacer o rehacer las figuras y tablas de este documento"
+                onClicked: studio.datos.abrirProductor()
+            }
+            Chip {
+                visible: ventana.escribiendo
+                text: "PDF"
+                icono: "application-pdf"
+                destacado: false
+                ayuda: "Mostrar u ocultar el PDF al lado del código (F7)"
+                onClicked: studio.interfaz.pedir("alternar_pdf", {})
+            }
+
+            Chip { visible: !ventana.escribiendo; text: "Abrir un .tex"; icono: "document-open"; ayuda: "Ctrl+O"; onClicked: studio.interfaz.pedir("abrir_tex", {}) }
+            Chip { visible: !ventana.escribiendo; text: "Compilar los marcados"; icono: "run-build"; ayuda: "Marca con Ctrl+clic; se compilan uno tras otro (Ctrl+Mayús+F5)"
+                   onClicked: paginaProyectos.compilarMarcados() }
+            Chip { visible: !ventana.escribiendo && p.hayAbierto; text: "Volver a " + (p.hayAbierto ? (p.abierto.titulo || p.nombreAbierto) : "")
+                   icono: "go-next"; onClicked: studio.interfaz.fijarVista("escritura"); ayuda: "El documento abierto (Ctrl+2)" }
+
+            BotonAccion { visible: ventana.existe("ventana.navegacion"); accion: ventana.existe("ventana.navegacion") ? ventana.acciones.accion("ventana.navegacion") : null; conTexto: false; flat: true }
+            BotonAccion { visible: ventana.existe("ventana.inferior"); accion: ventana.existe("ventana.inferior") ? ventana.acciones.accion("ventana.inferior") : null; conTexto: false; flat: true }
+            QQC2.ToolButton {
+                icon.name: "overflow-menu"
+                text: "Todas las órdenes"
+                display: QQC2.AbstractButton.IconOnly
+                Accessible.name: text
+                QQC2.ToolTip.text: text + " (también Ctrl+K)"
+                QQC2.ToolTip.visible: hovered
+                onClicked: menuTodo.popup()
+                MenuAcciones { id: menuTodo; acciones: ventana.acciones; conAtajos: true; elementos: ventana.acciones ? ventana.acciones.menus : [] }
             }
         }
-    ]
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Qt.alpha(Kirigami.Theme.textColor, 0.1) }
+    }
 
     // ------------------------------------------------------------------ las ranuras
     navegacion: BarraLateral {
@@ -295,6 +415,7 @@ VentanaStudio {
             }
         }
     }
+    DialogoInsertar { id: dialogoInsertar; onInsertar: texto => ventana.insertar(texto) }
     DialogoConfigurarDocumento { id: dialogoConfigurar }
     DialogoTexstudio { id: dialogoTexstudio }
     DialogoTexstudio {

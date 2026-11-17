@@ -139,6 +139,21 @@ def test_deteccion_en_tarea_categorias_y_filtro(app, piezas):
 
 
 @requiere_binding
+def test_las_tarjetas_son_las_filas_visibles_con_lo_que_pintan(app, piezas):
+    """La página de proyectos como tarjetas (rediseño del 2026-11-17, decisiones §1.17): las filas visibles, en orden."""
+    p = piezas["proyectos"]
+    p.detectar()
+    _esperar(app, lambda: p.enDeteccion)
+    tarjetas = p.tarjetas
+    assert len(tarjetas) == p.modelo.filas == 6
+    assert {"titulo", "tipo", "hace", "pdf", "estado", "nivel", "clave", "ruta", "relativa"} <= set(tarjetas[0])
+    p.modelo.filtrar("tesis")
+    assert [t["ruta"] for t in p.tarjetas] == [p.rutaDeFila(i) for i in range(p.modelo.filas)] and len(p.tarjetas) == 1
+    assert p.tarjetas[0]["hace"] == "nunca" and p.tarjetas[0]["tipo"] == "Tesis y trabajos de investigación"
+    p.modelo.filtrar("")
+
+
+@requiere_binding
 def test_categorias_en_arbol_y_filtro_por_rama(app, piezas):
     """La navegación es un árbol de tres niveles como mucho (categoría › tipo › grupo; 2026-11-10): cada rama dice su
     nivel, sus ancestros y si se despliega; elegir una rama filtra sus proyectos y los de sus hijas; la columna

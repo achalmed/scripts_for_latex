@@ -1,9 +1,10 @@
 // BarraLateral — la columna izquierda, que cambia con la vista:
 // · Proyectos: las categorías con proyectos (solo las que tienen información, R6), los recientes y las carpetas de
 //   trabajo (las de omisión y las añadidas; «Añadir carpeta…» abre el diálogo de carpetas de KDE);
-// · Escritura: el proyecto abierto (motor, compilador, estado) y tres pestañas: Archivos (principal, \input, .bib,
-//   configuración), Estructura (secciones, figuras, tablas, etiquetas: un clic va a la línea) y Bibliografía (las
-//   entradas de los .bib: un clic va a la entrada; doble clic escribe \cite{clave} en el cursor).
+// · Escritura (el documento y su estado están en la barra de arriba): la versión que se compila, si el marco declara
+//   varias, y cuatro pestañas: Archivos (principal, \input, .bib, configuración), Esquema (secciones, figuras, tablas,
+//   etiquetas: un clic va a la línea), Citas (las entradas de los .bib: un clic va a la entrada; doble clic escribe
+//   \cite{clave} en el cursor) y Datos (figuras con su miniatura, tablas y cifras de los paquetes del marco).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -14,7 +15,7 @@ QQC2.Control {
     id: raiz
 
     readonly property var p: studio.proyectos
-    property int anchoPreferido: Kirigami.Units.gridUnit * 16
+    property int anchoPreferido: Kirigami.Units.gridUnit * 18
     property int anchoMinimo: Kirigami.Units.gridUnit * 11
     property bool plegado: false
     implicitWidth: anchoPreferido
@@ -53,33 +54,6 @@ QQC2.Control {
         // ------------------------------------------------------------- Escritura
         ColumnLayout {
             spacing: 0
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.margins: Kirigami.Units.smallSpacing
-                spacing: Kirigami.Units.smallSpacing
-                QQC2.ToolButton {
-                    icon.name: "go-previous"
-                    display: QQC2.AbstractButton.IconOnly
-                    text: "Volver a los proyectos (Ctrl+1)"
-                    Accessible.name: text
-                    QQC2.ToolTip.text: text
-                    QQC2.ToolTip.visible: hovered
-                    onClicked: studio.interfaz.fijarVista("proyectos")
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-                    Kirigami.Heading { level: 4; text: raiz.p.hayAbierto ? raiz.p.abierto.nombre : "Ningún proyecto"; elide: Text.ElideRight; Layout.fillWidth: true }
-                    QQC2.Label {
-                        Layout.fillWidth: true
-                        visible: raiz.p.hayAbierto
-                        text: raiz.p.hayAbierto ? raiz.p.abierto.texto_motor + " · " + raiz.p.abierto.compilador_texto : ""
-                        elide: Text.ElideRight
-                        font: Kirigami.Theme.smallFont
-                        color: Kirigami.Theme.disabledTextColor
-                    }
-                }
-            }
             // la versión que se compila y se ve, si el marco produce varias de un mismo .tex (`versiones:` de su
             // latex-studio.yml): elegirla no escribe nada; la que compila F5 por omisión la fija «Configurar el documento»
             RowLayout {
@@ -110,10 +84,10 @@ QQC2.Control {
                 objectName: "pestanasLaterales"
                 Layout.fillWidth: true
                 // las cuatro a lo ancho (con cuatro, la barra se desplazaba y «Archivos» quedaba fuera de la vista)
-                QQC2.TabButton { text: "Archivos"; width: pestanas.width / 4 }
-                QQC2.TabButton { text: "Estructura"; width: pestanas.width / 4 }
-                QQC2.TabButton { text: "Bibliografía"; width: pestanas.width / 4 }
-                QQC2.TabButton { text: "Datos"; width: pestanas.width / 4 }
+                QQC2.TabButton { text: "Archivos"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
+                QQC2.TabButton { text: "Esquema"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
+                QQC2.TabButton { text: "Citas"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
+                QQC2.TabButton { text: "Datos"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
             }
             StackLayout {
                 Layout.fillWidth: true
@@ -306,6 +280,25 @@ QQC2.Control {
                                     text: filaDato.modelData.tipo
                                     font.weight: Font.DemiBold
                                     color: Kirigami.Theme.disabledTextColor
+                                }
+                                Rectangle {
+                                    visible: filaDato.modelData.tipo === "Figuras" && miniDato.status === Image.Ready
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: width * 0.55
+                                    radius: Kirigami.Units.cornerRadius
+                                    color: Qt.alpha(Kirigami.Theme.textColor, 0.04)
+                                    border.width: 1
+                                    border.color: Qt.alpha(Kirigami.Theme.textColor, 0.12)
+                                    clip: true
+                                    Image {
+                                        id: miniDato
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        fillMode: Image.PreserveAspectFit
+                                        asynchronous: true
+                                        cache: false
+                                        source: { studio.miniaturas.version; return filaDato.modelData.existe && filaDato.modelData.archivo ? studio.miniaturas.url(filaDato.modelData.archivo) : "" }
+                                    }
                                 }
                                 QQC2.Label {
                                     Layout.fillWidth: true

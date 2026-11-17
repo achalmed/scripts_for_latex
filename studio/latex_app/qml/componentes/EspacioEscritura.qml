@@ -1,5 +1,7 @@
 // EspacioEscritura — la vista Escritura: a la izquierda (en el centro de la ventana) las pestañas de los archivos
-// abiertos con el editor y la barra de búsqueda; a la derecha el PDF integrado (F7 lo oculta). Cada archivo abierto
+// abiertos, la barra de insertar (sección, figura, tabla, cita, ecuación, referencia, lista, negrita, cursiva, nota; el
+// rediseño del 2026-11-17, §1.17), el editor, la franja del primer problema con su arreglo y su línea, y abajo dónde estás
+// y cuántas palabras lleva el archivo; a la derecha el PDF integrado (F7 lo oculta). Cada archivo abierto
 // tiene su EditorTexto de gui-comun (su texto y su deshacer); el aviso de «cambió fuera» y la confirmación de sobrescribir viven
 // aquí. Sin datos propios: studio.editor (abiertos), studio.visor, studio.proyectos.
 import QtQuick
@@ -84,6 +86,36 @@ QQC2.SplitView {
             }
         }
 
+        // la barra de insertar: el LaTeX de memoria, en un formulario corto (DialogoInsertar en Main)
+        Flow {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            visible: raiz.editorActual !== null && !raiz.editorActual.soloLectura
+            spacing: Kirigami.Units.smallSpacing
+            Repeater {
+                model: [
+                    { tipo: "seccion", texto: "Sección", icono: "format-text-heading", ayuda: "Un capítulo, sección o subsección con su etiqueta" },
+                    { tipo: "figura", texto: "Figura", icono: "insert-image", ayuda: "Una imagen con su título, etiqueta, ancho y fuente" },
+                    { tipo: "tabla", texto: "Tabla", icono: "insert-table", ayuda: "Una tabla escrita celda por celda (booktabs)" },
+                    { tipo: "cita", texto: "Cita", icono: "format-text-blockquote", ayuda: "Una o varias entradas de los .bib del proyecto" },
+                    { tipo: "ecuacion", texto: "Ecuación", icono: "labplot-formula", ayuda: "Numerada o no, con su etiqueta" },
+                    { tipo: "referencia", texto: "Referencia", icono: "insert-link", ayuda: "A una figura, tabla, sección o ecuación con \\label" },
+                    { tipo: "lista", texto: "Lista", icono: "format-list-unordered", ayuda: "Con viñetas o numerada, un elemento por línea" }
+                ]
+                Chip {
+                    required property var modelData
+                    text: modelData.texto
+                    icono: modelData.icono
+                    ayuda: modelData.ayuda
+                    onClicked: ventana.pedirInsertar(modelData.tipo)
+                }
+            }
+            Rectangle { width: 1; height: Kirigami.Units.gridUnit * 1.4; color: Qt.alpha(Kirigami.Theme.textColor, 0.15) }
+            Chip { icono: "format-text-bold"; ayuda: "Negrita (\\textbf) sobre lo elegido"; onClicked: ventana.envolver("\\textbf{", "}") }
+            Chip { icono: "format-text-italic"; ayuda: "Énfasis (\\emph) sobre lo elegido"; onClicked: ventana.envolver("\\emph{", "}") }
+            Chip { icono: "format-text-superscript"; ayuda: "Nota al pie (\\footnote) con lo elegido"; onClicked: ventana.envolver("\\footnote{", "}") }
+        }
+
         Kirigami.InlineMessage {
             id: cambioFuera
             property string ruta: ""
@@ -132,6 +164,41 @@ QQC2.SplitView {
                                                      : "Ctrl+1 muestra los proyectos detectados; Ctrl+O abre un .tex."
         }
 
+        // el primer problema de la última compilación, con su causa, su arreglo y su línea (todos: el panel de abajo, F4)
+        Rectangle {
+            id: franja
+            readonly property var c: studio.compilacion
+            readonly property var primero: { c.nProblemas; c.mostrarErrores; c.mostrarAvisos; return c.nProblemas > 0 ? c.problema(0) : ({}) }
+            readonly property bool esError: primero.nivel === "error"
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            visible: studio.proyectos.hayAbierto && c.nProblemas > 0 && !!primero.nivel
+            implicitHeight: filaFranja.implicitHeight + Kirigami.Units.smallSpacing * 2
+            radius: Kirigami.Units.cornerRadius
+            color: Qt.alpha(esError ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor, 0.12)
+            border.width: 1
+            border.color: Qt.alpha(esError ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor, 0.35)
+            RowLayout {
+                id: filaFranja
+                anchors.fill: parent
+                anchors.margins: Kirigami.Units.smallSpacing
+                anchors.leftMargin: Kirigami.Units.largeSpacing
+                spacing: Kirigami.Units.smallSpacing
+                Kirigami.Icon { source: franja.esError ? "data-error" : "data-warning"; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+                    QQC2.Label { Layout.fillWidth: true; text: franja.primero.titulo || franja.primero.mensaje || ""; elide: Text.ElideRight; font.weight: Font.Medium }
+                    QQC2.Label { Layout.fillWidth: true; visible: !!franja.primero.accion; text: franja.primero.accion || ""; elide: Text.ElideRight; font: Kirigami.Theme.smallFont
+                                 color: Kirigami.Theme.disabledTextColor }
+                }
+                QQC2.Label { text: franja.c.nProblemas > 1 ? "1 de " + franja.c.nProblemas : ""; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                Chip { text: "Ir a la línea"; visible: (franja.primero.linea || 0) > 0; onClicked: franja.c.elegir(0); ayuda: (franja.primero.relativa || "") + ":" + (franja.primero.linea || "") }
+                Chip { text: "Siguiente"; visible: franja.c.nProblemas > 1; onClicked: franja.c.siguiente(); ayuda: "F8" }
+                Chip { text: "Ver todos"; onClicked: ventana.mostrarPanel(0); ayuda: "El panel de problemas, con la causa y el registro (F4)" }
+            }
+        }
+
         BarraBuscarReemplazar {
             id: busqueda
             Layout.fillWidth: true
@@ -148,6 +215,14 @@ QQC2.SplitView {
                 QQC2.Label {
                     text: raiz.editorActual ? "Línea " + raiz.editorActual.lineaActual + ", columna " + (raiz.editorActual.columnaActual + 1) : ""
                     font: Kirigami.Theme.smallFont
+                }
+                QQC2.Label {
+                    text: raiz.palabras > 0 ? raiz.palabras.toLocaleString(Qt.locale("es_PE"), "f", 0) + " palabras" : ""
+                    font: Kirigami.Theme.smallFont
+                    color: Kirigami.Theme.disabledTextColor
+                    QQC2.ToolTip.text: "Palabras del archivo abierto, sin órdenes ni comentarios"
+                    QQC2.ToolTip.visible: zonaPalabras.hovered
+                    HoverHandler { id: zonaPalabras }
                 }
                 QQC2.Label {
                     Layout.fillWidth: true
@@ -182,6 +257,19 @@ QQC2.SplitView {
     }
 
     function buscar(reemplazar) { busqueda.abrir(reemplazar) }
+
+    // las palabras del archivo abierto, sin comentarios, órdenes ni sus opciones; se cuentan tras una pausa al escribir
+    property int palabras: 0
+    function contarPalabras() {
+        const e = editorActual
+        if (!e || !e.area) { palabras = 0; return }
+        const limpio = e.area.text.replace(/(^|[^\\])%.*$/gm, "$1").replace(/\\[A-Za-z@]+\*?(\[[^\]]*\])?/g, " ").replace(/[{}$&_^~]/g, " ")
+        const m = limpio.match(/[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñÀ-ÿ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñÀ-ÿ'’-]*/g)   // V4 no conoce \p{L}
+        palabras = m ? m.length : 0
+    }
+    Timer { id: pausaPalabras; interval: 700; onTriggered: raiz.contarPalabras() }
+    onEditorActualChanged: pausaPalabras.restart()
+    Connections { target: raiz.editorActual ? raiz.editorActual.area : null; ignoreUnknownSignals: true; function onTextChanged() { pausaPalabras.restart() } }
 
     // el autocompletado de LaTeX en el EditorTexto de la base: lo calcula Python (órdenes con su firma, entornos, \ref de
     // las \label, \cite de los .bib, paquetes, clases y archivos del proyecto); una orden se ofrece desde dos letras

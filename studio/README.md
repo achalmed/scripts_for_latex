@@ -26,13 +26,16 @@ main.py --smoke
 ## Qué es
 
 El entorno donde el autor escribe, compila y revisa sus proyectos LaTeX (reingeniería del 2026-11-02; diagnóstico,
-referencias y decisiones R1–R16 en [../docs/reingenieria.md](../docs/reingenieria.md)). Dos vistas sobre la misma
-ventana; la barra de arriba es la de compilación.
+referencias y decisiones R1–R16 en [../docs/reingenieria.md](../docs/reingenieria.md)) y rediseñado el 2026-11-17 al estilo
+de Datafw Studio (decisiones §1.17). Dos vistas sobre la misma ventana. **La barra de arriba** es ligera: en Proyectos,
+«Tus documentos» con Abrir un .tex y Compilar los marcados; en Escritura, el documento, el estado de su última
+compilación en una línea («Con avisos hace 2 min · 1 aviso») y tres acciones: **Compilar** (o Detener), **Configurar** y,
+si su marco lo declara, el programa de sus datos. Lo demás sigue en los menús, en ⋮ y en la paleta (Ctrl+K).
 
 | vista | izquierda | centro | derecha | abajo (F4) |
 |---|---|---|---|---|
-| **Proyectos** (Ctrl+1) | categorías (solo las que tienen proyectos) en árbol con su tipo y su grupo (tres niveles como mucho), recientes, carpetas de trabajo | los proyectos detectados: estado, motor, última compilación, problemas, bibliografía, auxiliares, categoría; selección múltiple → cola | la ficha del proyecto: principal, clase, motor y de dónde sale, compilador, categoría y su motivo, archivos, configuración, la orden exacta | Problemas · Registro de LaTeX · Cola · Historial · Salida |
-| **Escritura** (Ctrl+2) | Archivos (principal, `\input`, `.bib`, configuración) · Estructura (secciones, figuras, tablas, etiquetas) · Bibliografía (claves de los `.bib`) · Datos (figuras, tablas y cifras que el marco declara: doble clic las inserta; «Actualizar» trae la versión nueva; abre su productor) | el editor: pestañas, resaltado LaTeX/BibTeX de KSyntaxHighlighting con el tema claro u oscuro, números de línea, buscar y reemplazar (con expresiones regulares), ir a línea, comentar, autocompletado | el PDF integrado (F7): páginas de `pdftoppm`, zoom, ajustar al ancho, miniaturas; Ctrl+clic en el editor → PDF, doble clic en el PDF → código (SyncTeX) | los mismos |
+| **Proyectos** (Ctrl+1) | categorías (solo las que tienen proyectos) en árbol con su tipo y su grupo (tres niveles como mucho), recientes, carpetas de trabajo | los documentos como **tarjetas** con la miniatura de su primera página, su tipo, cuándo se compilaron y un punto con su estado (o, con «Lista», la tabla: estado, motor, última compilación, problemas, bibliografía, auxiliares, categoría); Ctrl+clic marca varios → cola | la ficha del proyecto: principal, clase, motor y de dónde sale, compilador, categoría y su motivo, archivos, configuración, la orden exacta | Problemas · Registro de LaTeX · Cola · Historial · Salida |
+| **Escritura** (Ctrl+2) | Archivos (principal, `\input`, `.bib`, configuración) · Esquema (secciones, figuras, tablas, etiquetas) · Citas (claves de los `.bib`) · Datos (figuras con su miniatura, tablas y cifras que el marco declara: doble clic las inserta; «Actualizar» trae la versión nueva; abre su productor) | la **barra de insertar** (sección, figura, tabla celda por celda, cita de los `.bib`, ecuación, referencia a una `\label`, lista, negrita, énfasis, nota al pie: un formulario corto que muestra el LaTeX antes de escribirlo), la **franja del primer problema** con su arreglo, «Ir a la línea», «Siguiente» y «Ver todos», las palabras del archivo abierto y el editor: pestañas, resaltado LaTeX/BibTeX de KSyntaxHighlighting con el tema claro u oscuro, números de línea, buscar y reemplazar (con expresiones regulares), ir a línea, comentar, autocompletado | el PDF integrado (F7): páginas de `pdftoppm`, zoom, ajustar al ancho, miniaturas; Ctrl+clic en el editor → PDF, doble clic en el PDF → código (SyncTeX) | los mismos |
 
 **Un proyecto** es un documento principal con `\documentclass` y lo que incluye (R1). Se detectan en las carpetas de
 trabajo (por omisión `WRITING_DIR`, `DESPACHO_DIR` y la raíz `DOCS_ROOT` de `core/env.py` —con ella aparecen todos los proyectos:
@@ -107,7 +110,7 @@ La lista completa, generada de las acciones: Ayuda › Atajos de teclado.
 | `latex_app/controladores/` | lo que QML ve: `ajustes`, `proyectos`, `editor`, `compilacion`, `visor`, `historial` |
 | `latex_app/qml/` | `Main.qml` sobre `GuiComun.VentanaStudio` y los componentes propios (`componentes/`: `PaginaProyectos`, `BarraLateral`, `EspacioEscritura`, `RegistroCompilacion`, `Cola`, `HistorialCompilaciones`, `DialogoAjustesStudio`, `DialogoConfigurarDocumento`); el editor, la barra de búsqueda y la lista de problemas son de `gui-comun` 3.1 (`EditorTexto`, `BarraBuscarReemplazar`, `ListaErrores`, `gui_comun.editor.ControladorEditor`) y el visor PDF, de la 3.2 (`VistaPdf`, `gui_comun.visor_pdf.VisorPdf`, del que hereda `studio/latex_app/controladores/visor.py` para SyncTeX) |
 | `ejemplo/` | `proyectos/`: el árbol de muestra de las pruebas y las capturas (multiarchivo con Biber, BibTeX con comentario mágico, con error, con `latexmkrc`, un marco con compilador propio); los `.tex` sueltos de la ventana 2.0 |
-| `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales |
+| `capturar.py` | las capturas de la documentación sobre la muestra compilada, con `HOME` y caché temporales (`--lateral N` elige la pestaña de la izquierda; `--insertar <tipo>` abre el diálogo de insertar) |
 
 ## Uso
 

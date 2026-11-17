@@ -237,6 +237,25 @@ def fecha_legible(ts: float) -> str:
     return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
 
 
+def hace(ts: float, ahora: float | None = None) -> str:
+    """Cuándo, como lo dice una persona: «hace 3 min», «hace 2 h», «ayer», «hace 4 días» o la fecha (las tarjetas)."""
+    if not ts:
+        return "nunca"
+    import time
+    s = max(0.0, (ahora or time.time()) - ts)
+    if s < 60:
+        return "hace un momento"
+    if s < 3600:
+        return f"hace {int(s // 60)} min"
+    if s < 86400:
+        return f"hace {int(s // 3600)} h"
+    if s < 2 * 86400:
+        return "ayer"
+    if s < 30 * 86400:
+        return f"hace {int(s // 86400)} días"
+    return datetime.fromtimestamp(ts).strftime("%d/%m/%Y")
+
+
 def paginas_pdf(pdf: Path) -> int:
     """Las páginas del PDF según `pdfinfo` (poppler); 0 si no está o falla."""
     if not shutil.which("pdfinfo"):

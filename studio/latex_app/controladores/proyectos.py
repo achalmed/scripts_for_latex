@@ -58,6 +58,7 @@ def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None,
             "aux": str(p.auxiliares) if p.auxiliares else "—", "categoria": pr.SEPARADOR_GRUPO.join(grupo),
             "grupo": pr.SEPARADOR_GRUPO.join(grupo), "carpeta": p.carpeta,
             "ruta": p.principal, "titulo": p.titulo, "clave": clave, "nivel": nivel, "habilitado": True,
+            "pdf": p.pdf, "hace": svc.hace(p.pdf_mtime), "tipo": grupo[-1], "errores": p.errores, "avisos": p.avisos,
             "icono": {"nombre": "text-x-tex", "estado": ICONOS_ESTADO[clave]},
             "crudo": {"estado": ORDEN_ESTADO[clave], "ultima": p.pdf_mtime, "problemas": p.errores * 1000 + p.avisos,
                       "bib": len(p.bibs), "aux": p.auxiliares}}
@@ -65,6 +66,7 @@ def fila_proyecto(p: pr.Proyecto, en_curso: str = "", grupo: list | None = None,
 
 class Proyectos(QObject):
     cambiado = Signal()                  # la tabla, las categorías, los recuentos
+    tarjetasCambiadas = Signal()         # las filas visibles (las tarjetas de la página de proyectos)
     abiertoCambiado = Signal()           # el proyecto abierto y sus modelos
     detectando = Signal(bool)
     aviso = Signal(str, str)
@@ -97,6 +99,9 @@ class Proyectos(QObject):
         self._en_curso = ""
         self._worker = None
         self._detectado = False
+        for senal in (self._modelo.modelReset, self._modelo.layoutChanged, self._modelo.rowsInserted, self._modelo.rowsRemoved,
+                      self._modelo.dataChanged, self.cambiado):
+            senal.connect(self.tarjetasCambiadas)
         ajustes.carpetasCambiadas.connect(self.detectar)
         historial.recientesCambiados.connect(self._recientes_cambiaron)
 
@@ -282,6 +287,11 @@ class Proyectos(QObject):
         self.cambiado.emit()
 
     # ---------------------------------------------------------------------------------------------------- filas
+    @Property("QVariantList", notify=tarjetasCambiadas)
+    def tarjetas(self) -> list:
+        """Las filas visibles, en el orden de la tabla: lo que pinta la vista de tarjetas (rediseño de 2026-11-17)."""
+        return [self._tabla.fila(self._modelo.filaOrigen(i)) for i in range(self._modelo.rowCount())]
+
     @Slot(int, result=str)
     def rutaDeFila(self, fila_visible: int) -> str:
         if fila_visible < 0:
