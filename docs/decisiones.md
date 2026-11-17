@@ -180,6 +180,16 @@ pestañas van a lo ancho de la barra (con su ancho natural se desplazaba y «Arc
 Pruebas: `tests/test_datos.py`, sobre el marco de muestra (`studio/ejemplo/proyectos/marco`, su `datos.yml` y
 `studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`).
 
+### §1.18 La biblioteca del marco en la pestaña «Citas» (2026-11-17)
+
+«Citas» deja de ser solo las entradas de los `.bib`: si el marco declara su biblioteca (sección `biblioteca:` del
+`latex-studio.yml`, contrato §9), tres chips cambian entre «Del proyecto», la biblioteca entera (con portada, autor,
+año y clave; doble clic cita, y si el libro aún no es fuente del proyecto, el marco lo añade a sus fuentes y a su `.bib`
+tras confirmar) y las fichas del proyecto (tipo, clave y página, el texto; doble clic inserta la cita textual con su
+página). La ventana no sabe qué es Calibre ni Zotero: corre las órdenes que el marco declara, en hilos, y citar va en
+dos tiempos (primero sin aplicar). Escritura la sirve con `biblioteca-studio/lib/consulta.py`. Pruebas: la biblioteca
+de muestra del marco de ejemplo en `tests/test_datos.py`.
+
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 
 El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e

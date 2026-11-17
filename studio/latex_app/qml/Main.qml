@@ -142,6 +142,18 @@ VentanaStudio {
     Connections { target: studio.compilacion; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
     Connections { target: studio.visor; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
     Connections { target: studio.sistema; function onAviso(texto, tipo) { ventana.mensajes.mostrar(texto, tipo) } }
+    // citar un libro de la biblioteca: en el cursor; si aún no es fuente del proyecto, el marco lo añade tras confirmar
+    Connections {
+        target: studio.biblioteca
+        function onCitado(texto) { if (texto) ventana.insertar(texto) }
+        function onPedirConfirmacion(id, titulo, clave) {
+            ventana.confirmacion.pedir({ titulo: "Citar «" + titulo + "»",
+                                         consecuencias: "Todavía no es fuente de este documento: se añade a sus fuentes (fuentes/fuentes.yml) con la clave " + clave
+                                                        + " y se regenera su references.bib; luego se cita en el cursor. El texto no se toca.",
+                                         operacionTexto: "escritura", textoAceptar: "Añadir y citar", icono: "format-text-blockquote" },
+                                       () => studio.biblioteca.citarAplicando(id))
+        }
+    }
 
     Shortcut { sequence: "Ctrl+B"; onActivated: if (ventana.accion("compilar.compilar").habilitada) studio.compilacion.compilar() }
 

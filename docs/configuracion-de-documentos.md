@@ -154,3 +154,24 @@ cursor. Lo declara escritura (`escritura/core/config/latex-studio.yml`, con `rep
 --actualizar`); la muestra, `studio/ejemplo/proyectos/marco` (su `datos.yml` y `studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`). Pruebas:
 `tests/test_datos.py`.
 
+## 9. La biblioteca del proyecto (`biblioteca:`)
+
+Un marco cuyos documentos citan una biblioteca (libros con su clave y sus fichas) lo declara al nivel del esquema; la
+pestaña «Citas» lo muestra (decisiones §1.18):
+
+```yaml
+biblioteca:
+  nombre: Biblioteca
+  marcador: proyecto.yaml          # {proyecto}: la carpeta más cercana al principal que lo tiene (sin ella, no aplica)
+  buscar: [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, buscar, '{texto}']
+  fichas: [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, fichas, '{proyecto}']
+  citar:  [/usr/bin/python3, ../../../biblioteca-studio/lib/consulta.py, citar, '{proyecto}', '{id}']   # + --aplicar al confirmar
+  abrir:  [/usr/bin/python3, ../../../biblioteca-studio/studio/main.py, 'biblioteca-studio://libro/{id}']
+```
+
+`buscar` imprime `[{calibre_id, clave, titulo, autores, anio, pdf, portada, insertar}]`; `fichas`, `[{archivo, nombre,
+tipo, clave, pagina, verificacion, texto, insertar}]`; `citar`, `{clave, nueva, escrito, insertar}`: con `nueva` la
+ventana pide confirmación y la repite con `--aplicar`. La declara escritura (`escritura/core/config/latex-studio.yml`); la
+muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`). Pruebas:
+`tests/test_datos.py`.
+

@@ -7,6 +7,12 @@ datos:                             # §8 del contrato: lo que los informes del m
   marcador: datos.yml
   recursos: [python3, ../scripts/datos_muestra.py, recursos, '{proyecto}']
   actualizar: [python3, ../scripts/datos_muestra.py, actualizar, '{proyecto}']
+biblioteca:                        # §9 del contrato: buscar y citar libros, las fichas del proyecto
+  nombre: Biblioteca de muestra
+  marcador: datos.yml
+  buscar: [python3, ../scripts/datos_muestra.py, buscar, '{texto}']
+  fichas: [python3, ../scripts/datos_muestra.py, fichas, '{proyecto}']
+  citar: [python3, ../scripts/datos_muestra.py, citar, '{proyecto}', '{id}']
 documentos:
   - nombre: Memoria
     clases: [memoria]

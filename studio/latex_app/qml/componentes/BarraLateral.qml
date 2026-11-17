@@ -164,42 +164,165 @@ QQC2.Control {
                     }
                 }
 
-                // bibliografía
+                // citas: las entradas de los .bib del proyecto; y, si el marco declara su biblioteca (contrato §9), toda la
+                // biblioteca (con portada; citar un libro nuevo lo añade a las fuentes tras confirmar) y las fichas del
+                // proyecto (doble clic inserta la cita textual con su página)
                 ColumnLayout {
+                    id: pestanaCitas
+                    objectName: "pestanaCitas"
+                    readonly property var b: studio.biblioteca
+                    property int modo: 0                       // 0 del proyecto · 1 biblioteca · 2 fichas
+                    property string filtroFichas: ""
                     spacing: 0
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Kirigami.Units.smallSpacing
+                        visible: pestanaCitas.b.disponible
+                        spacing: Kirigami.Units.smallSpacing
+                        Repeater {
+                            model: ["Del proyecto", pestanaCitas.b.nombre, "Fichas (" + pestanaCitas.b.fichas.length + ")"]
+                            Chip {
+                                required property string modelData
+                                required property int index
+                                text: modelData
+                                destacado: pestanaCitas.modo === index
+                                onClicked: { pestanaCitas.modo = index; if (index === 1 && pestanaCitas.b.resultados.length === 0) pestanaCitas.b.buscar("") }
+                            }
+                        }
+                    }
                     Kirigami.SearchField {
                         Layout.fillWidth: true
                         Layout.margins: Kirigami.Units.smallSpacing
-                        placeholderText: "Filtrar " + raiz.p.nClaves + " entradas"
-                        onTextChanged: raiz.p.filtrarBibliografia(text)
+                        placeholderText: pestanaCitas.modo === 0 ? "Filtrar " + raiz.p.nClaves + " entradas"
+                                       : pestanaCitas.modo === 1 ? "Título, autor, año o clave" : "Filtrar las fichas"
+                        onTextChanged: {
+                            if (pestanaCitas.modo === 0) raiz.p.filtrarBibliografia(text)
+                            else if (pestanaCitas.modo === 1) pausaBusqueda.restart()
+                            else pestanaCitas.filtroFichas = text
+                        }
+                        Timer { id: pausaBusqueda; interval: 350; onTriggered: pestanaCitas.b.buscar(parent.text) }
                     }
-                    ListView {
-                        id: bib
+                    StackLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        clip: true
-                        model: raiz.p.bibliografia
-                        Accessible.name: "Bibliografía del proyecto"
-                        QQC2.ScrollBar.vertical: QQC2.ScrollBar {}
-                        delegate: QQC2.ItemDelegate {
-                            required property var model
-                            width: bib.width
-                            onClicked: raiz.abrirArchivo(model.archivo, model.linea)
-                            onDoubleClicked: raiz.citar(model.nombre)
-                            contentItem: ColumnLayout {
-                                spacing: 0
-                                QQC2.Label { Layout.fillWidth: true; text: model.nombre; font.family: Kirigami.Theme.fixedWidthFont.family; elide: Text.ElideRight }
-                                QQC2.Label { Layout.fillWidth: true; text: [model.autor, model.anio, model.titulo].filter(x => x).join(" · "); elide: Text.ElideRight; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                        currentIndex: pestanaCitas.b.disponible ? pestanaCitas.modo : 0
+
+                        ListView {
+                            id: bib
+                            clip: true
+                            model: raiz.p.bibliografia
+                            Accessible.name: "Bibliografía del proyecto"
+                            QQC2.ScrollBar.vertical: QQC2.ScrollBar {}
+                            delegate: QQC2.ItemDelegate {
+                                required property var model
+                                width: bib.width
+                                onClicked: raiz.abrirArchivo(model.archivo, model.linea)
+                                onDoubleClicked: raiz.citar(model.nombre)
+                                contentItem: ColumnLayout {
+                                    spacing: 0
+                                    QQC2.Label { Layout.fillWidth: true; text: model.nombre; font.family: Kirigami.Theme.fixedWidthFont.family; elide: Text.ElideRight }
+                                    QQC2.Label { Layout.fillWidth: true; text: [model.autor, model.anio, model.titulo].filter(x => x).join(" · "); elide: Text.ElideRight; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                                }
+                                QQC2.ToolTip.text: "Clic: ir a la entrada · doble clic: \\cite{" + model.nombre + "} en el cursor"
+                                QQC2.ToolTip.visible: hovered
+                                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                             }
-                            QQC2.ToolTip.text: "Clic: ir a la entrada · doble clic: \\cite{" + model.nombre + "} en el cursor"
-                            QQC2.ToolTip.visible: hovered
-                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                            Kirigami.PlaceholderMessage {
+                                anchors.centerIn: parent
+                                width: parent.width - Kirigami.Units.gridUnit * 2
+                                visible: bib.count === 0
+                                text: raiz.p.hayAbierto ? "El proyecto no tiene .bib (o están vacíos)" : "Ningún proyecto"
+                                explanation: pestanaCitas.b.disponible ? "Busca en «" + pestanaCitas.b.nombre + "» y cita cualquier libro." : ""
+                            }
                         }
-                        Kirigami.PlaceholderMessage {
-                            anchors.centerIn: parent
-                            width: parent.width - Kirigami.Units.gridUnit * 2
-                            visible: bib.count === 0
-                            text: raiz.p.hayAbierto ? "El proyecto no tiene .bib (o están vacíos)" : "Ningún proyecto"
+
+                        // toda la biblioteca
+                        ListView {
+                            id: libros
+                            clip: true
+                            model: pestanaCitas.b.resultados
+                            Accessible.name: "Libros de la biblioteca"
+                            QQC2.ScrollBar.vertical: QQC2.ScrollBar {}
+                            delegate: QQC2.ItemDelegate {
+                                id: filaLibro
+                                required property var modelData
+                                width: libros.width
+                                onDoubleClicked: pestanaCitas.b.citar(modelData.calibre_id, modelData.titulo)
+                                contentItem: RowLayout {
+                                    spacing: Kirigami.Units.smallSpacing
+                                    Image {
+                                        Layout.preferredWidth: Kirigami.Units.gridUnit * 2
+                                        Layout.preferredHeight: Kirigami.Units.gridUnit * 3
+                                        fillMode: Image.PreserveAspectFit
+                                        asynchronous: true
+                                        sourceSize.height: Kirigami.Units.gridUnit * 6
+                                        source: filaLibro.modelData.portada ? "file://" + filaLibro.modelData.portada : ""
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 0
+                                        QQC2.Label { Layout.fillWidth: true; text: filaLibro.modelData.titulo; elide: Text.ElideRight; maximumLineCount: 2; wrapMode: Text.Wrap }
+                                        QQC2.Label { Layout.fillWidth: true; text: (filaLibro.modelData.autores || []).join("; ") + (filaLibro.modelData.anio ? " · " + filaLibro.modelData.anio : "")
+                                                     elide: Text.ElideRight; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                                        QQC2.Label { Layout.fillWidth: true; text: filaLibro.modelData.clave || "sin clave de Zotero"; elide: Text.ElideRight
+                                                     font: Qt.font({ family: Kirigami.Theme.fixedWidthFont.family, pointSize: Kirigami.Theme.smallFont.pointSize }); color: filaLibro.modelData.clave ? Kirigami.Theme.disabledTextColor : Kirigami.Theme.neutralTextColor }
+                                    }
+                                }
+                                TapHandler { acceptedButtons: Qt.RightButton; onTapped: menuLibro.popup() }
+                                QQC2.Menu {
+                                    id: menuLibro
+                                    QQC2.MenuItem { text: "Citar en el cursor"; icon.name: "format-text-blockquote"; onTriggered: pestanaCitas.b.citar(filaLibro.modelData.calibre_id, filaLibro.modelData.titulo) }
+                                    QQC2.MenuItem { text: "Abrir el PDF"; icon.name: "application-pdf"; enabled: !!filaLibro.modelData.pdf; onTriggered: studio.escritorio.abrirConAplicacion(filaLibro.modelData.pdf) }
+                                    QQC2.MenuItem { text: "Abrir en Biblioteca Studio"; icon.name: "bookcase"; onTriggered: pestanaCitas.b.abrirLibro(filaLibro.modelData.calibre_id) }
+                                }
+                                QQC2.ToolTip.text: "Doble clic: citarlo en el cursor (si aún no es fuente del proyecto, se añade tras confirmar) · clic derecho: más"
+                                QQC2.ToolTip.visible: hovered
+                                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay * 2
+                            }
+                            Kirigami.PlaceholderMessage {
+                                anchors.centerIn: parent
+                                width: parent.width - Kirigami.Units.gridUnit * 2
+                                visible: libros.count === 0
+                                text: pestanaCitas.b.buscando ? "Buscando…" : "Ningún libro coincide"
+                            }
+                        }
+
+                        // las fichas del proyecto
+                        ListView {
+                            id: listaFichas
+                            clip: true
+                            model: pestanaCitas.b.fichas.filter(f => !pestanaCitas.filtroFichas || (f.nombre + " " + f.texto + " " + f.clave).toLowerCase().includes(pestanaCitas.filtroFichas.toLowerCase()))
+                            Accessible.name: "Fichas del proyecto"
+                            QQC2.ScrollBar.vertical: QQC2.ScrollBar {}
+                            delegate: QQC2.ItemDelegate {
+                                id: filaFicha
+                                required property var modelData
+                                width: listaFichas.width
+                                onClicked: raiz.abrirArchivo(modelData.archivo, 0)
+                                onDoubleClicked: if (modelData.insertar) raiz.insertarDatos(modelData.insertar)
+                                contentItem: ColumnLayout {
+                                    spacing: 0
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        QQC2.Label { text: filaFicha.modelData.tipo; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.highlightColor }
+                                        QQC2.Label { Layout.fillWidth: true; text: filaFicha.modelData.clave + (filaFicha.modelData.pagina ? ", p. " + filaFicha.modelData.pagina : "")
+                                                     font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor; elide: Text.ElideRight }
+                                        Kirigami.Icon { visible: filaFicha.modelData.verificacion && filaFicha.modelData.verificacion !== "pendiente"; source: "checkmark"
+                                                        implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth; color: Kirigami.Theme.positiveTextColor }
+                                    }
+                                    QQC2.Label { Layout.fillWidth: true; text: filaFicha.modelData.texto || filaFicha.modelData.nombre; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight }
+                                }
+                                QQC2.ToolTip.text: "Clic: abrir la ficha · doble clic: " + (filaFicha.modelData.insertar || "—") + " en el cursor"
+                                QQC2.ToolTip.visible: hovered
+                                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay * 2
+                            }
+                            Kirigami.PlaceholderMessage {
+                                anchors.centerIn: parent
+                                width: parent.width - Kirigami.Units.gridUnit * 2
+                                visible: listaFichas.count === 0
+                                text: "Sin fichas en fuentes/fichas/"
+                                explanation: pestanaCitas.b.error
+                            }
                         }
                     }
                 }

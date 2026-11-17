@@ -32,6 +32,47 @@ def _resolver(argv: list, esquema: Path, proyecto: Path) -> list[str]:
     return salida
 
 
+def con(argv: list[str], **valores) -> list[str]:
+    """La orden con sus huecos llenos ({texto}, {id}…), ya resueltas las rutas."""
+    return [a.format(**valores) if "{" in a else a for a in argv]
+
+
+def _json(argv: list[str], cwd: str, tope: int = TOPE_RECURSOS):
+    """Corre una orden del marco que imprime JSON; (dato, error)."""
+    try:
+        r = subprocess.run(argv, capture_output=True, text=True, timeout=tope, cwd=cwd)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return None, f"{argv[0]}: {e}"
+    if r.returncode != 0:
+        texto = (r.stderr or r.stdout).strip()
+        return None, texto.splitlines()[-1] if texto else f"código {r.returncode}"
+    try:
+        return json.loads(r.stdout), ""
+    except ValueError:
+        return None, "la orden no devolvió JSON"
+
+
+def declaracion_biblioteca(principal: str | Path) -> dict | None:
+    """La sección `biblioteca:` del esquema del marco (contrato §9), con sus órdenes resueltas; None si no la declara."""
+    if not principal:
+        return None
+    esquema = configuracion.buscar_esquema(Path(principal))
+    if esquema is None:
+        return None
+    try:
+        import yaml
+        b = (yaml.safe_load(esquema.read_text(encoding="utf-8")) or {}).get("biblioteca")
+    except Exception:
+        return None
+    if not isinstance(b, dict) or not b.get("buscar"):
+        return None
+    proyecto = _proyecto(Path(principal), str(b.get("marcador") or "")) if b.get("marcador") else Path(principal).resolve().parent
+    if proyecto is None:
+        return None
+    return {"nombre": str(b.get("nombre") or "Biblioteca"), "proyecto": str(proyecto),
+            **{k: _resolver(b.get(k) or [], esquema, proyecto) for k in ("buscar", "fichas", "citar", "abrir")}}
+
+
 def _proyecto(principal: Path, marcador: str) -> Path | None:
     carpeta = Path(principal).resolve().parent
     for _ in range(NIVELES_PROYECTO):

@@ -56,3 +56,20 @@ def test_una_orden_rota_es_un_error_sin_datos(marco):
     assert r["error"] and r["figuras"] == []
     r = datos.recursos({**d, "recursos": ["/no/existe/orden"]})
     assert r["error"]
+
+
+def test_biblioteca_del_marco_buscar_fichas_y_citar(marco):
+    """La sección `biblioteca:` (contrato §9): buscar, las fichas del proyecto y citar en dos tiempos."""
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_biblioteca(principal)
+    assert d["nombre"] == "Biblioteca de muestra" and d["proyecto"] == str(principal.parent.resolve())
+    libros, error = datos._json(datos.con(d["buscar"], texto="ciudades"), d["proyecto"])
+    assert not error and [l["clave"] for l in libros] == ["quispe2021ciudades"]
+    fichas, _ = datos._json(d["fichas"], d["proyecto"])
+    assert fichas[0]["insertar"].startswith("“") and "\\parencite[p.~12]{quispe2021ciudades}" in fichas[0]["insertar"]
+    simulado, _ = datos._json(datos.con(d["citar"], id="1"), d["proyecto"])
+    assert simulado["nueva"] and not simulado["escrito"]                      # primero pregunta: es nueva
+    aplicado, _ = datos._json(datos.con(d["citar"], id="1") + ["--aplicar"], d["proyecto"])
+    assert aplicado["escrito"] and aplicado["insertar"] == "\\parencite{quispe2021ciudades}"
+    assert not datos._json(datos.con(d["citar"], id="1"), d["proyecto"])[0]["nueva"]   # ya es fuente: se cita en el acto
+    assert datos.declaracion_biblioteca(marco / "pruebas" / "caso.tex") is None

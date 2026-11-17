@@ -73,6 +73,7 @@ def main() -> int:
                         help="añade expedientes de muestra (oficios, cartas, cursos) para ver las subcategorías del árbol")
     parser.add_argument("--categoria", default="", help="la rama elegida a la izquierda (p. ej. «Documentos institucionales › Oficios»)")
     parser.add_argument("--lateral", type=int, default=-1, help="pestaña de la barra lateral de Escritura (0 Archivos · 1 Estructura · 2 Bibliografía · 3 Datos)")
+    parser.add_argument("--citas", type=int, default=-1, help="en la pestaña Citas: 0 del proyecto · 1 biblioteca · 2 fichas")
     parser.add_argument("--insertar", default="", help="abre el diálogo de insertar de este tipo (seccion, figura, tabla, cita, ecuacion, referencia, lista)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -183,6 +184,14 @@ def main() -> int:
                 if pestanas is not None:
                     pestanas.setProperty("currentIndex", args.lateral)
             QTimer.singleShot(1200, lateral)
+        if args.citas >= 0:
+            def citas():
+                pestana = raiz.findChild(QObject, "pestanaCitas")
+                if pestana is not None:
+                    pestana.setProperty("modo", args.citas)
+                if args.citas == 1:
+                    piezas["biblioteca"].buscar("")
+            QTimer.singleShot(1800, citas)
         if args.insertar:
             def insertar():
                 interfaz.pedir.emit("insertar", {"tipo": args.insertar})
