@@ -54,6 +54,12 @@ if orden == "revisar":
                   modo="manual", marcado=(marcados.get(k) or {}).get("estado", ""), nota=(marcados.get(k) or {}).get("nota", ""))
          for k, v in MANUALES.items()] + [
         _control("referencias", "referencias", "Referencias verificables", "ok", "Sin citas."),
+        _control("matriz", "matriz", "Matriz de consistencia: nada huérfano", "aviso" if not (proyecto / "matriz.yml").is_file() else "ok",
+                 "El proyecto no tiene matriz.yml" if not (proyecto / "matriz.yml").is_file() else "", accion="matriz"),
+        _control("autoevaluacion", "autoevaluacion", "Autoevaluación con la rúbrica",
+                 "ok" if (proyecto / "autoevaluacion.yml").is_file() else "aviso",
+                 "Rúbrica de muestra" if (proyecto / "autoevaluacion.yml").is_file() else "Rúbrica de muestra · 2 criterios sin puntuar",
+                 accion="autoevaluar"),
         _control("ia", "ia", "Uso de la IA declarado", "falla" if usos and not incluida else "ok",
                  f"{len(usos)} uso registrado" if usos else "Sin usos de la IA registrados.",
                  [{"archivo": "informe.tex", "linea": 1, "texto": "El documento no incluye la declaración: añada \\input{ia/declaracion}"}]
@@ -61,7 +67,8 @@ if orden == "revisar":
     ]
     _json({"tipo": "memoria", "lista": {"clave": "memoria", "nombre": "Memoria de muestra", "fuente": "Fuente de muestra (2026)"},
            "grupos": [{"clave": "cifras", "nombre": "Cifras y datos"}, {"clave": "lista", "nombre": "Lista de control · Memoria de muestra"},
-                      {"clave": "referencias", "nombre": "Referencias y citas"}, {"clave": "ia", "nombre": "Inteligencia artificial"}],
+                      {"clave": "referencias", "nombre": "Referencias y citas"}, {"clave": "ia", "nombre": "Inteligencia artificial"},
+                      {"clave": "matriz", "nombre": "Matriz de consistencia"}, {"clave": "autoevaluacion", "nombre": "Autoevaluación"}],
            "controles": controles})
 if orden == "marcar":
     clave, estado = sys.argv[3].removeprefix("lista."), sys.argv[4]

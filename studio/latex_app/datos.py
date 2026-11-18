@@ -10,8 +10,10 @@ Fundamento: decisión de diseño (docs/decisiones.md §1.16): lo configurable lo
   nada de ningún marco (regla del repo); el contrato de escritura con datafw es suyo (`escritura/docs/datos-y-fuentes.md`).
 Alternativa: leer los paquetes de datafw desde aquí. Se descarta: LaTeX Studio es público y autónomo, y un marco sin
   datafw (docencia, el CV) no debe cargar nada de eso.
-Las demás secciones del contrato se leen igual: `biblioteca:` (§9), `ayuda:` (§10), `nuevo:` (§11) y `entrega:` (§12,
-  «Antes de entregar»: `declaracion_entrega`, `resultado_entrega`, `veredicto` y `uso_de_ia`; decisiones §1.21).
+Las demás secciones del contrato se leen igual: `biblioteca:` (§9), `ayuda:` (§10), `nuevo:` (§11), `entrega:` (§12,
+  «Antes de entregar»: `declaracion_entrega`, `resultado_entrega`, `veredicto` y `uso_de_ia`; decisiones §1.21), y con
+  `declaracion_seccion` las de §13 a §15: `matriz:` (la matriz de consistencia), `revisor:` (estilo y LaTeX en el
+  editor) y `plantillas:` (decisiones §1.22 a §1.24).
 Límite: `recursos` tiene 60 s; una orden que no existe o no devuelve JSON se informa como error, sin datos.
 """
 from __future__ import annotations
@@ -99,7 +101,7 @@ def declaracion_ayuda(principal: str | Path) -> dict | None:
     if proyecto is None:
         return None
     return {"nombre": str(a.get("nombre") or "Ayuda de la IA"), "proyecto": str(proyecto),
-            **{k: _resolver(a.get(k) or [], esquema, proyecto) for k in ("prompt", "pegar")}}
+            **{k: _resolver(a.get(k) or [], esquema, proyecto) for k in ("prompt", "pegar", "revisar_prompt")}}
 
 
 def declaracion_nuevo(carpeta: str | Path) -> dict | None:
@@ -187,7 +189,7 @@ def recursos(decl: dict) -> dict:
 
 # Las órdenes de `entrega:` (§12, decisiones §1.21): los controles antes de entregar, marcar un punto manual y registrar
 # un uso de la IA.
-ORDENES_ENTREGA = ("revisar", "marcar", "registrar_ia")
+ORDENES_ENTREGA = ("revisar", "marcar", "registrar_ia", "rubrica", "autoevaluar", "lector_frio")
 ESTADOS_ENTREGA = ("ok", "aviso", "falla", "manual")
 
 
@@ -268,3 +270,132 @@ def uso_de_ia(proyecto: str | Path, ruta: str, parte: str, prompt: dict, antes: 
     if fecha:
         uso["fecha"] = fecha
     return uso
+
+
+# Las secciones §13 a §15 (decisiones §1.22 a §1.24): la matriz de consistencia, el revisor del editor y las plantillas.
+# Todas se leen igual: el esquema del marco, la carpeta del `marcador` y las órdenes resueltas.
+SECCIONES = {
+    "matriz": {"nombre": "Matriz de consistencia", "requerida": "leer", "ordenes": ("leer", "cuadro", "nueva", "guia", "pregunta")},
+    "revisor": {"nombre": "Revisión", "requerida": "revisar", "ordenes": ("revisar", "reglas")},
+    "plantillas": {"nombre": "Plantillas", "requerida": "listar", "ordenes": ("listar", "componer")},
+}
+
+
+def declaracion_seccion(principal: str | Path, seccion: str) -> dict | None:
+    """La sección `seccion` (matriz, revisor o plantillas) del esquema del marco, con sus órdenes resueltas; None si no
+    la declara, le falta su orden principal o no se encuentra la carpeta de su `marcador`."""
+    forma = SECCIONES[seccion]
+    if not principal:
+        return None
+    esquema = configuracion.buscar_esquema(Path(principal))
+    if esquema is None:
+        return None
+    try:
+        import yaml
+        s = (yaml.safe_load(esquema.read_text(encoding="utf-8")) or {}).get(seccion)
+    except Exception:
+        return None
+    if not isinstance(s, dict) or not s.get(forma["requerida"]):
+        return None
+    proyecto = _proyecto(Path(principal), str(s.get("marcador") or "")) if s.get("marcador") else Path(principal).resolve().parent
+    if proyecto is None:
+        return None
+    return {"nombre": str(s.get("nombre") or forma["nombre"]), "proyecto": str(proyecto),
+            **{k: _resolver(s.get(k) or [], esquema, proyecto) for k in forma["ordenes"]}}
+
+
+ESTADOS_MATRIZ = ("ok", "aviso", "falla")
+
+
+def resultado_matriz(dato, proyecto: str | Path) -> dict:
+    """Lo que devolvió `leer` de `matriz:` (§13), listo para la ventana: cada huérfano y cada sección con su `ruta`
+    absoluta, las columnas y el resumen. Nunca lanza: lo mal formado vuelve como {error}."""
+    vacio = {"error": "", "existe": False, "archivo": "", "ruta": "", "filas": [], "huerfanos": [], "columnas": [],
+             "pregunta": {}, "porque": "", "fuente": "", "cuadro": {}, "fallas": 0, "avisos": 0, "no_aplica": ""}
+    if not isinstance(dato, dict):
+        return {**vacio, "error": "la orden no devolvió la matriz"}
+    if dato.get("error") and not dato.get("filas"):
+        return {**vacio, "error": str(dato["error"])}
+    base = Path(proyecto)
+    absoluta = lambda a: str(a if Path(a).is_absolute() else base / a) if a else ""
+    filas = []
+    for f in dato.get("filas") or []:
+        if not isinstance(f, dict):
+            continue
+        secciones = [{**s, "ruta": absoluta(str(s.get("archivo") or ""))} for s in f.get("secciones") or [] if isinstance(s, dict)]
+        indicadores = [i for i in f.get("indicadores") or [] if isinstance(i, dict)]
+        problemas = [x for x in f.get("problemas") or [] if isinstance(x, dict) and x.get("estado") in ESTADOS_MATRIZ]
+        estado = "falla" if any(x["estado"] == "falla" for x in problemas) else "aviso" if problemas else "ok"
+        filas.append({**{k: str(f.get(k) or "") for k in ("id", "nivel", "problema", "objetivo", "hipotesis", "prueba",
+                                                           "refutaria", "supuesto")},
+                      "variables": [str(v) for v in f.get("variables") or []], "indicadores": indicadores,
+                      "secciones": secciones, "problemas": problemas, "estado": estado, "linea": int(f.get("linea") or 0)})
+    huerfanos = [{**h, "ruta": absoluta(str(h.get("archivo") or "")), "linea": int(h.get("linea") or 0)}
+                 for h in dato.get("huerfanos") or [] if isinstance(h, dict) and h.get("estado") in ESTADOS_MATRIZ]
+    archivo = str(dato.get("archivo") or "")
+    return {**vacio, "error": str(dato.get("error") or ""), "existe": bool(dato.get("existe")), "archivo": archivo,
+            "ruta": absoluta(archivo), "filas": filas, "huerfanos": huerfanos,
+            "columnas": [c for c in dato.get("columnas") or [] if isinstance(c, dict)],
+            "pregunta": dato.get("pregunta") if isinstance(dato.get("pregunta"), dict) else {},
+            "porque": str(dato.get("porque") or ""), "fuente": str(dato.get("fuente") or ""),
+            "cuadro": dato.get("cuadro") if isinstance(dato.get("cuadro"), dict) else {},
+            "no_aplica": str(dato.get("no_aplica") or ""),
+            "fallas": sum(h["estado"] == "falla" for h in huerfanos), "avisos": sum(h["estado"] == "aviso" for h in huerfanos)}
+
+
+def resultado_revisor(dato) -> dict:
+    """Lo que devolvió `revisar` de `revisor:` (§14), con cada hallazgo junto a su regla (nombre, porqué y fuente) y
+    ordenado por línea. Nunca lanza."""
+    vacio = {"error": "", "perfil": {}, "reglas": [], "hallazgos": [], "estilo": 0, "latex": 0}
+    if not isinstance(dato, dict):
+        return {**vacio, "error": "la orden no devolvió la revisión"}
+    if dato.get("error"):
+        return {**vacio, "error": str(dato["error"])}
+    reglas = {str(r.get("clave")): r for r in dato.get("reglas") or [] if isinstance(r, dict) and r.get("clave")}
+    hallazgos = []
+    for h in dato.get("hallazgos") or []:
+        if not isinstance(h, dict):
+            continue
+        r = reglas.get(str(h.get("regla") or ""), {})
+        hallazgos.append({"linea": int(h.get("linea") or 0), "columna": int(h.get("columna") or 0), "largo": int(h.get("largo") or 0),
+                          "regla": str(h.get("regla") or ""), "clase": str(h.get("clase") or r.get("clase") or "estilo"),
+                          "texto": str(h.get("texto") or ""), "sugerencia": str(h.get("sugerencia") or ""),
+                          "nombre": str(r.get("nombre") or h.get("regla") or ""), "porque": str(r.get("porque") or ""),
+                          "fuente": str(r.get("fuente") or ""), "archivo": str(h.get("archivo") or "")})
+    hallazgos.sort(key=lambda h: (h["archivo"], h["linea"], h["columna"]))
+    return {**vacio, "perfil": dato.get("perfil") if isinstance(dato.get("perfil"), dict) else {},
+            "reglas": list(reglas.values()), "hallazgos": hallazgos,
+            "estilo": sum(h["clase"] == "estilo" for h in hallazgos), "latex": sum(h["clase"] == "latex" for h in hallazgos)}
+
+
+def resultado_rubrica(dato) -> dict:
+    """Lo que devolvió `rubrica` de `entrega:` (§12): la rúbrica en el formato común (criterios con sus niveles, del mejor
+    al peor) con lo puntuado en cada criterio, la nota y de dónde viene. Nunca lanza."""
+    vacio = {"error": "", "titulo": "", "fuente": "", "origen": "", "porque": "", "criterios": [], "nota": None,
+             "vetos": [], "faltan": 0, "cambio": False, "hay": False}
+    if not isinstance(dato, dict):
+        return {**vacio, "error": "la orden no devolvió la rúbrica"}
+    if dato.get("error") or dato.get("problemas"):
+        return {**vacio, "error": str(dato.get("error") or "; ".join(map(str, dato.get("problemas") or [])))}
+    r = dato.get("rubrica") if isinstance(dato.get("rubrica"), dict) else None
+    if r is None:
+        return {**vacio, "porque": str(dato.get("porque") or ""), "fuente": str(dato.get("fuente") or "")}
+    puntajes = dato.get("puntajes") if isinstance(dato.get("puntajes"), dict) else {}
+    criterios = []
+    for c in r.get("criterios") or []:
+        if not isinstance(c, dict):
+            continue
+        p = puntajes.get(c.get("clave")) or {}
+        niveles = [{"puntaje": n.get("puntaje"), "texto": f"{n.get('puntaje'):g}" if isinstance(n.get("puntaje"), (int, float)) else str(n.get("puntaje")),
+                    "nombre": str(n.get("nombre") or ""), "descriptor": str(n.get("descriptor") or "")}
+                   for n in c.get("niveles") or [] if isinstance(n, dict)]
+        elegido = p.get("puntaje")
+        criterios.append({"clave": str(c.get("clave")), "nombre": str(c.get("nombre") or ""), "peso": c.get("peso"),
+                          "descripcion": str(c.get("descripcion") or ""), "niveles": niveles,
+                          "puntaje": "" if elegido is None else (f"{elegido:g}" if isinstance(elegido, (int, float)) else str(elegido)),
+                          "justificacion": str(p.get("justificacion") or ""), "fecha": str(p.get("fecha") or "")})
+    nota = dato.get("nota") if isinstance(dato.get("nota"), dict) else {}
+    return {**vacio, "hay": True, "titulo": str(r.get("titulo") or ""), "fuente": str(r.get("fuente") or ""),
+            "porque": str(dato.get("porque") or ""), "origen": str(dato.get("origen") or ""), "criterios": criterios,
+            "nota": nota.get("nota"), "vetos": list(nota.get("vetos") or []), "faltan": sum(1 for c in criterios if not c["puntaje"]),
+            "cambio": bool(dato.get("cambio"))}

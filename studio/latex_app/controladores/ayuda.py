@@ -7,6 +7,8 @@ Método: corre las dos órdenes de la sección `ayuda:` del `latex-studio.yml` d
   `prompt` (devuelve {prompt, componente, titulo, fuente, aviso}) y `pegar` (lo pegado y el texto del editor van en dos
   archivos temporales de la caché; devuelve {ok, errores, avisos, antes, despues, diff}). La ventana no llama a ningún
   modelo ni escribe el archivo: aceptar reemplaza el tramo en el editor y el autor guarda con Ctrl+S.
+  Antes de copiar, `revisar_prompt` (si el marco lo declara; C12.3, decisiones §1.22) dice si el prompt lleva datos de
+  estudiantes o del despacho: la ventana lo muestra y el autor decide si copia igual.
 Límite: la ventana no sabe qué prompt sirve a qué parte ni qué es un componente: lo dice el marco. Sin la sección, la
   acción queda deshabilitada.
 """
@@ -30,6 +32,7 @@ class AyudaParte(QObject):
     cambiado = Signal()
     promptListo = Signal("QVariantMap")              # {prompt, componente, titulo, fuente, aviso} o {error}
     pegadoListo = Signal("QVariantMap")              # {ok, errores, avisos, antes, despues, diff} o {error}
+    promptRevisado = Signal("QVariantMap")           # {sensible, nivel, hallazgos, porque, fuente} (C12.3) o {sensible: false}
 
     def __init__(self, proyectos, tareas, consola, sistema=None, parent=None):
         super().__init__(parent)
@@ -42,6 +45,33 @@ class AyudaParte(QObject):
 
     def _get_nombre(self): return self._decl["nombre"] if self._decl else "Ayuda de la IA"
     nombre = Property(str, _get_nombre, notify=cambiado)
+
+    def _get_revisa(self): return bool(self._decl and self._decl.get("revisar_prompt"))
+    revisaPrompt = Property(bool, _get_revisa, notify=cambiado)
+
+    @Slot(str)
+    def revisarPrompt(self, texto: str) -> None:
+        """Antes de copiar: si el prompt lleva datos de estudiantes o del despacho (`revisar_prompt` del marco, C12.3).
+        `promptRevisado` trae el resultado; sin la orden, trae {sensible: false} y la ventana copia sin preguntar."""
+        if not self.revisaPrompt:
+            self.promptRevisado.emit({"sensible": False, "hallazgos": []})
+            return
+        decl = dict(self._decl)
+        archivo = _cache() / "prompt.txt"
+        archivo.write_text(texto or "", encoding="utf-8")
+        argv = datos.con(decl["revisar_prompt"], prompt=str(archivo))
+
+        def trabajo(progress_cb=None, cancel_cb=None, message_cb=None):
+            return datos._json(argv, decl["proyecto"])
+
+        def fin(r):
+            dato, error = r
+            if not isinstance(dato, dict) or dato.get("error"):
+                # sin respuesta no se sabe: se avisa, para que el autor decida en vez de copiar a ciegas
+                dato = {"sensible": True, "nivel": "desconocido", "hallazgos": [],
+                        "error": (dato or {}).get("error") if isinstance(dato, dict) else (error or "la revisión no respondió")}
+            self.promptRevisado.emit(dato)
+        self.tareas.funcion("Revisar el prompt antes de copiarlo", trabajo, silenciosa=True, operacion="lectura", error=False, al_terminar=fin)
 
     @Slot()
     def recargar(self) -> None:

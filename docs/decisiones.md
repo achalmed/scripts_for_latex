@@ -274,6 +274,63 @@ declara las tres órdenes con comprobaciones de juguete y sin datos reales. Prue
 revisar, marcar y registrar, simulando y aplicando; el veredicto y lo mal formado) y `tests/test_controladores.py` (el
 controlador en sus hilos); captura con `studio/capturar.py --entrega` en `docs/figuras/latex-studio-antes-de-entregar.png`.
 
+### §1.22 La norma del flujo de conocimiento: la matriz, el asistente de pregunta, la autoevaluación, el texto alternativo y el aviso antes de copiar un prompt (2026-11-18)
+
+El autor aprobó como norma `prompts/00 metodo/FLUJO_DE_CONOCIMIENTO.md` (67 mejoras con su fuente; el fundamento, en
+`FLUJO_DE_CONOCIMIENTO_FUNDAMENTO.md` §5) y pidió que los programas la cumplan de manera estricta. A LaTeX Studio le tocan,
+con escritura como marco, estas; como en §1.16 a §1.21, **la ventana no sabe qué es ninguna**: corre lo que el marco
+declara y pinta lo que devuelve, con la línea tenue «por qué · fuente» que el marco da.
+
+- **La matriz de consistencia viva** (C1.1, C1.3; Hernández Sampieri et al., 2014, Calibre 732; Gerring, 2012; King et
+  al., 1994; Popper, 2007, Calibre 617; Alvesson y Sandberg, 2011): una sección nueva del contrato, `matriz:` (§13), y un
+  panel, Herramientas › «Matriz de consistencia…» (Ctrl+Alt+M; `DialogoMatriz.qml`, `controladores/matriz.py`). Arriba,
+  «Nada huérfano» o cuántos elementos huérfanos; cada fila con su problema, objetivo e hipótesis, debajo la evidencia que la
+  refutaría y el supuesto que cuestiona, sus indicadores (por su nombre; la referencia `estudio@vN/indicador` en la ayuda)
+  y su sección (un clic va a ella). «Generar el cuadro» lo escribe el marco. Un panel y no una pestaña lateral más: la
+  matriz se mira de vez en cuando, y las cuatro pestañas de la barra ya están a un cuarto de ancho.
+- **El asistente de pregunta** (C1.2; Booth et al., 2016; Varian, 1997; Mendoza Bellido, 2022, Calibre 578), como ventana
+  (`DialogoPregunta.qml`): cuatro pasos (tema, rompecabezas, pregunta delimitada, evidencia), cada uno con su pregunta, su
+  ayuda, un ejemplo y su fuente; «Revisar» pide los avisos del marco sin escribir y «Guardar en la matriz» escribe tras
+  revisar. Los pasos los da el marco (`guia`), no la ventana.
+- **La autoevaluación con la rúbrica** (C11.2; Andrade, 2019; Panadero y Jonsson, 2013): dos órdenes más en `entrega:`
+  (`rubrica`, `autoevaluar`), la rúbrica en el formato común del ecosistema (el mismo que usa docencia) y el diálogo
+  «Autoevaluación» (`DialogoRubrica.qml`), con un botón desde el control de «Antes de entregar» (la clave `accion` del
+  control). Cada criterio se guarda por separado con su justificación: el clic en «Guardar» es la confirmación.
+- **El texto alternativo obligatorio al insertar una figura** (C8.3; W3C, 2024, Calibre 10443; LaTeX Project, 2025): si
+  el marco da `insertar_alt` en la figura de la pestaña Datos (§8), el doble clic abre `DialogoAlt.qml` con el borrador y
+  no inserta sin texto. La ventana escapa lo que LaTeX no admite dentro de `alt={…}`.
+- **El aviso antes de copiar un prompt** (C12.3; Comisión Europea, 2025; NIST, 2023, Calibre 10441): `revisar_prompt` en
+  `ayuda:` (§10). Avisa y deja decidir («Copiar de todos modos»), porque quien sabe si el dato puede salir es el autor; si
+  la revisión falla, también pregunta: copiar a ciegas sería peor que preguntar de más.
+
+- **El lector frío** (C11.4; COPE Council, 2017): `lector_frio` en `entrega:` y «Versión para lector frío» en el pie de
+  «Antes de entregar»: el marco copia el proyecto fuera del documento, quita la autoría y compila; la ventana abre el PDF.
+  Los comentarios del revisor vuelven por el marco como un control con sus hallazgos (un clic, a la línea): cambios
+  sugeridos que el autor atiende, nunca aplicados solos.
+
+Pruebas: `tests/test_datos.py` (cada sección sobre la muestra, simulando y aplicando) y `tests/test_controladores.py` (los
+controladores en sus hilos). Capturas con `studio/capturar.py` (`--matriz`, `--pregunta 3`, `--rubrica`, `--alt`) en
+`docs/figuras/`.
+
+### §1.23 El revisor del editor: estilo y LaTeX con reglas citadas, que sugiere y no reescribe (2026-11-18)
+
+Las mejoras C6.1 (Williams y Bizup, 2017; McCloskey, 2019; Gopen y Swan, 1990), C6.2 (PLAIN, 2011, Calibre 10510;
+McCloskey, 2019) y C13.2 (Trettin, 2016; Fear, 2020; Wright, 2024) piden revisar el texto mientras se escribe y no solo al
+final. Una sección nueva, `revisor:` (contrato §14), y una pestaña del panel inferior, «Revisión» (`RevisionEditor.qml`,
+`controladores/revisor.py`), que se pone al día al guardar y con Ctrl+Alt+R sobre lo que está en el editor (aún sin
+guardar). Una pestaña del panel inferior y no subrayados en el editor: el editor común de `gui-comun` no tiene capas de
+marcas, y una lista con «por qué · fuente» enseña la regla, que es lo que pide la mejora. **Nada del panel cambia el
+texto**: la norma pide un revisor que sugiere y nunca reescribe solo. El perfil de lector lo decide el marco (escritura lo
+lee del `proyecto.yaml`).
+
+### §1.24 Las plantillas que ahorran tiempo (2026-11-18)
+
+La mejora C13.4 (Knauff y Nejasmic, 2014: Word fue más rápido que LaTeX en varias tareas, salvo en ecuaciones) obliga a
+que LaTeX Studio reduzca el costo de LaTeX en lo que más se repite. Una sección nueva, `plantillas:` (contrato §15), y
+Herramientas › «Insertar una plantilla…» (Ctrl+Alt+T; `DialogoPlantillas.qml`, `controladores/plantillas.py`): la lista a
+la izquierda, el formulario corto y lo compuesto a la derecha, «Insertar» en el cursor. Las plantillas las da el marco;
+la barra de insertar (§1.17) sigue para lo genérico (sección, figura suelta, tabla, cita, ecuación).
+
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 
 El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e

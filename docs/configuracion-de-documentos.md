@@ -150,7 +150,11 @@ datos:
 Un argumento que empieza con «.» es una ruta relativa al esquema. `recursos` imprime
 `{"paquetes": [{estudio, usada, ultima, nueva}], "figuras": [{id, titulo, insertar, existe}], "tablas": [{id, titulo,
 insertar, existe, variantes}], "cifras": [{macro, valor}]}`; `insertar` es el texto que el doble clic pone en el
-cursor. Lo declara escritura (`escritura/core/config/latex-studio.yml`, con `reporting/main.py recursos` e `importar
+cursor. Una figura puede traer además `alt` (el texto alternativo: un borrador desde el indicador o el ya aprobado),
+`alt_aprobado` y `insertar_alt` (la orden con el hueco `{alt}`): entonces el texto alternativo es **obligatorio** al
+insertarla (decisiones §1.22; mejora C8.3 del flujo de conocimiento): el doble clic abre el diálogo con el borrador, el
+autor lo corrige y lo aprueba, y la ventana pone `insertar_alt` con `{alt}` lleno (sin llaves y con `% & # _ $`
+escapados); sin texto no se inserta. Lo declara escritura (`escritura/core/config/latex-studio.yml`, con `reporting/main.py recursos` e `importar
 --actualizar`); la muestra, `studio/ejemplo/proyectos/marco` (su `datos.yml` y `studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`). Pruebas:
 `tests/test_datos.py`.
 
@@ -208,7 +212,11 @@ ayuda:
 `prompt` al portapapeles. `pegar` recibe dos rutas de archivos de la caché de la ventana: `{pegado}` (lo que respondió el
 chat) y `{tex}` (el texto del editor, que puede tener cambios sin guardar), e imprime `{ok, errores, avisos, componente,
 antes, despues, diff}`: si `ok` y el autor acepta, la ventana reemplaza `antes` por `despues` en el editor. Ninguna de las
-dos escribe nada ni llama a un modelo. Las declara escritura (`escritura/core/config/latex-studio.yml`);
+dos escribe nada ni llama a un modelo. Opcional, `revisar_prompt: [..., '{prompt}', ...]` (decisiones §1.22; mejora C12.3):
+antes de copiar, la ventana escribe el prompt en un archivo de su caché (`{prompt}`) y la orden imprime `{sensible, nivel:
+alto|medio|ninguno, hallazgos: [{tipo, nivel, linea, texto}], total, porque, fuente}`; si `sensible`, el diálogo lo dice
+con su porqué y su fuente y copiar queda a decisión del autor («Copiar de todos modos» o «No copiar»); si la orden falla,
+también pregunta. Sin la orden, copia sin preguntar. Las declara escritura (`escritura/core/config/latex-studio.yml`);
 la muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`), las §9 y §10.
 Pruebas: `tests/test_datos.py`.
 
@@ -270,3 +278,95 @@ escrito}`. Las dos simulan sin `--aplicar`; la ventana las corre con él: marcar
 con `escritura/scripts/antes_de_entregar.py`; sus controles, en `escritura/docs/verificacion.md` §9); la muestra,
 `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/entrega_muestra.py`). Pruebas: `tests/test_datos.py` y
 `tests/test_controladores.py`.
+
+**La autoevaluación con la rúbrica** (opcional; decisiones §1.22; mejora C11.2):
+
+```yaml
+  rubrica: [/usr/bin/python3, ../../scripts/antes_de_entregar.py, rubrica, '{proyecto}']
+  autoevaluar: [/usr/bin/python3, ../../scripts/antes_de_entregar.py, autoevaluar, '{proyecto}', '{datos}']   # + --aplicar
+```
+
+`rubrica` imprime `{rubrica, origen, ruta, puntajes: {clave: {puntaje, justificacion, fecha}}, nota: {nota, vetos, faltan},
+cambio, problemas, porque, fuente}`; `rubrica` tiene el **formato común** del ecosistema (`{titulo, fuente, criterios:
+[{clave, nombre, peso, niveles: [{puntaje, descriptor}]}]}`, el de `escritura/config/entrega/rubrica.schema.yml`) o es
+`null` si el documento no tiene; `cambio` dice que la rúbrica cambió desde que se puntuó. `autoevaluar` recibe en `{datos}`
+`{clave, puntaje, justificacion}` y, con `--aplicar`, lo guarda (imprime `{puntajes, nota, escrito}` o `{error}`: un
+puntaje que no es nivel, una justificación corta). La ventana lo pinta en «Autoevaluación» (`DialogoRubrica.qml`): los
+niveles del mejor al peor con su descriptor, la justificación y «Guardar» por criterio.
+
+**El lector frío** (opcional; decisiones §1.22; mejora C11.4): `lector_frio: [..., '{proyecto}']` con `--aplicar` prepara
+fuera del documento una versión sin nombres para un revisor externo y la compila; imprime `{pdf, quitado: [{archivo, linea,
+campo}], pendientes, escrito}` o `{error}`. La ventana la ofrece en el pie de «Antes de entregar» («Versión para lector
+frío») y abre el PDF. Los comentarios del revisor los trae el marco y vuelven como un control más, con sus hallazgos.
+
+**Un control con `accion`** (`autoevaluar` o `matriz`) lleva en el diálogo el botón que abre su ventana (la autoevaluación,
+la matriz de consistencia de §13): el control se resuelve allí y «Antes de entregar» lo vuelve a revisar.
+
+## 13. La matriz de consistencia (`matriz:`)
+
+Un marco cuyos documentos tienen matriz de consistencia (problema, objetivos, hipótesis, variables, indicadores y método)
+la declara al nivel del esquema; la ventana la muestra en Herramientas › «Matriz de consistencia…» (Ctrl+Alt+M) y ofrece
+el «Asistente de pregunta» (decisiones §1.22; mejoras C1.1 a C1.3 del flujo de conocimiento):
+
+```yaml
+matriz:
+  nombre: Matriz de consistencia
+  marcador: proyecto.yaml
+  leer: [/usr/bin/python3, ../../scripts/matriz.py, leer, '{proyecto}']
+  cuadro: [/usr/bin/python3, ../../scripts/matriz.py, cuadro, '{proyecto}']        # + --aplicar
+  nueva: [/usr/bin/python3, ../../scripts/matriz.py, nueva, '{proyecto}']          # + --aplicar
+  guia: [/usr/bin/python3, ../../scripts/matriz.py, guia]
+  pregunta: [/usr/bin/python3, ../../scripts/matriz.py, pregunta, '{proyecto}', '{datos}']   # + --aplicar
+```
+
+`leer` (no escribe) imprime `{archivo, existe, no_aplica, porque, fuente, pregunta, metodo, columnas: [{clave, nombre,
+porque, fuente}], filas: [{id, nivel, problema, objetivo, hipotesis, variables, indicadores: [{ref, existe, nombre,
+detalle}], secciones: [{ref, existe, archivo, linea}], prueba, refutaria, supuesto, linea, problemas: [{estado, texto,
+clase}]}], huerfanos: [{estado, fila, texto, clase, archivo, linea}], cuadro: {archivo, existe, al_dia}}`; `estado` es
+`falla` (una hipótesis sin indicador o sin sección, un indicador o una sección que no existen) o `aviso` (falta lo que la
+refutaría o el supuesto que cuestiona; un indicador que no se pudo comprobar). `archivo` es relativo a `{proyecto}`; un
+clic en una sección lleva a su línea y «Editar la fila» abre la matriz en su línea. `cuadro` y `nueva` escriben con
+`--aplicar` e imprimen `{archivo, escrito}` o `{error}` (el marco no pisa un cuadro escrito a mano). `guia` imprime
+`{titulo, porque, fuente, pasos: [{clave, titulo, pregunta, ayuda, ejemplos, campos: [{clave, rotulo, tipo: texto|lineas,
+obligatorio}], porque, fuente}]}`; `pregunta` recibe los valores del asistente en `{datos}` e imprime `{ok, avisos:
+[{paso, estado, texto}], archivo, escrito}`: sin `--aplicar` revisa, con él guarda. Lo declara escritura
+(`escritura/core/config/latex-studio.yml`, con `escritura/scripts/matriz.py`); la muestra,
+`studio/ejemplo/proyectos/marco/scripts/flujo_muestra.py`. Pruebas: `tests/test_datos.py` y `tests/test_controladores.py`.
+
+## 14. El revisor del editor (`revisor:`)
+
+Un marco que sabe revisar el estilo y el LaTeX de un archivo lo declara al nivel del esquema; la ventana lo muestra en la
+pestaña «Revisión» del panel inferior, al guardar y con Herramientas › «Revisar el estilo» (Ctrl+Alt+R) (decisiones §1.23;
+mejoras C6.1, C6.2 y C13.2):
+
+```yaml
+revisor:
+  marcador: proyecto.yaml
+  revisar: [/usr/bin/python3, ../../scripts/revisor.py, revisar, '{archivo}', --proyecto, '{proyecto}', --nombre, '{ruta}']
+  reglas: [/usr/bin/python3, ../../scripts/revisor.py, reglas]
+```
+
+`{archivo}` es una copia del texto del editor (con lo no guardado) en la caché de la ventana y `{ruta}` la ruta real.
+`revisar` (30 s como mucho; no escribe nada) imprime `{perfil: {clave, nombre}, reglas: [{clave, clase: estilo|latex,
+nombre, porque, fuente}], hallazgos: [{linea, columna, largo, regla, clase, texto, sugerencia}], resumen}` o `{error}`. La
+ventana junta cada hallazgo con su regla y pinta la línea, el nombre, lo hallado, la sugerencia y la línea tenue «por qué
+· fuente»; un clic va a la línea. **Sugiere y nunca reescribe**: nada del panel cambia el texto. El perfil de lector
+(académico, decisor, estudiante) lo decide el marco. La muestra, `flujo_muestra.py`; pruebas en `tests/test_datos.py` y
+`tests/test_controladores.py`.
+
+## 15. Las plantillas (`plantillas:`)
+
+Un marco con plantillas para lo que más se repite lo declara al nivel del esquema; la ventana lo ofrece en Herramientas ›
+«Insertar una plantilla…» (Ctrl+Alt+T) (decisiones §1.24; mejora C13.4):
+
+```yaml
+plantillas:
+  marcador: proyecto.yaml
+  listar: [/usr/bin/python3, ../../scripts/plantillas.py, listar, '{proyecto}']
+  componer: [/usr/bin/python3, ../../scripts/plantillas.py, componer, '{proyecto}', '{datos}']
+```
+
+`listar` imprime `{plantillas: [{clave, nombre, descripcion, porque, fuente, campos: [{clave, rotulo, tipo:
+texto|lineas|opcion, opciones: [{clave, nombre}], omision, obligatorio, ayuda}]}]}`; `componer` recibe `{plantilla,
+valores}` e imprime `{insertar, avisos}` o `{error}`. Ninguna escribe: la ventana muestra lo compuesto y lo pone en el
+cursor al pulsar «Insertar». La muestra, `flujo_muestra.py`; pruebas en `tests/test_datos.py` y `tests/test_controladores.py`.

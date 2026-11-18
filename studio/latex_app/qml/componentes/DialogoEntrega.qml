@@ -3,7 +3,8 @@
 // «Faltan N» (las fallas más los puntos manuales sin marcar; los avisos no bloquean). Cada control, en su grupo, con su
 // punto de color, su línea tenue «por qué · fuente» y sus hallazgos: un clic lleva al archivo y la línea en el editor.
 // Los puntos manuales tienen casilla y nota: sin casilla y con nota quedan justificados. La única acción rellena es
-// «Revisar de nuevo»; la ventana no sabe qué es cada control: lo dice el marco.
+// «Revisar de nuevo»; la ventana no sabe qué es cada control: lo dice el marco. Un control con `accion` (autoevaluar,
+// matriz) trae el botón que abre su ventana (la autoevaluación con la rúbrica, la matriz de consistencia; §1.22).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -21,7 +22,19 @@ Kirigami.Dialog {
     standardButtons: Kirigami.Dialog.NoButton
     padding: Kirigami.Units.largeSpacing
 
+    property bool preparandoFrio: false
     function abrir() { e.revisar(); open() }
+    Connections {
+        target: dialogo.e
+        function onLectorFrioListo(d) {
+            dialogo.preparandoFrio = false
+            if (d.error) ventana.mensajes.mostrar("Lector frío: " + d.error, "aviso")
+            else if (d.pdf) {
+                ventana.mensajes.mostrar("Versión sin nombres lista" + ((d.pendientes || []).length ? ": revisa " + d.pendientes.length + " nombres en el texto" : "") + ".", "positivo")
+                studio.sistema.abrirEnOkular(d.pdf, "", 0)
+            }
+        }
+    }
     function colorDe(c) {
         if (c.estado === "falla") return Kirigami.Theme.negativeTextColor
         if (c.estado === "aviso") return Kirigami.Theme.neutralTextColor
@@ -58,6 +71,14 @@ Kirigami.Dialog {
                 text: dialogo.e.revisando ? "Revisando…" : "Un clic en un hallazgo lo abre en el editor. Revisar no escribe nada."
             }
             Chip { text: "Cerrar"; onClicked: dialogo.close() }
+            Chip {
+                text: "Versión para lector frío"; icono: "im-invisible-user"
+                visible: dialogo.e.puedeLectorFrio
+                enabled: !dialogo.e.revisando && !dialogo.preparandoFrio
+                opacity: enabled ? 1 : 0.5
+                ayuda: "Un PDF sin nombres para un revisor externo (el marco lo compila aparte; el documento no cambia)"
+                onClicked: { dialogo.preparandoFrio = true; dialogo.e.lectorFrio() }
+            }
             Chip {
                 text: "Revisar de nuevo"; icono: "view-refresh"; destacado: true
                 enabled: !dialogo.e.revisando
@@ -172,6 +193,12 @@ Kirigami.Dialog {
                                     Layout.maximumWidth: Kirigami.Units.gridUnit * 18
                                     elide: Text.ElideRight
                                     color: Kirigami.Theme.disabledTextColor
+                                }
+                                Chip {                         // el control que se resuelve en otra ventana (decisiones §1.22)
+                                    visible: (fila.c.accion === "autoevaluar" && dialogo.e.puedeAutoevaluar)
+                                             || (fila.c.accion === "matriz" && studio.matriz.disponible)
+                                    text: fila.c.accion === "autoevaluar" ? "Autoevaluar…" : "Abrir la matriz…"
+                                    onClicked: { dialogo.close(); if (fila.c.accion === "autoevaluar") dialogoRubrica.abrir(); else dialogoMatriz.abrir() }
                                 }
                             }
                             QQC2.Label {                               // por qué · fuente

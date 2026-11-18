@@ -140,7 +140,11 @@ if orden == "actualizar":
     sys.exit(0)
 print(json.dumps({
     "paquetes": [{"estudio": d["paquete"], "usada": d["usada"], "ultima": d["ultima"], "nueva": d["usada"] != d["ultima"]}],
-    "figuras": [{"id": f, "titulo": t, "insertar": f"\\includegraphics{{figures/{f}.pdf}}", "existe": False} for f, t in d.get("figuras", {}).items()],
+    # C8.3: cada figura trae su texto alternativo (`alt`: el borrador desde el título, o el aprobado) y `insertar_alt`, el
+    # texto con el hueco {alt} que la ventana llena con lo que el autor aprueba al insertarla
+    "figuras": [{"id": f, "titulo": t, "insertar": f"\\includegraphics{{figures/{f}.pdf}}", "existe": False,
+                 "alt": f"Gráfico: {t.lower()}, según el paquete de muestra.", "alt_aprobado": False,
+                 "insertar_alt": f"\\includegraphics[alt={{{{alt}}}}]{{figures/{f}.pdf}}"} for f, t in d.get("figuras", {}).items()],
     "tablas": [{"id": f, "titulo": t, "insertar": f"\\input{{tables/{f}.tex}}", "existe": False} for f, t in d.get("tablas", {}).items()],
     "cifras": [{"macro": m, "valor": v} for m, v in d.get("cifras", {}).items()],
 }, ensure_ascii=False))

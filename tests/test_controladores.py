@@ -459,3 +459,86 @@ def test_antes_de_entregar_revisa_marca_y_registra_el_uso_de_la_ia(app, piezas):
     _esperar(app, lambda: not registrados, 60)
     assert registrados[0]["escrito"] and (principal.parent / "ia" / "registro.yml").is_file()
     assert "el prompt" not in (principal.parent / "ia" / "registro.yml").read_text(encoding="utf-8")
+
+
+@requiere_binding
+def test_matriz_lee_crea_genera_y_guarda_la_pregunta(app, piezas, tmp_path, monkeypatch):
+    """La matriz de consistencia (decisiones §1.22): con el proyecto del marco abierto, `leer` llega en un hilo; «Crear»
+    y «Generar el cuadro» escriben y vuelven a leer; el asistente revisa sin escribir y guarda con aplicar."""
+    from latex_app.controladores.matriz import MatrizProyecto
+    p, muestra = piezas["proyectos"], piezas["muestra"]
+    m = MatrizProyecto(p, piezas["tareas"], piezas["consola"])
+    assert not m.disponible
+    principal = muestra / "marco" / "informes" / "informe-anual" / "informe.tex"
+    assert not p.abrir(str(principal))
+    assert m.disponible and dict(m.puede) == {"cuadro": True, "nueva": True, "guia": True, "pregunta": True}
+    m.leer()
+    _esperar(app, lambda: m.leyendo, 60)
+    assert not dict(m.resultado)["existe"]
+    escritos = []
+    m.escrito.connect(lambda d: escritos.append(dict(d)))
+    m.crear()
+    _esperar(app, lambda: not escritos or m.leyendo, 60)
+    r = dict(m.resultado)
+    assert escritos[0]["escrito"] and r["existe"] and r["fallas"] == 1 and len(r["filas"]) == 2
+    m.generarCuadro()
+    _esperar(app, lambda: len(escritos) < 2 or m.leyendo, 60)
+    assert (principal.parent / "tables" / "matriz.tex").is_file() and dict(m.resultado)["cuadro"]["al_dia"]
+    m.pedirGuia()
+    _esperar(app, lambda: not dict(m.guia), 60)
+    assert len(dict(m.guia)["pasos"]) == 4
+    revisadas, guardadas = [], []
+    m.preguntaRevisada.connect(lambda d: revisadas.append(dict(d)))
+    m.preguntaGuardada.connect(lambda d: guardadas.append(dict(d)))
+    valores = {"tema": "Empleo", "hecho": "No cuadra", "poblacion": "Ciudades", "periodo": "2019 a 2024", "comparacion": "por sector",
+               "texto": "Cuánto del empleo se explica por el sector", "evidencia": "La encuesta"}
+    antes = (principal.parent / "matriz.yml").read_text(encoding="utf-8")
+    m.pregunta(valores, False)
+    _esperar(app, lambda: not revisadas, 60)
+    assert revisadas[0]["ok"] and revisadas[0]["avisos"] and (principal.parent / "matriz.yml").read_text(encoding="utf-8") == antes
+    m.pregunta(valores, True)
+    _esperar(app, lambda: not guardadas or m.leyendo, 60)
+    assert guardadas[0]["escrito"] and "Cuánto del empleo" in dict(m.resultado)["pregunta"]["texto"]
+
+
+@requiere_binding
+def test_revisor_plantillas_rubrica_y_el_prompt_sensible(app, piezas):
+    """El revisor del editor (§1.23), las plantillas (§1.24), la autoevaluación con la rúbrica y el aviso antes de copiar
+    un prompt (§1.22): cada uno corre la orden de su marco en un hilo y devuelve lo que la ventana pinta."""
+    from latex_app.controladores.ayuda import AyudaParte
+    from latex_app.controladores.entrega import AntesDeEntregar
+    from latex_app.controladores.plantillas import PlantillasMarco
+    from latex_app.controladores.revisor import RevisorEditor
+    p, muestra, tareas, consola = piezas["proyectos"], piezas["muestra"], piezas["tareas"], piezas["consola"]
+    rv, pl = RevisorEditor(p, tareas, consola), PlantillasMarco(p, tareas, consola)
+    e, a = AntesDeEntregar(p, tareas, consola), AyudaParte(p, tareas, consola)
+    principal = muestra / "marco" / "informes" / "informe-anual" / "informe.tex"
+    assert not p.abrir(str(principal))
+    assert rv.disponible and pl.disponible and e.puedeAutoevaluar and a.revisaPrompt
+    rv.revisar(str(principal), "Los datos fueron recogidos.\n{\\bf x}\n")
+    _esperar(app, lambda: rv.revisando, 60)
+    r = dict(rv.resultado)
+    assert rv.ruta == str(principal) and (r["estilo"], r["latex"]) == (1, 1) and r["hallazgos"][0]["fuente"]
+    rv.revisarArchivo(str(principal))                              # al guardar: lo que hay en el disco
+    _esperar(app, lambda: rv.revisando, 60)
+    assert [h["linea"] for h in dict(rv.resultado)["hallazgos"]] == [9, 9]
+    pl.listar()
+    _esperar(app, lambda: not pl.lista, 60)
+    compuestas = []
+    pl.compuesta.connect(lambda d: compuestas.append(dict(d)))
+    pl.componer("cuadro", {"titulo": "Cuadro", "columnas": "3"})
+    _esperar(app, lambda: not compuestas, 60)
+    assert "\\toprule" in compuestas[0]["insertar"] and compuestas[0]["avisos"] == []
+    e.leerRubrica()
+    _esperar(app, lambda: not dict(e.rubrica), 60)
+    assert dict(e.rubrica)["faltan"] == 2
+    autoevaluados = []
+    e.autoevaluado.connect(lambda d: autoevaluados.append(dict(d)))
+    e.autoevaluar("fuentes", "2", "Cada afirmación lleva su fuente con página.")
+    _esperar(app, lambda: not autoevaluados or dict(e.rubrica)["faltan"] == 2, 60)
+    assert autoevaluados[0]["escrito"] and (principal.parent / "autoevaluacion.yml").is_file()
+    revisados = []
+    a.promptRevisado.connect(lambda d: revisados.append(dict(d)))
+    a.revisarPrompt("Corrige. DNI 12345678.")
+    _esperar(app, lambda: not revisados, 60)
+    assert revisados[0]["sensible"] and revisados[0]["nivel"] == "alto"

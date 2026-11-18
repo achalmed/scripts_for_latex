@@ -22,12 +22,32 @@ ayuda:                             # §10 del contrato: el prompt de la parte ab
   marcador: datos.yml
   prompt: [python3, ../scripts/datos_muestra.py, prompt, '{proyecto}', '{archivo}']
   pegar: [python3, ../scripts/datos_muestra.py, pegar, '{proyecto}', '{archivo}', '{pegado}', --tex, '{tex}']
+  revisar_prompt: [python3, ../scripts/flujo_muestra.py, revisar-prompt, '{prompt}']   # antes de copiar (C12.3, §1.22)
 entrega:                           # §12 del contrato: los controles antes de entregar, marcar lo manual y registrar la IA
   nombre: Antes de entregar
   marcador: datos.yml
   revisar: [python3, ../scripts/entrega_muestra.py, revisar, '{proyecto}']
   marcar: [python3, ../scripts/entrega_muestra.py, marcar, '{proyecto}', '{id}', '{estado}', '{nota}']
   registrar_ia: [python3, ../scripts/entrega_muestra.py, registrar_ia, '{proyecto}', '{datos}']
+  rubrica: [python3, ../scripts/flujo_muestra.py, rubrica, '{proyecto}']                   # la autoevaluación (§1.22)
+  autoevaluar: [python3, ../scripts/flujo_muestra.py, autoevaluar, '{proyecto}', '{datos}']
+  lector_frio: [python3, ../scripts/flujo_muestra.py, lector-frio, '{proyecto}']             # la versión sin nombres (§1.22)
+matriz:                            # §13 del contrato: la matriz de consistencia y el asistente de pregunta
+  nombre: Matriz de consistencia
+  marcador: datos.yml
+  leer: [python3, ../scripts/flujo_muestra.py, matriz-leer, '{proyecto}']
+  cuadro: [python3, ../scripts/flujo_muestra.py, matriz-cuadro, '{proyecto}']
+  nueva: [python3, ../scripts/flujo_muestra.py, matriz-nueva, '{proyecto}']
+  guia: [python3, ../scripts/flujo_muestra.py, matriz-guia]
+  pregunta: [python3, ../scripts/flujo_muestra.py, matriz-pregunta, '{proyecto}', '{datos}']
+revisor:                           # §14 del contrato: estilo y LaTeX del archivo abierto
+  marcador: datos.yml
+  revisar: [python3, ../scripts/flujo_muestra.py, revisor, '{archivo}', '{ruta}']
+  reglas: [python3, ../scripts/flujo_muestra.py, reglas]
+plantillas:                        # §15 del contrato: las plantillas que ahorran tiempo
+  marcador: datos.yml
+  listar: [python3, ../scripts/flujo_muestra.py, plantillas]
+  componer: [python3, ../scripts/flujo_muestra.py, componer, '{datos}']
 nuevo:                             # §11 del contrato: los tipos que se pueden crear y crearlos (simula sin --aplicar)
   nombre: Marco de muestra
   tipos: [python3, ../scripts/nuevo_muestra.py, tipos]

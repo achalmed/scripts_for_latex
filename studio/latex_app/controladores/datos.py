@@ -49,7 +49,10 @@ class DatosProyecto(QObject):
         carpeta = self._decl["proyecto"] if self._decl else ""
         f = [{"tipo": "Figuras", "id": x["id"], "titulo": x.get("titulo", ""), "insertar": x.get("insertar", ""),
               "existe": bool(x.get("existe", True)), "detalle": x.get("paquete", ""),
-              "archivo": f"{carpeta}/{x['archivo']}" if carpeta and x.get("archivo") else ""} for x in self._rec["figuras"]]
+              "archivo": f"{carpeta}/{x['archivo']}" if carpeta and x.get("archivo") else "",
+              # C8.3 (decisiones §1.22): el texto alternativo, borrador o aprobado, y la orden con el hueco {alt}
+              "alt": str(x.get("alt") or ""), "altAprobado": bool(x.get("alt_aprobado")), "insertarAlt": str(x.get("insertar_alt") or "")}
+             for x in self._rec["figuras"]]
         t = [{"tipo": "Tablas", "id": x["id"], "titulo": x.get("titulo", ""), "insertar": x.get("insertar", ""),
               "existe": bool(x.get("existe", True)), "detalle": ", ".join(x.get("variantes") or []) or x.get("paquete", ""), "archivo": ""}
              for x in self._rec["tablas"]]

@@ -24,6 +24,7 @@ QQC2.Control {
     signal abrirArchivo(string ruta, int linea)
     signal citar(string clave)
     signal insertarDatos(string texto)                 // una figura, tabla o cifra del paquete en el cursor
+    signal insertarFigura(var figura)                  // una figura con texto alternativo obligatorio (insertarAlt; §1.22, C8.3)
     signal actualizarDatos()                           // «Actualizar» de la pestaña Datos (la ventana confirma)
 
     Kirigami.Theme.colorSet: Kirigami.Theme.View
@@ -419,7 +420,7 @@ QQC2.Control {
                             required property int index
                             readonly property bool primera: index === 0 || pestanaDatos.lista[index - 1].tipo !== modelData.tipo
                             width: listaDatos.width
-                            onDoubleClicked: raiz.insertarDatos(modelData.insertar)
+                            onDoubleClicked: modelData.insertarAlt ? raiz.insertarFigura(modelData) : raiz.insertarDatos(modelData.insertar)
                             contentItem: ColumnLayout {
                                 spacing: 0
                                 QQC2.Label {

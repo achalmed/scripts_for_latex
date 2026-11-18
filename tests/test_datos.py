@@ -164,7 +164,7 @@ def test_entrega_declara_revisa_marca_y_registra(marco):
 
     dato, error = datos._json(d["revisar"], d["proyecto"])
     r = datos.resultado_entrega(dato, d["proyecto"])
-    assert not error and not r["error"] and [g["clave"] for g in r["grupos"]] == ["cifras", "lista", "referencias", "ia"]
+    assert not error and not r["error"] and [g["clave"] for g in r["grupos"]] == ["cifras", "lista", "referencias", "ia", "matriz", "autoevaluacion"]
     cifras = r["controles"][0]
     assert cifras["estado"] == "falla" and cifras["hallazgos"][1]["ruta"] == str(principal) and cifras["hallazgos"][1]["linea"] == 8
     assert (r["fallas"], r["pendientes"], r["faltan"], r["listo"]) == (1, 2, 3, False)
@@ -178,7 +178,8 @@ def test_entrega_declara_revisa_marca_y_registra(marco):
     assert error["error"]
     subprocess.run(datos.declaracion(principal)["actualizar"], check=True, capture_output=True, cwd=d["proyecto"])
     r = datos.resultado_entrega(datos._json(d["revisar"], d["proyecto"])[0], d["proyecto"])
-    assert r["listo"] and r["avisos"] == 1                        # un aviso no bloquea: listo para entregar
+    assert r["listo"] and r["avisos"] == 3                        # los avisos no bloquean: listo para entregar
+    assert {c["accion"] for c in r["controles"] if c.get("accion")} == {"matriz", "autoevaluar"}   # abren su ventana (§1.22)
 
     uso = datos.uso_de_ia(d["proyecto"], str(principal), "Informe anual", {"titulo": "Redacción", "version": "1.0", "ruta": ""},
                           "Una línea.\nOtra.\n", "Una sola.\n")
@@ -207,3 +208,78 @@ def test_veredicto_y_lo_mal_formado():
                                                 "hallazgos": [{"archivo": "/abs/a.tex", "linea": "3", "texto": "t"}]}]}, "/p")
     assert [c["id"] for c in r["controles"]] == ["y"] and r["grupos"] == [{"clave": "nuevo", "nombre": "Nuevo"}]
     assert r["controles"][0]["hallazgos"][0] == {"archivo": "/abs/a.tex", "ruta": "/abs/a.tex", "linea": 3, "texto": "t"}
+
+
+def test_matriz_declara_lee_crea_y_guarda_la_pregunta(marco):
+    """La sección `matriz:` (contrato §13, decisiones §1.22): `leer` devuelve las filas con lo huérfano (la ventana les pone
+    rutas absolutas y cuenta fallas y avisos); `nueva`, `cuadro` y `pregunta` simulan sin --aplicar y escriben con él."""
+    import json
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_seccion(principal, "matriz")
+    assert d["nombre"] == "Matriz de consistencia" and d["proyecto"] == str(principal.parent.resolve())
+    assert datos.declaracion_seccion(marco / "pruebas" / "caso.tex", "matriz") is None and datos.declaracion_seccion("", "matriz") is None
+    r = datos.resultado_matriz(datos._json(d["leer"], d["proyecto"])[0], d["proyecto"])
+    assert not r["existe"] and r["filas"] == [] and not r["error"]
+    sim, _ = datos._json(d["nueva"], d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "matriz.yml").exists(), "nueva sin --aplicar no escribe"
+    datos._json(d["nueva"] + ["--aplicar"], d["proyecto"])
+    r = datos.resultado_matriz(datos._json(d["leer"], d["proyecto"])[0], d["proyecto"])
+    assert r["existe"] and r["ruta"] == str(principal.parent / "matriz.yml") and len(r["filas"]) == 2
+    general, he1 = r["filas"]
+    assert general["estado"] == "ok" and general["secciones"][0]["ruta"] == str(principal.parent / "informe.tex")
+    assert he1["estado"] == "falla" and (r["fallas"], r["avisos"]) == (1, 1)
+    assert all(h["ruta"].endswith("matriz.yml") and h["linea"] > 0 for h in r["huerfanos"])
+    guia, _ = datos._json(d["guia"], d["proyecto"])
+    assert len(guia["pasos"]) == 4 and all(p["fuente"] for p in guia["pasos"])
+    revisada, _ = datos._json(datos.con(d["pregunta"], datos=json.dumps({"tema": "x"})), d["proyecto"])
+    assert not revisada["ok"] and not revisada["escrito"]
+    valores = {"tema": "Empleo", "hecho": "No cuadra", "poblacion": "Ciudades", "periodo": "2019 a 2024", "comparacion": "por sector",
+               "texto": "¿Cuánto del empleo se explica por el sector?", "evidencia": "La encuesta"}
+    hecho, _ = datos._json(datos.con(d["pregunta"], datos=json.dumps(valores)) + ["--aplicar"], d["proyecto"])
+    assert hecho["escrito"] and "sector" in (principal.parent / "matriz.yml").read_text(encoding="utf-8")
+
+
+def test_revisor_y_plantillas_del_marco(marco, tmp_path):
+    """`revisor:` (§14) recibe una copia del texto del editor y devuelve hallazgos que la ventana junta con su regla
+    (nombre, porqué, fuente), ordenados por línea; `plantillas:` (§15) lista y compone sin escribir nada."""
+    import json
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_seccion(principal, "revisor")
+    copia = tmp_path / "editor.tex"
+    copia.write_text("Texto.\n{\\bf negrita}\nLos datos fueron recogidos en campo.\n", encoding="utf-8")
+    r = datos.resultado_revisor(datos._json(datos.con(d["revisar"], archivo=str(copia), ruta=str(principal)), d["proyecto"])[0])
+    assert not r["error"] and (r["estilo"], r["latex"]) == (1, 1)
+    obsoleto, pasiva = r["hallazgos"]
+    assert obsoleto["linea"] == 2 and obsoleto["fuente"] == "Trettin (2016)" and obsoleto["porque"]
+    assert pasiva["linea"] == 3 and pasiva["clase"] == "estilo" and pasiva["sugerencia"]
+    assert datos.resultado_revisor({"error": "x"})["error"] == "x" and datos.resultado_revisor(None)["error"]
+    p = datos.declaracion_seccion(principal, "plantillas")
+    lista, _ = datos._json(p["listar"], p["proyecto"])
+    assert {x["clave"] for x in lista["plantillas"]} == {"figura", "cuadro"} and all(x["fuente"] for x in lista["plantillas"])
+    antes = sorted(x.name for x in principal.parent.iterdir())
+    c, _ = datos._json(datos.con(p["componer"], datos=json.dumps({"plantilla": "figura", "valores": {"archivo": "f.pdf", "titulo": "T"}})), p["proyecto"])
+    assert "alt={}" in c["insertar"] and "Falta «Texto alternativo»." in c["avisos"]
+    assert sorted(x.name for x in principal.parent.iterdir()) == antes, "componer no escribe"
+
+
+def test_rubrica_y_revisar_prompt(marco, tmp_path):
+    """La autoevaluación (`rubrica` y `autoevaluar` de §12) y el aviso antes de copiar un prompt (`revisar_prompt` de §10)."""
+    import json
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_entrega(principal)
+    r = datos.resultado_rubrica(datos._json(d["rubrica"], d["proyecto"])[0])
+    assert r["hay"] and r["faltan"] == 2 and r["criterios"][0]["niveles"][0]["texto"] == "3" and r["fuente"]
+    carga = json.dumps({"clave": "claridad", "puntaje": "3", "justificacion": "Se lee de corrido sin volver atrás."})
+    sim, _ = datos._json(datos.con(d["autoevaluar"], datos=carga), d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "autoevaluacion.yml").exists()
+    datos._json(datos.con(d["autoevaluar"], datos=carga) + ["--aplicar"], d["proyecto"])
+    r = datos.resultado_rubrica(datos._json(d["rubrica"], d["proyecto"])[0])
+    assert r["faltan"] == 1 and r["criterios"][0]["puntaje"] == "3" and r["criterios"][0]["justificacion"]
+    assert datos.resultado_rubrica({"rubrica": None})["hay"] is False and datos.resultado_rubrica("x")["error"]
+    a = datos.declaracion_ayuda(principal)
+    prompt = tmp_path / "p.txt"
+    prompt.write_text("Corrige la parte. DNI 12345678 del estudiante.\n", encoding="utf-8")
+    s, _ = datos._json(datos.con(a["revisar_prompt"], prompt=str(prompt)), a["proyecto"])
+    assert s["sensible"] and s["hallazgos"][0]["linea"] == 1 and s["fuente"]
+    prompt.write_text("Corrige la parte.\n", encoding="utf-8")
+    assert not datos._json(datos.con(a["revisar_prompt"], prompt=str(prompt)), a["proyecto"])[0]["sensible"]

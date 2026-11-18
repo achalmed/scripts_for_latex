@@ -8,6 +8,9 @@ Método: corre las tres órdenes de la sección `entrega:` del `latex-studio.yml
   el veredicto), `marcar` con `--aplicar` al tocar la casilla o guardar la nota (el clic es la confirmación; luego se
   revisa de nuevo) y `registrar_ia` con `--aplicar` cuando el autor pone en el editor un cambio de la ayuda de la IA
   (contrato §10, «Poner en el editor»).
+  La autoevaluación con la rúbrica (C11.2; decisiones §1.22): `rubrica` trae la rúbrica en el formato común y lo
+  puntuado (`datos.resultado_rubrica`), y `autoevaluar` guarda un criterio con `--aplicar` al pulsar «Guardar»; un
+  control que trae `accion: autoevaluar` muestra el botón que abre el diálogo.
 Límite: la ventana no sabe qué es una cifra viva ni qué lista corresponde a un tipo: lo dice el marco. El veredicto lo
   calcula la ventana con lo revisado (`datos.veredicto`): listo si no hay fallas y todo lo manual está marcado o
   justificado. Sin la sección, la acción queda deshabilitada y nada se registra.
@@ -25,6 +28,9 @@ class AntesDeEntregar(QObject):
     cambiado = Signal()
     resultadoCambiado = Signal()
     marcado = Signal("QVariantMap")                  # lo que respondió `marcar` ({id, estado, escrito} o {error})
+    rubricaCambiada = Signal()
+    autoevaluado = Signal("QVariantMap")             # lo que respondió `autoevaluar` ({puntajes, nota, escrito} o {error})
+    lectorFrioListo = Signal("QVariantMap")          # lo que respondió `lector_frio` ({pdf, quitado, pendientes, escrito} o {error})
     registrado = Signal("QVariantMap")               # lo que respondió `registrar_ia`
 
     def __init__(self, proyectos, tareas, consola, parent=None):
@@ -34,6 +40,7 @@ class AntesDeEntregar(QObject):
         self._resultado: dict = datos.resultado_entrega({"controles": []}, "")
         self._revisando = False
         self._pedido = 0
+        self._rubrica: dict = {}
         proyectos.abiertoCambiado.connect(self.recargar)
 
     # ------------------------------------------------------------------ propiedades
@@ -51,6 +58,15 @@ class AntesDeEntregar(QObject):
 
     def _get_puede_marcar(self): return bool(self._decl and self._decl.get("marcar"))
     puedeMarcar = Property(bool, _get_puede_marcar, notify=cambiado)
+
+    def _get_puede_autoevaluar(self): return bool(self._decl and self._decl.get("rubrica") and self._decl.get("autoevaluar"))
+    puedeAutoevaluar = Property(bool, _get_puede_autoevaluar, notify=cambiado)
+
+    def _get_puede_lector_frio(self): return bool(self._decl and self._decl.get("lector_frio"))
+    puedeLectorFrio = Property(bool, _get_puede_lector_frio, notify=cambiado)
+
+    def _get_rubrica(self): return self._rubrica
+    rubrica = Property("QVariantMap", _get_rubrica, notify=rubricaCambiada)
 
     # ------------------------------------------------------------------ revisar
     @Slot()
@@ -136,3 +152,64 @@ class AntesDeEntregar(QObject):
                 self.consola.registrar("warn", f"Registrar el uso de la IA: {dato.get('error', 'no se escribió')}")
             self.registrado.emit(dato)
         self.tareas.funcion("Registrar el uso de la IA", trabajo, silenciosa=True, operacion="escritura", error=False, al_terminar=fin)
+
+    # ------------------------------------------------------------------ la autoevaluación con la rúbrica (C11.2)
+    @Slot()
+    def leerRubrica(self) -> None:
+        """La rúbrica que le toca al proyecto y lo ya puntuado (`rubrica` del marco); `rubrica` lo trae."""
+        if not self.puedeAutoevaluar:
+            return
+        decl = dict(self._decl)
+
+        def trabajo(progress_cb=None, cancel_cb=None, message_cb=None):
+            return datos._json(decl["rubrica"], decl["proyecto"])
+
+        def fin(r):
+            dato, error = r
+            self._rubrica = datos.resultado_rubrica(dato if dato is not None else {"error": error})
+            self.rubricaCambiada.emit()
+        self.tareas.funcion("Leer la rúbrica", trabajo, silenciosa=True, operacion="lectura", error=False, al_terminar=fin)
+
+    @Slot(str, str, str)
+    def autoevaluar(self, clave: str, puntaje: str, justificacion: str) -> None:
+        """Guarda el puntaje y la justificación de un criterio (el clic en «Guardar» es la confirmación)."""
+        if not self.puedeAutoevaluar:
+            return
+        decl = dict(self._decl)
+        carga = json.dumps({"clave": clave, "puntaje": puntaje, "justificacion": justificacion}, ensure_ascii=False)
+        argv = datos.con(decl["autoevaluar"], datos=carga) + ["--aplicar"]
+
+        def trabajo(progress_cb=None, cancel_cb=None, message_cb=None):
+            return datos._json(argv, decl["proyecto"])
+
+        def fin(r):
+            dato, error = r
+            dato = dato if isinstance(dato, dict) else {"error": error or "la orden no devolvió nada"}
+            if dato.get("error"):
+                self.consola.registrar("warn", f"Autoevaluación: {dato['error']}")
+            self.autoevaluado.emit(dato)
+            self.leerRubrica()
+            self.revisar()
+        self.tareas.funcion("Guardar la autoevaluación", trabajo, silenciosa=True, operacion="escritura", error=False, al_terminar=fin)
+
+    # ------------------------------------------------------------------ el lector frío (C11.4)
+    @Slot()
+    def lectorFrio(self) -> None:
+        """La versión sin nombres para un revisor externo (`lector_frio --aplicar`: el marco la copia, la anonimiza y la
+        compila fuera del documento); `lectorFrioListo` trae el PDF y lo que se quitó."""
+        if not self.puedeLectorFrio:
+            return
+        decl = dict(self._decl)
+
+        def trabajo(progress_cb=None, cancel_cb=None, message_cb=None):
+            return datos._json(decl["lector_frio"] + ["--aplicar"], decl["proyecto"], tope=600)
+
+        def fin(r):
+            dato, error = r
+            dato = dato if isinstance(dato, dict) else {"error": error or "la orden no devolvió nada"}
+            if dato.get("error"):
+                self.consola.registrar("warn", f"Lector frío: {dato['error']}")
+            elif dato.get("pdf"):
+                self.consola.registrar("ok", f"Versión sin nombres: {dato['pdf']}")
+            self.lectorFrioListo.emit(dato)
+        self.tareas.funcion("Preparar la versión para el lector frío", trabajo, operacion="escritura", error=False, al_terminar=fin)

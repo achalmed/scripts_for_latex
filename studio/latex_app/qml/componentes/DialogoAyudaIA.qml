@@ -3,6 +3,8 @@
 // escrito) y pegar lo que respondió el chat; la ventana no llama a ningún modelo. Lo pegado se comprueba sin IA y se
 // muestra como cambio sugerido; «Poner en el editor» reemplaza el tramo de la parte en el editor (deshacer con Ctrl+Z) y
 // el archivo se escribe solo con Ctrl+S. Si el marco declara `entrega:` (§12), aceptar registra el uso (`registrar_ia`).
+// Antes de copiar, si el marco declara `revisar_prompt` (C12.3, decisiones §1.22), la ventana pregunta si el prompt lleva
+// datos de estudiantes o del despacho: si los lleva, lo dice con su porqué y su fuente, y copiar queda a decisión del autor.
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -17,6 +19,10 @@ Kirigami.Dialog {
     property var pegado: null                   // {ok, errores, avisos, antes, despues, diff} o {error}
     property bool esperando: false
     property string pendiente: ""               // lo pegado que llegó con el pedido: se comprueba cuando esté el prompt
+    property var revision: null                 // lo que dijo `revisar_prompt` antes de copiar: {sensible, nivel, hallazgos, porque, fuente}
+    property bool revisandoPrompt: false
+
+    function copiar() { studio.sistema.copiarTexto(dialogo.prompt.prompt); ventana.mensajes.mostrar("Prompt copiado: pégalo en tu chat.", "positivo") }
 
     title: "Ayuda de la IA" + (prompt && prompt.titulo ? " — " + prompt.titulo : "")
     preferredWidth: Kirigami.Units.gridUnit * 44
@@ -25,7 +31,7 @@ Kirigami.Dialog {
 
     function abrirPara(e, texto) {
         if (!e) { ventana.mensajes.mostrar("Abre la parte del escrito que quieres trabajar.", "aviso"); return }
-        editor = e; componente = ""; prompt = null; pegado = null; respuesta.text = texto || ""; pendiente = texto || ""
+        editor = e; componente = ""; prompt = null; pegado = null; revision = null; respuesta.text = texto || ""; pendiente = texto || ""
         esperando = true
         a.pedirPrompt(e.ruta, "")
         open()
@@ -44,13 +50,18 @@ Kirigami.Dialog {
             }
         }
         function onPegadoListo(r) { dialogo.esperando = false; dialogo.pegado = r }
+        function onPromptRevisado(r) {
+            dialogo.revisandoPrompt = false
+            dialogo.revision = r
+            if (!r.sensible) dialogo.copiar()
+        }
     }
 
     customFooterActions: [
         Kirigami.Action {
             text: "Copiar el prompt"; icon.name: "edit-copy"
-            enabled: !!dialogo.prompt && !!dialogo.prompt.prompt
-            onTriggered: { studio.sistema.copiarTexto(dialogo.prompt.prompt); ventana.mensajes.mostrar("Prompt copiado: pégalo en tu chat.", "positivo") }
+            enabled: !!dialogo.prompt && !!dialogo.prompt.prompt && !dialogo.revisandoPrompt
+            onTriggered: { dialogo.revisandoPrompt = true; dialogo.revision = null; dialogo.a.revisarPrompt(dialogo.prompt.prompt) }
         },
         Kirigami.Action {
             text: "Comprobar lo pegado"; icon.name: "dialog-ok"
@@ -134,6 +145,30 @@ Kirigami.Dialog {
                 wrapMode: Text.WordWrap
                 text: dialogo.prompt ? (dialogo.prompt.aviso || "") + (dialogo.prompt.largo ? " El prompt es largo para un chat externo." : "") : ""
                 color: Kirigami.Theme.neutralTextColor
+            }
+
+            // el aviso antes de copiar (C12.3): datos de estudiantes o del despacho en el prompt
+            Kirigami.InlineMessage {
+                id: avisoSensible
+                Layout.fillWidth: true
+                visible: !!dialogo.revision && dialogo.revision.sensible === true
+                type: dialogo.revision && dialogo.revision.nivel === "alto" ? Kirigami.MessageType.Error : Kirigami.MessageType.Warning
+                text: !dialogo.revision ? "" : dialogo.revision.error ? "No se pudo revisar el prompt (" + dialogo.revision.error + "). ¿Lo copias igual?"
+                      : "El prompt parece llevar datos que no deben salir de la máquina: "
+                        + (dialogo.revision.hallazgos || []).slice(0, 4).map(h => h.tipo + (h.linea > 0 ? " (línea " + h.linea + ")" : "")).join(", ")
+                        + ((dialogo.revision.total || 0) > 4 ? " y " + (dialogo.revision.total - 4) + " más" : "") + ". Quítalos antes de pegarlo en un chat externo."
+                actions: [
+                    Kirigami.Action { text: "Copiar de todos modos"; icon.name: "edit-copy"; onTriggered: { dialogo.revision = null; dialogo.copiar() } },
+                    Kirigami.Action { text: "No copiar"; icon.name: "dialog-cancel"; onTriggered: dialogo.revision = null }
+                ]
+            }
+            QQC2.Label {                                   // por qué · fuente del aviso
+                Layout.fillWidth: true
+                visible: avisoSensible.visible && text !== ""
+                text: dialogo.revision ? [(dialogo.revision.porque || "").replace(/\.$/, ""), dialogo.revision.fuente].filter(x => !!x).join(" · ") : ""
+                wrapMode: Text.WordWrap
+                font: Kirigami.Theme.smallFont
+                color: Kirigami.Theme.disabledTextColor
             }
 
             // 2. lo pegado

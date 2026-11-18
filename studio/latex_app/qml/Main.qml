@@ -109,6 +109,12 @@ VentanaStudio {
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
             case "ayuda_ia": dialogoAyuda.abrirPara(e, datos.pegado || ""); break
             case "antes_de_entregar": dialogoEntrega.abrir(); break
+            case "matriz": dialogoMatriz.abrir(); break
+            case "pregunta": dialogoPregunta.abrir(datos); break
+            case "autoevaluar": dialogoRubrica.abrir(); break
+            case "revisar_estilo": ventana.mostrarPanel(4); if (e) studio.revisor.revisar(e.ruta, e.area.text); break
+            case "plantillas": dialogoPlantillas.abrir(datos.plantilla || ""); break
+            case "texto_alternativo": if (datos.figura) dialogoAlt.abrir(datos.figura); break
             case "nueva_ficha": dialogoFicha.nuevaPara(datos.libro || null, datos); break
             case "insertar": ventana.pedirInsertar(datos.tipo || "seccion"); break
             case "configurar_texstudio": dialogoTexstudio.abrir(); break
@@ -309,6 +315,7 @@ VentanaStudio {
         onAbrirArchivo: (ruta, linea) => ventana.irA(ruta, linea)
         onCitar: clave => ventana.insertar("\\cite{" + clave + "}")
         onInsertarDatos: texto => ventana.insertar(texto)
+        onInsertarFigura: figura => dialogoAlt.abrir(figura)
         onActualizarDatos: ventana.confirmacion.pedir({ titulo: "Actualizar los datos del proyecto",
                                                         consecuencias: "Lleva el proyecto a la última versión de sus paquetes (su ficha) y vuelve a escribir sus figuras, tablas y cifras importadas. El texto del documento no se toca.",
                                                         operacionTexto: "actualización", textoAceptar: "Actualizar", icono: "view-refresh" },
@@ -325,7 +332,7 @@ VentanaStudio {
         id: panelInferior
         consola: studio.consola
         altoPreferido: Kirigami.Units.gridUnit * 11
-        extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }, { titulo: "Historial", componente: cHistorial }]
+        extras: [{ titulo: "Problemas", componente: cProblemas }, { titulo: "Registro de LaTeX", componente: cRegistro }, { titulo: "Cola", componente: cCola }, { titulo: "Historial", componente: cHistorial }, { titulo: "Revisión", componente: cRevision }]
     }
     // los problemas de la compilación: ListaErrores de gui-comun 3.1, con los filtros por nivel de LaTeX en su cabecera
     Component {
@@ -353,6 +360,7 @@ VentanaStudio {
     Component { id: cRegistro; RegistroCompilacion {} }
     Component { id: cCola; Cola {} }
     Component { id: cHistorial; HistorialCompilaciones {} }
+    Component { id: cRevision; RevisionEditor {} }    // estilo y LaTeX del archivo abierto (§1.23)
 
     // ------------------------------------------------------------------ diálogos (archivos y carpetas: los de KDE, de gui-comun 3.0)
     ElegirArchivos {
@@ -438,6 +446,11 @@ VentanaStudio {
     DialogoFicha { id: dialogoFicha }                  // Citas › Fichas: nueva y editar (§1.19)
     DialogoAyudaIA { id: dialogoAyuda }                // la ayuda de la IA de la parte abierta (§1.19)
     DialogoEntrega { id: dialogoEntrega }              // «Antes de entregar» (Ctrl+Alt+E): los controles del marco (§1.21)
+    DialogoAlt { id: dialogoAlt; onInsertar: texto => ventana.insertar(texto) }   // el texto alternativo de una figura (C8.3; §1.22)
+    DialogoMatriz { id: dialogoMatriz }                // la matriz de consistencia (Ctrl+Alt+M; §1.22)
+    DialogoPregunta { id: dialogoPregunta }            // el asistente de pregunta en cuatro pasos (§1.22)
+    DialogoRubrica { id: dialogoRubrica }              // la autoevaluación con la rúbrica (§1.22)
+    DialogoPlantillas { id: dialogoPlantillas; onInsertar: texto => ventana.insertar(texto) }   // las plantillas del marco (Ctrl+Alt+T; §1.24)
     DialogoNuevo { id: dialogoNuevo }                  // «Nuevo documento» (Ctrl+N): lo que el marco sabe crear (§1.20)
     DialogoTexstudio { id: dialogoTexstudio }
     DialogoTexstudio {

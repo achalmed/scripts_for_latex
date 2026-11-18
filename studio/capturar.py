@@ -82,6 +82,13 @@ def main() -> int:
     parser.add_argument("--nuevo", default="", help="abre «Nuevo documento» con este tipo del marco de muestra, lleno y revisado")
     parser.add_argument("--entrega", action="store_true",
                         help="abre «Antes de entregar» del proyecto abierto, con un punto manual ya marcado y otro sin marcar")
+    parser.add_argument("--matriz", action="store_true", help="crea la matriz de muestra y abre «Matriz de consistencia» (§1.22)")
+    parser.add_argument("--pregunta", type=int, default=-1, help="abre el asistente de pregunta, lleno, en este paso (0 a 3)")
+    parser.add_argument("--rubrica", action="store_true", help="abre la autoevaluación con un criterio ya puntuado")
+    parser.add_argument("--revision", action="store_true", help="revisa el archivo abierto y muestra la pestaña «Revisión» (§1.23)")
+    parser.add_argument("--plantilla", default="", help="abre «Insertar una plantilla» con esta plantilla elegida (§1.24)")
+    parser.add_argument("--alt", action="store_true", help="abre el texto alternativo de la primera figura de la pestaña Datos")
+    parser.add_argument("--prompt-sensible", action="store_true", help="en la ayuda de la IA, revisa un prompt con un dato sensible")
     parser.add_argument("--insertar", default="", help="abre el diálogo de insertar de este tipo (seccion, figura, tabla, cita, ecuacion, referencia, lista)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -213,6 +220,33 @@ def main() -> int:
             (proyecto / "entrega.yml").write_text(
                 "puntos:\n  revision: {estado: hecho, fecha: '2026-11-18', nota: La leyó Tomás Arango}\n", encoding="utf-8")
             QTimer.singleShot(1600, lambda: interfaz.pedir.emit("antes_de_entregar", {}))
+        proyecto_abierto = Path(principal).parent
+        muestra_py = [sys.executable, str(proyecto_abierto.parents[1] / "scripts" / "flujo_muestra.py")]
+        if args.matriz:
+            subprocess.run(muestra_py + ["matriz-nueva", str(proyecto_abierto), "--aplicar"], check=True, capture_output=True)
+            QTimer.singleShot(1600, lambda: interfaz.pedir.emit("matriz", {}))
+        if args.pregunta >= 0:
+            valores = {"tema": "El empleo en las ciudades de muestra", "hecho": "El empleo creció entre 2019 y 2024, pero los ingresos no",
+                       "poblacion": "Trabajadores de las ciudades de muestra", "periodo": "2019 a 2024", "comparacion": "por sector",
+                       "texto": "¿Cuánto del cambio del empleo entre 2019 y 2024 se explica por el sector", "evidencia": "La encuesta de muestra"}
+            QTimer.singleShot(1400, lambda: interfaz.pedir.emit("pregunta", {"valores": valores, "paso": args.pregunta, "revisar": args.pregunta == 3}))
+        if args.rubrica:
+            subprocess.run(muestra_py + ["autoevaluar", str(proyecto_abierto),
+                                         '{"clave": "claridad", "puntaje": 3, "justificacion": "Cada párrafo empieza por su idea y se lee de corrido."}',
+                                         "--aplicar"], check=True, capture_output=True)
+            QTimer.singleShot(1600, lambda: interfaz.pedir.emit("autoevaluar", {}))
+        if args.revision:
+            QTimer.singleShot(2400, lambda: interfaz.pedir.emit("revisar_estilo", {}))
+        if args.plantilla:
+            QTimer.singleShot(1400, lambda: interfaz.pedir.emit("plantillas", {"plantilla": args.plantilla}))
+        if args.alt:
+            def alt():
+                figura = next((x for x in piezas["datos"].elementos if x.get("insertarAlt")), None)
+                if figura is not None:
+                    interfaz.pedir.emit("texto_alternativo", {"figura": figura})
+            QTimer.singleShot(2600, alt)
+        if args.prompt_sensible:
+            QTimer.singleShot(3200, lambda: piezas["ayuda"].revisarPrompt("Revisa la parte del informe.\nDNI 12345678 del responsable."))
         if args.insertar:
             def insertar():
                 interfaz.pedir.emit("insertar", {"tipo": args.insertar})
@@ -223,7 +257,7 @@ def main() -> int:
             QTimer.singleShot(1200, lambda: interfaz.pedir.emit("nuevo_documento", {"tipo": args.nuevo, "valores": valores, "revisar": True}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
-        app.capturar(args.salida, espera_ms=9000 if args.compilar_abierto else 3500)
+        app.capturar(args.salida, espera_ms=9000 if args.compilar_abierto else 6000 if args.prompt_sensible else 3500)
 
     QTimer.singleShot(300, compilar)
     codigo = app.app.exec()

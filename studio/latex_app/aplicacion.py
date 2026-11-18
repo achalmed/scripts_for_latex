@@ -27,6 +27,9 @@ from latex_app.controladores.compilacion import Compilacion
 from latex_app.controladores.configuracion import ConfiguracionDocumento
 from latex_app.controladores.ayuda import AyudaParte
 from latex_app.controladores.entrega import AntesDeEntregar
+from latex_app.controladores.matriz import MatrizProyecto
+from latex_app.controladores.plantillas import PlantillasMarco
+from latex_app.controladores.revisor import RevisorEditor
 from latex_app.controladores.biblioteca import BibliotecaProyecto
 from latex_app.controladores.datos import DatosProyecto
 from latex_app.controladores.miniaturas import Miniaturas
@@ -256,6 +259,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     biblioteca = BibliotecaProyecto(proyectos, tareas, consola)   # la pestaña «Citas»: la biblioteca del marco (§9)
     ayuda = AyudaParte(proyectos, tareas, consola)               # la ayuda de la IA de la parte abierta (§10 del contrato)
     entrega = AntesDeEntregar(proyectos, tareas, consola)        # «Antes de entregar»: los controles del marco (§12, §1.21)
+    matriz = MatrizProyecto(proyectos, tareas, consola)          # la matriz de consistencia y el asistente de pregunta (§13, §1.22)
+    revisor = RevisorEditor(proyectos, tareas, consola)          # estilo y LaTeX del archivo abierto (§14, §1.23)
+    plantillas = PlantillasMarco(proyectos, tareas, consola)     # las plantillas que ahorran tiempo (§15, §1.24)
     nuevo = NuevoDocumento(ajustes, proyectos, tareas, consola)  # «Nuevo documento»: lo que el marco sabe crear (§11, §1.20)
     miniaturas = Miniaturas(cache or cache_del_studio())   # la primera página de cada PDF (tarjetas y figuras, §1.17)
     visor = Visor(cache=cache)
@@ -331,6 +337,22 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        descripcion="Los controles que el marco revisa antes de entregar: cifras vivas, la lista de control del "
                                    "tipo, referencias y citas cotejadas, y el uso de la IA declarado; un clic en un hallazgo "
                                    "lleva a su línea")
+    acciones.registrar("escritura.matriz", "&Matriz de consistencia…", "view-list-details", "Ctrl+Alt+M", "Herramientas",
+                       habilitada=False, al_disparar=pedir("matriz"),
+                       descripcion="La matriz del proyecto: cada hipótesis con su indicador y su sección, lo que la refutaría "
+                                   "y el supuesto que cuestiona; lo huérfano se marca y un clic lleva a la fila o a la sección")
+    acciones.registrar("escritura.pregunta", "Asistente de &pregunta…", "help-hint", None, "Herramientas",
+                       habilitada=False, al_disparar=pedir("pregunta"),
+                       descripcion="De un tema a una pregunta en cuatro pasos: tema, rompecabezas, pregunta delimitada y la "
+                                   "evidencia que la contestaría; se guarda en la matriz")
+    acciones.registrar("escritura.revisar", "&Revisar el estilo", "tools-check-spelling", "Ctrl+Alt+R", "Herramientas",
+                       habilitada=False, al_disparar=pedir("revisar_estilo"),
+                       descripcion="Estilo de la redacción y LaTeX del archivo abierto, con la regla y su fuente; sugiere y no "
+                                   "cambia nada (también al guardar)")
+    acciones.registrar("escritura.plantillas", "Insertar una p&lantilla…", "insert-table", "Ctrl+Alt+T", "Herramientas",
+                       habilitada=False, al_disparar=pedir("plantillas"),
+                       descripcion="Una tabla de regresión del paquete, una figura con su nota, su fuente y su texto "
+                                   "alternativo, un cuadro con booktabs…: un formulario corto y el texto en el cursor")
     acciones.registrar("proyecto.cerrar", "Cerrar el &proyecto", "project-development-close", None, "Archivo", habilitada=False, al_disparar=pedir("cerrar_proyecto"))
     acciones.registrar("escritorio.pdf", "Abrir el PDF con su &aplicación", "application-pdf", "Ctrl+Shift+P", "Archivo", habilitada=False,
                        al_disparar=lambda *_: escritorio.abrirConAplicacion(pdf_abierto()), descripcion="El PDF en Okular (o la aplicación de KDE para PDF)")
@@ -414,7 +436,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
         ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
                        "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
-        ("&Herramientas", ["documento.configurar", "escritura.ayuda_ia", "escritura.entrega", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
+        ("&Herramientas", ["documento.configurar", "escritura.ayuda_ia", "escritura.entrega", "|", "escritura.matriz",
+                           "escritura.pregunta", "escritura.revisar", "escritura.plantillas", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
     ])
@@ -461,6 +484,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("documento.configurar", hay_proyecto)
         acciones.habilitar("escritura.ayuda_ia", hay_archivo and ayuda.disponible)
         acciones.habilitar("escritura.entrega", hay_proyecto and entrega.disponible)
+        acciones.habilitar("escritura.matriz", hay_proyecto and matriz.disponible)
+        acciones.habilitar("escritura.pregunta", hay_proyecto and matriz.disponible and matriz.puede.get("pregunta", False))
+        acciones.habilitar("escritura.revisar", hay_archivo and revisor.disponible)
+        acciones.habilitar("escritura.plantillas", hay_archivo and plantillas.disponible)
         acciones.habilitar("archivo.texstudio", (hay_proyecto or hay_archivo) and sistema.hayTexstudio)
         acciones.habilitar("proyectos.detectar", not proyectos.enDeteccion)
         acciones.marcar("compilar.al_guardar", ajustes.compilarAlGuardar)
@@ -470,7 +497,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     for senal in (proyectos.cambiado, proyectos.abiertoCambiado, editor.cambiado, editor.actualCambiado, compilacion.cambiado,
                   compilacion.problemasCambiados, interfaz.vistaCambiada, ajustes.cambiado, visor.zoomCambiado, historial.cambiado,
-                  ayuda.cambiado, entrega.cambiado):
+                  ayuda.cambiado, entrega.cambiado, matriz.cambiado, revisor.cambiado, plantillas.cambiado):
         senal.connect(disponibilidad)
 
     # ------------------------------------------------- lo que encadena a los controladores
@@ -548,6 +575,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     configuracion.aplicado.connect(configurado)
     compilacion.terminada.connect(terminada)
     editor.guardadoArchivo.connect(guardado)
+    editor.guardadoArchivo.connect(revisor.revisarArchivo)   # la pestaña «Revisión» se pone al día al guardar (§1.23)
     disponibilidad()
 
     from latex_app import instancia
@@ -565,7 +593,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
                   editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones, nuevo=nuevo,
                   configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor, datos=datos, miniaturas=miniaturas, biblioteca=biblioteca,
-                  ayuda=ayuda, entrega=entrega)
+                  ayuda=ayuda, entrega=entrega, matriz=matriz, revisor=revisor, plantillas=plantillas)
     for nombre, objeto in piezas.items():
         app.exponer(nombre, objeto)
     app.exponer("descripcionStudio", DESCRIPCION)
