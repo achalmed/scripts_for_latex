@@ -100,6 +100,38 @@ def declaracion_ayuda(principal: str | Path) -> dict | None:
             **{k: _resolver(a.get(k) or [], esquema, proyecto) for k in ("prompt", "pegar")}}
 
 
+def declaracion_nuevo(carpeta: str | Path) -> dict | None:
+    """La sección `nuevo:` (contrato §11: qué documentos se pueden crear y crearlos) del esquema del marco de la carpeta
+    de trabajo `carpeta` (el esquema en ella o en una carpeta de arriba), con sus órdenes resueltas; None si no la declara."""
+    if not carpeta or not Path(carpeta).is_dir():
+        return None
+    esquema = configuracion.buscar_esquema(Path(carpeta) / "_")          # buscar_esquema sube desde la carpeta del archivo
+    if esquema is None:
+        return None
+    try:
+        import yaml
+        todo = yaml.safe_load(esquema.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return None
+    n = todo.get("nuevo") if isinstance(todo, dict) else None
+    if not isinstance(n, dict) or not n.get("tipos") or not n.get("crear"):
+        return None
+    return {"nombre": str(n.get("nombre") or todo.get("marco") or esquema.parent.name), "marco": str(todo.get("marco") or ""),
+            "esquema": str(esquema), "carpeta": str(Path(carpeta).resolve()),
+            "tipos": _resolver(n["tipos"], esquema, Path(carpeta)), "crear": _resolver(n["crear"], esquema, Path(carpeta))}
+
+
+def declaraciones_nuevo(carpetas) -> list[dict]:
+    """Las secciones `nuevo:` de las carpetas de trabajo y de los marcos detectados: una por esquema, en su orden."""
+    salida, vistos = [], set()
+    for carpeta in carpetas:
+        d = declaracion_nuevo(carpeta)
+        if d is not None and d["esquema"] not in vistos:
+            vistos.add(d["esquema"])
+            salida.append(d)
+    return salida
+
+
 def _proyecto(principal: Path, marcador: str) -> Path | None:
     carpeta = Path(principal).resolve().parent
     for _ in range(NIVELES_PROYECTO):

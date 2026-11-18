@@ -27,7 +27,7 @@ studios) y el compilador del `.tex` suelto (`script_compilar_latex/`, alias `com
 - **Nunca se escriben fuentes**: compilar no las toca y el editor escribe solo con Ctrl+S (`Editor.guardar`), sin pisar
   un cambio externo sin confirmación. Limpiar muestra la lista y confirma. «Configurar el documento» (Ctrl+Alt+D,
   `studio/latex_app/configuracion.py`) toca solo el preámbulo y escribe tras mostrar la diferencia, sin pisar cambios
-  sin guardar; citar un libro nuevo y guardar una ficha los declara el marco y van tras confirmar (§1.18, §1.19).
+  sin guardar; citar, fichar y crear un documento nuevo los declara el marco y van tras confirmar (§1.18 a §1.20).
 - **TeXstudio compila con la misma receta** (`studio/compilar.py`, sin Qt; decisiones §1.15). Su `texstudio.ini` lo toca
   solo `studio/latex_app/texstudio.py`: como texto (QSettings pierde sus tipos), las claves de `deseado()`, con TeXstudio
   cerrado, respaldo y deshacer; las pruebas, en un `.ini` temporal; ninguna sesión lo aplica sin el sí del autor.

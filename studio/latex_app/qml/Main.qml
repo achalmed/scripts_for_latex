@@ -81,6 +81,7 @@ VentanaStudio {
         function onPedir(nombre, datos) {
             const e = ventana.editor()
             switch (nombre) {
+            case "nuevo_documento": dialogoNuevo.abrir(datos); break
             case "abrir_tex": selectorTex.abrir(p.hayAbierto ? p.abierto.carpeta : ""); break
             case "carpetas": if (ventana.dialogoAjustes) { ventana.dialogoAjustes.moduloActual = 0; ventana.dialogoAjustes.open() } break
             case "anadir_carpeta": selectorCarpeta.abrir(""); break
@@ -278,6 +279,8 @@ VentanaStudio {
                 onClicked: studio.interfaz.pedir("alternar_pdf", {})
             }
 
+            Chip { visible: !ventana.escribiendo; text: "Nuevo documento"; icono: "document-new"; ayuda: "Un informe, una tesis, un artículo… con la estructura de su marco (Ctrl+N)"
+                   onClicked: studio.interfaz.pedir("nuevo_documento", {}) }
             Chip { visible: !ventana.escribiendo; text: "Abrir un .tex"; icono: "document-open"; ayuda: "Ctrl+O"; onClicked: studio.interfaz.pedir("abrir_tex", {}) }
             Chip { visible: !ventana.escribiendo; text: "Compilar los marcados"; icono: "run-build"; ayuda: "Marca con Ctrl+clic; se compilan uno tras otro (Ctrl+Mayús+F5)"
                    onClicked: paginaProyectos.compilarMarcados() }
@@ -433,6 +436,7 @@ VentanaStudio {
     DialogoConfigurarDocumento { id: dialogoConfigurar }
     DialogoFicha { id: dialogoFicha }                  // Citas › Fichas: nueva y editar (§1.19)
     DialogoAyudaIA { id: dialogoAyuda }                // la ayuda de la IA de la parte abierta (§1.19)
+    DialogoNuevo { id: dialogoNuevo }                  // «Nuevo documento» (Ctrl+N): lo que el marco sabe crear (§1.20)
     DialogoTexstudio { id: dialogoTexstudio }
     DialogoTexstudio {
         id: dialogoOkular

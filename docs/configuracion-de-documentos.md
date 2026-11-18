@@ -212,3 +212,27 @@ dos escribe nada ni llama a un modelo. Las declara escritura (`escritura/core/co
 la muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`), las §9 y §10.
 Pruebas: `tests/test_datos.py`.
 
+## 11. Documentos nuevos (`nuevo:`)
+
+Un marco que sabe crear documentos (un informe, una tesis, un artículo…) lo declara al nivel del esquema; la ventana lo
+ofrece en «Nuevo documento» (Ctrl+N, el botón de la página de proyectos y la paleta; decisiones §1.20):
+
+```yaml
+nuevo:
+  nombre: Escritura                # el marco, en la lista de marcos (si hay varios que declaran `nuevo:`)
+  tipos: [/usr/bin/python3, ../../scripts/nuevo_documento.py, tipos]
+  crear: [/usr/bin/python3, ../../scripts/nuevo_documento.py, crear, '{datos}']   # + --aplicar al crear
+```
+
+La sección se busca en cada carpeta de trabajo (el esquema en ella o en una de arriba) y en el marco de cada proyecto
+detectado; un argumento que empieza con «.» es una ruta relativa al esquema, y las órdenes corren en la carpeta de trabajo.
+`tipos` imprime `{marco, tipos: [{clave, nombre, descripcion, carpeta, variante: {rotulo, omision, opciones: [{clave,
+nombre, descripcion}]}, campos: [{clave, rotulo, obligatorio, tipo, opciones, omision, segun_variante}]}]}`: `tipo` es
+`texto`, `lineas` (un valor por línea) u `opcion` (con `opciones: [{clave, nombre}]`); `segun_variante` (`{variante:
+[claves]}`) dice qué opciones admite cada variante, y un campo sin ninguna para la elegida no se muestra. `{datos}` es el
+JSON `{tipo, variante, <clave>: valor…}` del formulario. Sin `--aplicar`, `crear` **simula**: crea el documento en un
+temporal y devuelve `{destino, carpeta, slug, tipo, principal, archivos, avisos, escrito: false}` sin tocar la carpeta
+real; con `--aplicar` lo crea y devuelve lo mismo con `escrito: true`, y la ventana abre `principal`. Un problema (falta
+un dato obligatorio, la carpeta ya existe) vuelve como `{error}`. Lo declara escritura (`escritura/core/config/latex-studio.yml`,
+con `escritura/scripts/nuevo_documento.py` sobre `proyecto/main.py nuevo`); la muestra, `studio/ejemplo/proyectos/marco`
+(`studio/ejemplo/proyectos/marco/scripts/nuevo_muestra.py`). Pruebas: `tests/test_datos.py` y `tests/test_controladores.py`.

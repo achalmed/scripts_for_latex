@@ -29,6 +29,7 @@ from latex_app.controladores.ayuda import AyudaParte
 from latex_app.controladores.biblioteca import BibliotecaProyecto
 from latex_app.controladores.datos import DatosProyecto
 from latex_app.controladores.miniaturas import Miniaturas
+from latex_app.controladores.nuevo import NuevoDocumento
 from latex_app.controladores.sincronizacion import Sincronizacion
 from gui_comun.editor import ControladorEditor
 from latex_app.controladores.historial import Historial
@@ -253,6 +254,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
     datos = DatosProyecto(proyectos, tareas, consola)   # la pestaña «Datos» (lo que declara el marco, §8 del contrato)
     biblioteca = BibliotecaProyecto(proyectos, tareas, consola)   # la pestaña «Citas»: la biblioteca del marco (§9)
     ayuda = AyudaParte(proyectos, tareas, consola)               # la ayuda de la IA de la parte abierta (§10 del contrato)
+    nuevo = NuevoDocumento(ajustes, proyectos, tareas, consola)  # «Nuevo documento»: lo que el marco sabe crear (§11, §1.20)
     miniaturas = Miniaturas(cache or cache_del_studio())   # la primera página de cada PDF (tarjetas y figuras, §1.17)
     visor = Visor(cache=cache)
     sistema = Sistema(ajustes, consola)
@@ -275,6 +277,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         return p.pdf if p is not None else ""
 
     # --- Archivo
+    acciones.registrar("archivo.nuevo", "&Nuevo documento…", "document-new", StandardKey.New, "Archivo", al_disparar=pedir("nuevo_documento"),
+                       descripcion="Un informe, una tesis, una monografía, un artículo, un ensayo o un libro con la estructura de su "
+                                   "marco: eliges el tipo y llenas el formulario; «Revisar» muestra lo que se creará")
     acciones.registrar("archivo.abrir", "&Abrir un .tex…", "document-open", StandardKey.Open, "Archivo", al_disparar=pedir("abrir_tex"),
                        descripcion="Abre el proyecto de ese .tex (un capítulo abre su documento principal); con el diálogo de archivos de KDE")
     acciones.registrar("archivo.carpetas", "Carpetas de &trabajo…", "folder-open", "Ctrl+Shift+O", "Archivo", al_disparar=pedir("carpetas"),
@@ -394,7 +399,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        al_disparar=lambda *_: escritorio.abrirConAplicacion(str(REPO / "script_compilar_latex" / "README.md")))
 
     acciones.definir_menus([
-        ("&Archivo", ["archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "|", "archivo.guardar", "archivo.guardar_como", "archivo.guardar_todo",
+        ("&Archivo", ["archivo.nuevo", "archivo.abrir", "archivo.carpetas", "archivo.anadir_carpeta", "proyectos.detectar", "|", "archivo.guardar", "archivo.guardar_como", "archivo.guardar_todo",
                       "archivo.cerrar", "proyecto.cerrar", "|", "escritorio.pdf", "escritorio.dolphin", "escritorio.carpeta", "escritorio.terminal",
                       "escritorio.copiar", "escritorio.editor", "archivo.texstudio", "|", "archivo.salir"]),
         ("&Editar", ["editar.buscar", "editar.reemplazar", "editar.ir_linea", "|", "editar.completar", "editar.comentar"]),
@@ -530,6 +535,8 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
             proyectos.releerEstructura()
 
     proyectos.abiertoCambiado.connect(abierto_cambiado)
+    ajustes.carpetasCambiadas.connect(nuevo.recargar)
+    proyectos.detectando.connect(lambda en_curso: None if en_curso else nuevo.recargar())
     configuracion.aplicado.connect(configurado)
     compilacion.terminada.connect(terminada)
     editor.guardadoArchivo.connect(guardado)
@@ -548,7 +555,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     servidor.irA.connect(ir_desde_fuera)
     piezas = dict(consola=consola, tareas=tareas, interfaz=interfaz, ajustes=ajustes, historial=historial, proyectos=proyectos,
-                  editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones,
+                  editor=editor, compilacion=compilacion, visor=visor, sistema=sistema, acciones=acciones, nuevo=nuevo,
                   configuracion=configuracion, sincronizacion=sincronizacion, servidor=servidor, datos=datos, miniaturas=miniaturas, biblioteca=biblioteca,
                   ayuda=ayuda)
     for nombre, objeto in piezas.items():

@@ -114,3 +114,39 @@ def test_ayuda_del_marco_prompt_y_pegado_sin_escribir(marco, tmp_path):
     assert r["ok"] and r["despues"] == "Un párrafo nuevo.\n" and r["antes"] in antes
     assert principal.read_text(encoding="utf-8") == antes, "comprobar no escribe el documento"
     assert datos.declaracion_ayuda(marco / "pruebas" / "caso.tex") is None
+
+
+def test_nuevo_documento_declara_simula_y_crea(marco, tmp_path):
+    """La sección `nuevo:` (contrato §11, decisiones §1.20): los tipos con su formulario; `crear` sin --aplicar simula
+    (devuelve la carpeta, los archivos y el principal, y no escribe en el marco); con --aplicar crea."""
+    import json
+    d = datos.declaracion_nuevo(marco)
+    assert d["nombre"] == "Marco de muestra" and d["marco"] == "muestra"
+    assert d["esquema"] == str((marco / "config" / "latex-studio.yml").resolve())
+    assert d["tipos"][1] == str((marco / "scripts" / "nuevo_muestra.py").resolve())      # «../» relativo al esquema
+    assert datos.declaracion_nuevo(marco / "informes") == {**d, "carpeta": str((marco / "informes").resolve())}   # sube
+    assert datos.declaracion_nuevo(tmp_path / "no-existe") is None and datos.declaracion_nuevo("") is None
+    vacia = tmp_path / "vacia"
+    vacia.mkdir()
+    assert datos.declaracion_nuevo(vacia) is None
+    assert [x["esquema"] for x in datos.declaraciones_nuevo([marco, marco / "informes", vacia])] == [d["esquema"]]
+
+    cat, error = datos._json(d["tipos"], d["carpeta"])
+    assert not error and [t["clave"] for t in cat["tipos"]] == ["memoria", "nota", "acta"]
+    memoria = cat["tipos"][0]
+    assert memoria["descripcion"] and [v["clave"] for v in memoria["variante"]["opciones"]] == ["anual", "semestral"]
+    assert {c["clave"]: c["tipo"] for c in memoria["campos"]}["autores"] == "lineas"
+
+    antes = sorted(str(p.relative_to(marco)) for p in marco.rglob("*"))
+    campos = {"tipo": "memoria", "variante": "anual", "titulo": "Memoria institucional 2026", "autores": "Rosa Quispe\nTomás Arango"}
+    sim, _ = datos._json(datos.con(d["crear"], datos=json.dumps(campos, ensure_ascii=False)), d["carpeta"])
+    assert not sim.get("error") and not sim["escrito"]
+    assert sim["carpeta"].startswith("informes/") and sim["carpeta"].endswith("-memoria-institucional-2026")
+    assert sim["principal"] == str(marco.resolve() / sim["carpeta"] / "informe.tex") and "informe.tex" in sim["archivos"]
+    assert sorted(str(p.relative_to(marco)) for p in marco.rglob("*")) == antes, "simular no escribe en el marco"
+    hecho, _ = datos._json(datos.con(d["crear"], datos=json.dumps(campos, ensure_ascii=False)) + ["--aplicar"], d["carpeta"])
+    assert hecho["escrito"] and Path(hecho["principal"]).is_file() and hecho["archivos"] == sim["archivos"]
+    otra, _ = datos._json(datos.con(d["crear"], datos=json.dumps(campos)), d["carpeta"])
+    assert otra["error"].startswith("Ya existe")
+    falta, _ = datos._json(datos.con(d["crear"], datos=json.dumps({**campos, "autores": ""})), d["carpeta"])
+    assert "Autores" in falta["error"]

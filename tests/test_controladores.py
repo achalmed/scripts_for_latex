@@ -397,3 +397,34 @@ def test_qtpdf_pinta_una_pagina_real(app, tmp_path):
     _esperar(app, lambda: pagina.property("progress") < 1.0 or pagina.property("implicitWidth") <= 0, 30)
     assert pagina.property("progress") == 1.0 and pagina.property("implicitWidth") > 0
     assert pagina.property("currentFrame") == 1
+
+
+@requiere_binding
+def test_nuevo_documento_con_el_marco_detectado(app, piezas):
+    """«Nuevo documento» (decisiones §1.20): el marco de los proyectos detectados declara `nuevo:`; sus tipos llegan en
+    un hilo, «Revisar» simula sin escribir y «Crear» escribe y avisa el principal para abrirlo."""
+    from latex_app.controladores.nuevo import NuevoDocumento
+    p, muestra = piezas["proyectos"], piezas["muestra"]
+    n = NuevoDocumento(piezas["ajustes"], p, piezas["tareas"], piezas["consola"])
+    n.recargar()
+    assert not n.disponible                                      # sin detectar: ninguna carpeta de trabajo lo declara
+    p.detectar()
+    _esperar(app, lambda: p.enDeteccion)
+    n.recargar()
+    assert [m["nombre"] for m in n.marcos] == ["Marco de muestra"] and n.marco == 0 and n.nombreMarco == "Marco de muestra"
+    _esperar(app, lambda: n.cargando, 60)
+    assert [t["clave"] for t in n.tipos] == ["memoria", "nota", "acta"] and n.error == ""
+    campos = {"tipo": "nota", "variante": "simple", "titulo": "Nota sobre el puente", "autores": "Rosa Quispe"}
+    n.revisar(campos)
+    _esperar(app, lambda: n.trabajando, 60)
+    r = dict(n.revision)
+    assert r["carpeta"].startswith("notas/") and not r["escrito"] and not Path(r["destino"]).exists()
+    assert Path(r["destino"]).is_relative_to(muestra.resolve())
+    creados = []
+    n.creado.connect(creados.append)
+    n.crear(campos)
+    _esperar(app, lambda: n.trabajando, 60)
+    assert creados == [r["principal"]] and Path(creados[0]).is_file()
+    n.olvidar()
+    assert dict(n.revision) == {}
+    _esperar(app, lambda: p.enDeteccion)

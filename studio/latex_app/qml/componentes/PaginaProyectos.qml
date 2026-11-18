@@ -135,7 +135,9 @@ QQC2.SplitView {
                 visible: rejilla.count === 0
                 icon.name: raiz.p.enDeteccion ? "view-refresh" : "text-x-tex"
                 text: raiz.p.enDeteccion ? "Buscando tus documentos…" : raiz.p.total === 0 ? "Empieza con un documento" : "Ningún documento coincide"
-                explanation: raiz.p.total === 0 && !raiz.p.enDeteccion ? "Añade una carpeta de trabajo (Ctrl+Mayús+O) o abre un .tex (Ctrl+O)." : ""
+                explanation: raiz.p.total === 0 && !raiz.p.enDeteccion ? "Crea uno (Ctrl+N), añade una carpeta de trabajo (Ctrl+Mayús+O) o abre un .tex (Ctrl+O)." : ""
+                helpfulAction: raiz.p.total === 0 && !raiz.p.enDeteccion ? accionNuevo : null
+                Kirigami.Action { id: accionNuevo; text: "Nuevo documento"; icon.name: "document-new"; onTriggered: studio.interfaz.pedir("nuevo_documento", {}) }
             }
         }
 

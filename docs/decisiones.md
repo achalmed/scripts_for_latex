@@ -216,6 +216,30 @@ Escritura las sirve con `biblioteca-studio/lib/consulta.py` (decisiones §9.4 y 
 `tests/test_datos.py`, capturas en `docs/figuras/latex-studio-ficha.png` y `latex-studio-ayuda-ia.png`
 (`studio/capturar.py --ficha`, `--ayuda-ia`).
 
+### §1.20 «Nuevo documento»: crear lo que el marco sabe crear, sin la terminal (2026-11-18)
+
+El autor pidió crear un informe, una tesis, una monografía, un artículo, un ensayo o un libro con botones y formularios,
+sin `proyecto/main.py nuevo` en la terminal. Como en §1.16 y §1.18, **la ventana no sabe nada de ningún marco**: el marco
+declara la sección `nuevo:` de su `latex-studio.yml` (contrato §11) con dos órdenes, `tipos` (los tipos, su línea, sus
+variantes o esquemas y los campos del formulario, con rótulo, si es obligatorio y sus opciones) y `crear` (recibe el
+formulario en JSON). La sección se busca en cada carpeta de trabajo y en los marcos de los proyectos detectados
+(`datos.declaraciones_nuevo`); con varios marcos que la declaran, se elige el marco primero.
+
+Crear va en dos tiempos, como citar y fichar: **«Revisar»** corre `crear` sin `--aplicar` y el marco crea el documento en
+un temporal (escritura: `--raiz-proyectos`) y devuelve la carpeta real de destino, los archivos y el principal, sin tocar
+la carpeta real; **«Crear y abrir»**, la única acción rellena del diálogo, corre lo revisado con `--aplicar` y abre el
+principal en el editor. Cualquier cambio del formulario invalida lo revisado. Las opciones van en lista (las variantes,
+con su descripción en la misma línea) y los tipos en tarjetas con su línea, sin nubes de pastillas. Se abre con el botón
+«Nuevo documento» de la página de proyectos, Ctrl+N (Archivo › Nuevo documento…) y la paleta; si no hay proyectos, el
+mensaje vacío lo ofrece.
+
+Escritura lo sirve con `escritura/scripts/nuevo_documento.py`, un guion delgado sobre `proyecto/main.py nuevo` (el slug
+sale del título con `slug_de_titulo` de `escritura/proyecto/lib/crear.py`). Antes se corrigió en escritura el fallo que lo hacía peligroso:
+`nuevo informe` no reenviaba `--raiz-proyectos` (ni el subtítulo, el autor ni la profundidad) a `reporting/main.py
+nuevo`, y un informe «de prueba» nacía en la carpeta real. La muestra (`studio/ejemplo/proyectos/marco/scripts/nuevo_muestra.py`)
+declara tres tipos sin datos reales. Pruebas: `tests/test_datos.py` (declarar, simular sin escribir, crear) y
+`tests/test_controladores.py` (el controlador con el marco detectado); captura con `studio/capturar.py --nuevo memoria`.
+
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 
 El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e

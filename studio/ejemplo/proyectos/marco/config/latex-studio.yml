@@ -22,6 +22,10 @@ ayuda:                             # §10 del contrato: el prompt de la parte ab
   marcador: datos.yml
   prompt: [python3, ../scripts/datos_muestra.py, prompt, '{proyecto}', '{archivo}']
   pegar: [python3, ../scripts/datos_muestra.py, pegar, '{proyecto}', '{archivo}', '{pegado}', --tex, '{tex}']
+nuevo:                             # §11 del contrato: los tipos que se pueden crear y crearlos (simula sin --aplicar)
+  nombre: Marco de muestra
+  tipos: [python3, ../scripts/nuevo_muestra.py, tipos]
+  crear: [python3, ../scripts/nuevo_muestra.py, crear, '{datos}']
 documentos:
   - nombre: Memoria
     clases: [memoria]

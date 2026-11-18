@@ -8,6 +8,7 @@ esquema de color que se pida, la vista y el proyecto y archivo abiertos.
     /usr/bin/python3 studio/capturar.py docs/figuras/latex-studio-escritura.png --esquema …/LliphiOscuro.colors --vista escritura \\
         --proyecto tesis-multiarchivo/principal.tex --archivo capitulos/metodo.tex --linea 18
     /usr/bin/python3 studio/capturar.py salida.png --paleta "compilar"
+    /usr/bin/python3 studio/capturar.py salida.png --nuevo memoria --sin-compilar     # «Nuevo documento», ya revisado
 
 Sin `--sin-compilar`, compila todos los proyectos de la muestra (en cola, cada uno con su compilador) antes de capturar:
 el estado, los problemas, el registro y el PDF son reales.
@@ -76,6 +77,7 @@ def main() -> int:
     parser.add_argument("--citas", type=int, default=-1, help="en la pestaña Citas: 0 del proyecto · 1 biblioteca · 2 fichas")
     parser.add_argument("--ficha", action="store_true", help="abre «Nueva ficha» con una textual de muestra ya revisada (Citas › Fichas)")
     parser.add_argument("--ayuda-ia", default=None, help="abre «Ayuda de la IA» de la parte abierta; con texto, lo pega y lo comprueba")
+    parser.add_argument("--nuevo", default="", help="abre «Nuevo documento» con este tipo del marco de muestra, lleno y revisado")
     parser.add_argument("--insertar", default="", help="abre el diálogo de insertar de este tipo (seccion, figura, tabla, cita, ecuacion, referencia, lista)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -206,6 +208,10 @@ def main() -> int:
             def insertar():
                 interfaz.pedir.emit("insertar", {"tipo": args.insertar})
             QTimer.singleShot(1500, insertar)
+        if args.nuevo:
+            valores = {"titulo": "Memoria institucional 2026", "subtitulo": "Lo hecho en el año", "autores": "Rosa Quispe\nTomás Arango",
+                       "profundidad": "completo"}
+            QTimer.singleShot(1200, lambda: interfaz.pedir.emit("nuevo_documento", {"tipo": args.nuevo, "valores": valores, "revisar": True}))
         if args.paleta is not None:
             QTimer.singleShot(900, lambda: raiz.property("paleta").abrir(args.paleta))
         app.capturar(args.salida, espera_ms=9000 if args.compilar_abierto else 3500)
