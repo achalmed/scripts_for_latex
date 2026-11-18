@@ -22,6 +22,12 @@ ayuda:                             # §10 del contrato: el prompt de la parte ab
   marcador: datos.yml
   prompt: [python3, ../scripts/datos_muestra.py, prompt, '{proyecto}', '{archivo}']
   pegar: [python3, ../scripts/datos_muestra.py, pegar, '{proyecto}', '{archivo}', '{pegado}', --tex, '{tex}']
+entrega:                           # §12 del contrato: los controles antes de entregar, marcar lo manual y registrar la IA
+  nombre: Antes de entregar
+  marcador: datos.yml
+  revisar: [python3, ../scripts/entrega_muestra.py, revisar, '{proyecto}']
+  marcar: [python3, ../scripts/entrega_muestra.py, marcar, '{proyecto}', '{id}', '{estado}', '{nota}']
+  registrar_ia: [python3, ../scripts/entrega_muestra.py, registrar_ia, '{proyecto}', '{datos}']
 nuevo:                             # §11 del contrato: los tipos que se pueden crear y crearlos (simula sin --aplicar)
   nombre: Marco de muestra
   tipos: [python3, ../scripts/nuevo_muestra.py, tipos]

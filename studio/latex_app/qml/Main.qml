@@ -108,6 +108,7 @@ VentanaStudio {
             case "atajos": dialogoAtajos.open(); break
             case "configurar_documento": dialogoConfigurar.abrirPara(datos.ruta || ""); break
             case "ayuda_ia": dialogoAyuda.abrirPara(e, datos.pegado || ""); break
+            case "antes_de_entregar": dialogoEntrega.abrir(); break
             case "nueva_ficha": dialogoFicha.nuevaPara(datos.libro || null, datos); break
             case "insertar": ventana.pedirInsertar(datos.tipo || "seccion"); break
             case "configurar_texstudio": dialogoTexstudio.abrir(); break
@@ -436,6 +437,7 @@ VentanaStudio {
     DialogoConfigurarDocumento { id: dialogoConfigurar }
     DialogoFicha { id: dialogoFicha }                  // Citas › Fichas: nueva y editar (§1.19)
     DialogoAyudaIA { id: dialogoAyuda }                // la ayuda de la IA de la parte abierta (§1.19)
+    DialogoEntrega { id: dialogoEntrega }              // «Antes de entregar» (Ctrl+Alt+E): los controles del marco (§1.21)
     DialogoNuevo { id: dialogoNuevo }                  // «Nuevo documento» (Ctrl+N): lo que el marco sabe crear (§1.20)
     DialogoTexstudio { id: dialogoTexstudio }
     DialogoTexstudio {

@@ -428,3 +428,34 @@ def test_nuevo_documento_con_el_marco_detectado(app, piezas):
     n.olvidar()
     assert dict(n.revision) == {}
     _esperar(app, lambda: p.enDeteccion)
+
+
+@requiere_binding
+def test_antes_de_entregar_revisa_marca_y_registra_el_uso_de_la_ia(app, piezas):
+    """«Antes de entregar» (decisiones §1.21): con el proyecto del marco abierto, `revisar` llega en un hilo con el
+    veredicto; marcar la casilla escribe el punto y vuelve a revisar; aceptar un cambio de la IA lo registra."""
+    from latex_app.controladores.entrega import AntesDeEntregar
+    p, muestra = piezas["proyectos"], piezas["muestra"]
+    e = AntesDeEntregar(p, piezas["tareas"], piezas["consola"])
+    assert not e.disponible
+    principal = muestra / "marco" / "informes" / "informe-anual" / "informe.tex"
+    assert not p.abrir(str(principal))
+    assert e.disponible and e.nombre == "Antes de entregar" and e.puedeMarcar
+    e.revisar()
+    _esperar(app, lambda: e.revisando, 60)
+    r = dict(e.resultado)
+    assert not r["error"] and r["faltan"] == 3 and not r["listo"]
+    assert r["controles"][0]["hallazgos"][-1]["ruta"] == str(principal.resolve())
+    marcados = []
+    e.marcado.connect(lambda d: marcados.append(dict(d)))
+    e.marcar("lista.revision", True, "")
+    _esperar(app, lambda: not marcados or e.revisando, 60)
+    assert marcados[0]["escrito"] and marcados[0]["estado"] == "hecho"
+    assert dict(e.resultado)["pendientes"] == 1 and (principal.parent / "entrega.yml").is_file()
+    registrados = []
+    e.registrado.connect(lambda d: registrados.append(dict(d)))
+    e.registrarIa({"ruta": str(principal), "parte": "Informe anual", "prompt": {"titulo": "Redacción", "texto": "el prompt"},
+                   "antes": "Antes.\n", "despues": "Después.\n"})
+    _esperar(app, lambda: not registrados, 60)
+    assert registrados[0]["escrito"] and (principal.parent / "ia" / "registro.yml").is_file()
+    assert "el prompt" not in (principal.parent / "ia" / "registro.yml").read_text(encoding="utf-8")

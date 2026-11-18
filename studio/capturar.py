@@ -9,6 +9,8 @@ esquema de color que se pida, la vista y el proyecto y archivo abiertos.
         --proyecto tesis-multiarchivo/principal.tex --archivo capitulos/metodo.tex --linea 18
     /usr/bin/python3 studio/capturar.py salida.png --paleta "compilar"
     /usr/bin/python3 studio/capturar.py salida.png --nuevo memoria --sin-compilar     # «Nuevo documento», ya revisado
+    /usr/bin/python3 studio/capturar.py salida.png --vista escritura --proyecto marco/informes/informe-anual/informe.tex \\
+        --entrega --sin-compilar                                                      # «Antes de entregar», revisado
 
 Sin `--sin-compilar`, compila todos los proyectos de la muestra (en cola, cada uno con su compilador) antes de capturar:
 el estado, los problemas, el registro y el PDF son reales.
@@ -78,6 +80,8 @@ def main() -> int:
     parser.add_argument("--ficha", action="store_true", help="abre «Nueva ficha» con una textual de muestra ya revisada (Citas › Fichas)")
     parser.add_argument("--ayuda-ia", default=None, help="abre «Ayuda de la IA» de la parte abierta; con texto, lo pega y lo comprueba")
     parser.add_argument("--nuevo", default="", help="abre «Nuevo documento» con este tipo del marco de muestra, lleno y revisado")
+    parser.add_argument("--entrega", action="store_true",
+                        help="abre «Antes de entregar» del proyecto abierto, con un punto manual ya marcado y otro sin marcar")
     parser.add_argument("--insertar", default="", help="abre el diálogo de insertar de este tipo (seccion, figura, tabla, cita, ecuacion, referencia, lista)")
     parser.add_argument("--ancho", type=int, default=1440)
     parser.add_argument("--alto", type=int, default=900)
@@ -204,6 +208,11 @@ def main() -> int:
             QTimer.singleShot(2200, lambda: interfaz.pedir.emit("nueva_ficha", {"libro": libro, **valores}))
         if args.ayuda_ia is not None:
             QTimer.singleShot(2200, lambda: interfaz.pedir.emit("ayuda_ia", {"pegado": args.ayuda_ia.replace("\\n", "\n")}))
+        if args.entrega:
+            proyecto = Path(principal).parent                 # la muestra guarda lo marcado en <proyecto>/entrega.yml
+            (proyecto / "entrega.yml").write_text(
+                "puntos:\n  revision: {estado: hecho, fecha: '2026-11-18', nota: La leyó Tomás Arango}\n", encoding="utf-8")
+            QTimer.singleShot(1600, lambda: interfaz.pedir.emit("antes_de_entregar", {}))
         if args.insertar:
             def insertar():
                 interfaz.pedir.emit("insertar", {"tipo": args.insertar})

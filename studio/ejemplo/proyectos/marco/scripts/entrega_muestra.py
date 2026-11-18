@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""scripts/entrega_muestra.py — «Antes de entregar» del marco de muestra (§12 del contrato): lo que lee el diálogo de LaTeX Studio.
+
+revisar <proyecto>: los controles en JSON, con comprobaciones de juguete sobre informe.tex y datos.yml (un número escrito
+a mano, el paquete en una versión vieja, un punto que se comprueba solo y dos manuales); marcar <proyecto> <id> <estado>
+[<nota>] [--aplicar]: el estado de un punto manual en <proyecto>/entrega.yml; registrar_ia <proyecto> <json> [--aplicar]:
+un uso en <proyecto>/ia/registro.yml y su declaración en ia/declaracion.tex. Sin --aplicar, nada se escribe. Lo usan las
+pruebas y las capturas; ningún dato real (el marco real, escritura, lo sirve con scripts/antes_de_entregar.py).
+"""
+import json
+import re
+import sys
+from datetime import date
+from pathlib import Path
+
+import yaml
+
+MANUALES = {"revision": "Otra persona leyó la versión final.", "origen": "Cada cifra coincide con su cuadro de origen."}
+
+
+def _json(d):
+    print(json.dumps(d, ensure_ascii=False))
+    sys.exit(0)
+
+
+def _yaml(p: Path) -> dict:
+    return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.is_file() else {}
+
+
+def _control(id, grupo, nombre, estado, detalle="", hallazgos=(), **extra):
+    return {"id": id, "grupo": grupo, "nombre": nombre, "porque": f"Por qué de muestra para «{nombre}».",
+            "fuente": "Fuente de muestra (2026)", "estado": estado, "detalle": detalle, "hallazgos": list(hallazgos), **extra}
+
+
+orden, proyecto = sys.argv[1], Path(sys.argv[2])
+aplicar = "--aplicar" in sys.argv
+estado_yml = proyecto / "entrega.yml"
+if orden == "revisar":
+    tex = (proyecto / "informe.tex").read_text(encoding="utf-8")
+    a_mano = [{"archivo": "informe.tex", "linea": n, "texto": f"«{m.group(0)}» escrito a mano: {l.strip()}"}
+              for n, l in enumerate(tex.split("\n"), 1) for m in re.finditer(r"\d+,\d+(?:~?\\%)?", l)]
+    d = _yaml(proyecto / "datos.yml")
+    viejo = [{"archivo": "datos.yml", "linea": 3, "texto": f"{d['paquete']}@{d['usada']} es una versión vieja: está publicada la {d['ultima']}"}] \
+        if d.get("usada") != d.get("ultima") else []
+    marcados = _yaml(estado_yml).get("puntos") or {}
+    usos = (_yaml(proyecto / "ia" / "registro.yml").get("usos")) or []
+    incluida = "\\input{ia/declaracion}" in tex
+    controles = [
+        _control("cifras", "cifras", "Cifras vivas", "falla" if viejo else "aviso" if a_mano else "ok",
+                 f"{len(viejo)} falla · {len(a_mano)} número escrito a mano" if viejo else f"{len(a_mano)} número escrito a mano",
+                 viejo + a_mano),
+        _control("lista.seccion", "lista", "Tiene una sección.", "ok" if "\\section" in tex else "falla", modo="automatico"),
+    ] + [_control(f"lista.{k}", "lista", v, "manual", {"hecho": "Hecho", "justificado": "No aplica"}.get((marcados.get(k) or {}).get("estado"), "Sin marcar"),
+                  modo="manual", marcado=(marcados.get(k) or {}).get("estado", ""), nota=(marcados.get(k) or {}).get("nota", ""))
+         for k, v in MANUALES.items()] + [
+        _control("referencias", "referencias", "Referencias verificables", "ok", "Sin citas."),
+        _control("ia", "ia", "Uso de la IA declarado", "falla" if usos and not incluida else "ok",
+                 f"{len(usos)} uso registrado" if usos else "Sin usos de la IA registrados.",
+                 [{"archivo": "informe.tex", "linea": 1, "texto": "El documento no incluye la declaración: añada \\input{ia/declaracion}"}]
+                 if usos and not incluida else []),
+    ]
+    _json({"tipo": "memoria", "lista": {"clave": "memoria", "nombre": "Memoria de muestra", "fuente": "Fuente de muestra (2026)"},
+           "grupos": [{"clave": "cifras", "nombre": "Cifras y datos"}, {"clave": "lista", "nombre": "Lista de control · Memoria de muestra"},
+                      {"clave": "referencias", "nombre": "Referencias y citas"}, {"clave": "ia", "nombre": "Inteligencia artificial"}],
+           "controles": controles})
+if orden == "marcar":
+    clave, estado = sys.argv[3].removeprefix("lista."), sys.argv[4]
+    nota = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] != "--aplicar" else ""
+    if clave not in MANUALES:
+        _json({"error": f"«{clave}» no es un punto manual"})
+    if estado == "justificado" and not nota.strip():
+        _json({"error": "Para dar un punto por no aplicable, escriba por qué en la nota."})
+    d = _yaml(estado_yml)
+    puntos = d.setdefault("puntos", {})
+    if estado == "pendiente" and not nota:
+        puntos.pop(clave, None)
+    else:
+        puntos[clave] = {"estado": estado, "fecha": date.today().isoformat(), "nota": nota}
+    if aplicar:
+        estado_yml.write_text(yaml.safe_dump(d, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    _json({"id": f"lista.{clave}", "estado": estado, "nota": nota, "archivo": "entrega.yml", "escrito": aplicar})
+if orden == "registrar_ia":
+    uso = json.loads(sys.argv[3])
+    if not uso.get("archivo") or not uso.get("resumen"):
+        _json({"error": "Falta el archivo o el resumen del uso."})
+    uso = {"fecha": uso.get("fecha") or date.today().isoformat(), **uso}
+    uso["prompt"] = {k: v for k, v in (uso.get("prompt") or {}).items() if k != "texto"}
+    registro = proyecto / "ia" / "registro.yml"
+    usos = (_yaml(registro).get("usos") or []) + [uso]
+    if aplicar:
+        registro.parent.mkdir(exist_ok=True)
+        registro.write_text(yaml.safe_dump({"usos": usos}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        (proyecto / "ia" / "declaracion.tex").write_text(
+            "\\noindent\\textbf{Uso de IA (muestra).}\n" + "".join(f"{u['fecha']}: {u['resumen']}. Lo revisó el autor.\\par\n" for u in usos),
+            encoding="utf-8")
+    _json({"uso": uso, "total": len(usos), "registro": "ia/registro.yml", "declaracion": "ia/declaracion.tex", "escrito": aplicar})
+_json({"error": f"orden desconocida: {orden}"})

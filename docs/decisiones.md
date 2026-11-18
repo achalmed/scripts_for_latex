@@ -240,6 +240,40 @@ nuevo`, y un informe «de prueba» nacía en la carpeta real. La muestra (`studi
 declara tres tipos sin datos reales. Pruebas: `tests/test_datos.py` (declarar, simular sin escribir, crear) y
 `tests/test_controladores.py` (el controlador con el marco detectado); captura con `studio/capturar.py --nuevo memoria`.
 
+### §1.21 «Antes de entregar»: los controles de la cadena de evidencia, declarados por el marco (2026-11-18)
+
+La fase 1 de la investigación del flujo de conocimiento («cerrar la cadena de evidencia», su §7) pide cuatro controles al
+final de un documento académico o técnico, que no dependan de la memoria (Haynes et al., 2009): cifras vivas (Gentzkow y
+Shapiro, 2014; Christensen y Miguel, 2018), la lista de control del tipo (Appelbaum et al., 2018; von Elm et al., 2007),
+referencias verificables y citas textuales cotejadas (ICMJE, 2025; Jergas y Baethge, 2015; Roig, 2015) y el uso de la IA
+registrado y declarado (COPE, 2023; Comisión Europea, 2025). Como en §1.16 a §1.20, **la ventana no sabe qué es ninguno**:
+el marco declara la sección `entrega:` (contrato §12) con tres órdenes, `revisar`, `marcar` y `registrar_ia`, y la
+ventana pinta lo que devuelven.
+
+- **El diálogo** (Herramientas › «Antes de entregar…», Ctrl+Alt+E y la paleta; `studio/latex_app/qml/componentes/DialogoEntrega.qml`,
+  `studio/latex_app/controladores/entrega.py`). Arriba, el veredicto: «Listo para entregar» o «Faltan N». Debajo, un grupo por control,
+  cada uno con su punto de color (rojo falla, ámbar aviso, verde bien, hueco lo manual sin marcar), su nombre, su detalle,
+  una línea tenue con el porqué y la fuente, y sus hallazgos (los cinco primeros y «Ver los N»): un clic cierra el diálogo
+  y abre el archivo en esa línea. La única acción rellena es «Revisar de nuevo»; nada de pastillas.
+- **Ninguna lista bloquea por su cuenta**: el veredicto lo calcula la ventana (`datos.veredicto`): listo si no hay fallas y
+  todo lo manual está marcado o justificado. Los avisos se leen y no bloquean: un número de redacción escrito a mano o una
+  obra que aún no está en la biblioteca no deben impedir entregar, pero se ven.
+- **Lo manual**, con casilla y nota: la casilla lo da por hecho; sin casilla y con nota, queda justificado («no aplica»).
+  Se escribe al tocar la casilla o al terminar la nota (`marcar --aplicar`): el clic es la confirmación, como en una lista
+  de control en papel, y el diálogo revisa de nuevo. El estado vive en el proyecto (escritura: `<proyecto>/registro/entrega.yml`, con
+  fecha), no en la ventana.
+- **El registro de la IA**: «Poner en el editor» de la ayuda de la IA (§1.19) llama a `registrar_ia --aplicar` con la
+  fecha, el archivo, la parte, el prompt (título, ruta, versión y su texto, del que el marco guarda solo la huella) y un
+  resumen del cambio («reemplazó 3 líneas de texto por 4»). Es lo único que la ventana escribe sin un segundo paso: el
+  autor ya aceptó el cambio, y un registro que pidiera confirmación aparte se saltaría. Deshacer el cambio con Ctrl+Z no
+  borra el uso: se declara de más, nunca de menos. El texto del documento sigue escribiéndose solo con Ctrl+S.
+
+Escritura lo sirve con `escritura/scripts/antes_de_entregar.py` (un módulo por control en `escritura/scripts/entrega/`, las listas en
+`escritura/config/entrega/listas/`; `escritura/docs/verificacion.md` §9). La muestra (`studio/ejemplo/proyectos/marco/scripts/entrega_muestra.py`)
+declara las tres órdenes con comprobaciones de juguete y sin datos reales. Pruebas: `tests/test_datos.py` (declarar,
+revisar, marcar y registrar, simulando y aplicando; el veredicto y lo mal formado) y `tests/test_controladores.py` (el
+controlador en sus hilos); captura con `studio/capturar.py --entrega` en `docs/figuras/latex-studio-antes-de-entregar.png`.
+
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 
 El autor pidió que LaTeX Studio dejara de sentirse «un editor más» y fuera, como Datafw Studio, interactivo, fácil e

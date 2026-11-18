@@ -2,7 +2,7 @@
 // Yachay: copiar el prompt que el marco arma para la parte abierta (el del ecosistema, con su entrada rellena con el
 // escrito) y pegar lo que respondió el chat; la ventana no llama a ningún modelo. Lo pegado se comprueba sin IA y se
 // muestra como cambio sugerido; «Poner en el editor» reemplaza el tramo de la parte en el editor (deshacer con Ctrl+Z) y
-// el archivo se escribe solo con Ctrl+S.
+// el archivo se escribe solo con Ctrl+S. Si el marco declara `entrega:` (§12), aceptar registra el uso (`registrar_ia`).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
@@ -68,7 +68,16 @@ Kirigami.Dialog {
                 area.remove(i, i + antes.length)
                 area.insert(i, dialogo.pegado.despues)
                 dialogo.editor.seleccionar(i, i + dialogo.pegado.despues.length)
-                ventana.mensajes.mostrar("Cambio puesto en el editor: revísalo y guarda con Ctrl+S (Ctrl+Z lo deshace).", "positivo")
+                // el cambio aceptado queda en el registro de usos de la IA del marco (contrato §12, decisiones §1.21)
+                const f = dialogo.prompt && dialogo.prompt.fuente ? dialogo.prompt.fuente : {}
+                const registra = studio.entrega.disponible
+                if (registra)
+                    studio.entrega.registrarIa({ ruta: dialogo.editor.ruta, parte: (dialogo.prompt && dialogo.prompt.titulo) || dialogo.componente,
+                                                 prompt: { titulo: f.titulo || "", ruta: f.ruta || "", version: f.version || "",
+                                                           componente: dialogo.componente, texto: dialogo.prompt ? dialogo.prompt.prompt || "" : "" },
+                                                 antes: antes, despues: dialogo.pegado.despues })
+                ventana.mensajes.mostrar("Cambio puesto en el editor" + (registra ? " y su uso, registrado" : "")
+                                         + ": revísalo y guarda con Ctrl+S (Ctrl+Z lo deshace).", "positivo")
                 dialogo.close()
             }
         }

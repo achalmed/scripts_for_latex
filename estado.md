@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-10
+actualizado: 2026-11-18
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-10
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-18 | **Antes de entregar** (decisiones §1.21): Herramientas › «Antes de entregar…» (Ctrl+Alt+E y la paleta) muestra los controles que declara el marco (contrato §12, `entrega:`): el veredicto «Listo para entregar» o «Faltan N», cada control con su punto de color, su porqué y su fuente, y sus hallazgos (un clic va a la línea); lo manual con casilla y nota. «Poner en el editor» de la ayuda de la IA registra el uso (`registrar_ia`). Escritura lo sirve con `scripts/antes_de_entregar.py` (cifras vivas, lista de control del tipo, referencias y citas cotejadas, la IA declarada) | `docs/configuracion-de-documentos.md` §12; `tests/test_datos.py`, `tests/test_controladores.py`; `docs/figuras/latex-studio-antes-de-entregar.png` |
 | 2026-11-17 | **Fichar y la ayuda de la IA, como en Yachay** (decisiones §1.19): en Citas › Fichas, «Nueva ficha» y «Editar la ficha…» con el formulario que declara el marco, revisar antes de guardar y la huella de la ficha (no pisa lo que cambió fuera); en Herramientas, «Ayuda de la IA para esta parte…» (Ctrl+Alt+I): copia el prompt de la parte y pone lo que respondió el chat como cambio sugerido en el editor, sin llamar a ningún modelo ni escribir el archivo. Contrato §9 ampliado y §10 nuevo (`ayuda:`); escritura lo declara con `biblioteca-studio/lib/consulta.py` | `docs/configuracion-de-documentos.md` §9 y §10; `tests/test_datos.py`; `docs/figuras/latex-studio-ficha.png`, `latex-studio-ayuda-ia.png` |
 | 2026-11-10 | **Arranque, visor e inclusiones, a pedido del autor**: la ventana arranca en la página de proyectos (el último abierto queda marcado, no se reabre); el PDF se ve a la derecha del código por omisión y Okular en su ventana solo si se elige en Ajustes (clave nueva `visor/okular_ventana`); las inclusiones con una macro en la ruta (`\input{profiles/\CVprofile}`: el valor de omisión y las demás variantes) y las órdenes propias que envuelven un `\input` (`\inputAnexos`): el CV pasa de 2 a 36 archivos; con una rama elegida, el nombre del proyecto va sin las carpetas que la rama ya dice (`documentos/oficios/` en Oficios) | `docs/decisiones.md` §1.15; `tests/test_proyectos.py::test_inclusiones_con_macros_en_la_ruta_y_ordenes_propias` |
 | 2026-11-10 | **Proyectos, a pedido del autor**: las categorías se subclasifican en árbol (categoría › tipo › grupo, tres niveles como mucho, de las carpetas: Documentos institucionales › Oficios › 2026, Docencia › Econometría I › Examen parcial; R6); la columna Categoría y la ficha muestran la rama; el nombre del proyecto se parte en hasta tres líneas (por carpetas); las columnas se ensanchan desde la cabecera y la barra de desplazamiento ya no tapa los contadores; un clic elige la fila entera, como en Git Studio, en vez de enmarcar una celda (los arreglos de la tabla y el panel, en `gui-comun`, `[Unreleased]`); `capturar.py --arbol --categoria` | `docs/reingenieria.md` R6; `tests/test_proyectos.py`, `tests/test_controladores.py` |
@@ -52,6 +53,9 @@ nada en curso
   arrastrar el borde de una cabecera y el clic derecho en ella. Requiere el `gui-comun` de `main` con lo de `[Unreleased]`.
 - 2026-11-03 · dueño: **el autor** · probar en la sesión real la selección, los enlaces y la búsqueda del PDF (Ctrl+Alt+F)
   y el autocompletado de argumentos; las pruebas los ejercitan con eventos de ratón sin pantalla.
+- 2026-11-18 · dueño: **el autor** · usar «Antes de entregar» (Ctrl+Alt+E) en la sesión real sobre un escrito de
+  `escritura` y decir qué avisos sobran (las excepciones se ajustan en `escritura/config/entrega/ajustes.yml` o en el
+  `registro/entrega.yml` del proyecto) y si alguna lista de control pide puntos que no corresponden a su tipo.
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el
 manual los cita.
 

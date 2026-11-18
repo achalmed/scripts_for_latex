@@ -10,6 +10,8 @@ Fundamento: decisión de diseño (docs/decisiones.md §1.16): lo configurable lo
   nada de ningún marco (regla del repo); el contrato de escritura con datafw es suyo (`escritura/docs/datos-y-fuentes.md`).
 Alternativa: leer los paquetes de datafw desde aquí. Se descarta: LaTeX Studio es público y autónomo, y un marco sin
   datafw (docencia, el CV) no debe cargar nada de eso.
+Las demás secciones del contrato se leen igual: `biblioteca:` (§9), `ayuda:` (§10), `nuevo:` (§11) y `entrega:` (§12,
+  «Antes de entregar»: `declaracion_entrega`, `resultado_entrega`, `veredicto` y `uso_de_ia`; decisiones §1.21).
 Límite: `recursos` tiene 60 s; una orden que no existe o no devuelve JSON se informa como error, sin datos.
 """
 from __future__ import annotations
@@ -181,3 +183,88 @@ def recursos(decl: dict) -> dict:
     except ValueError:
         return {**vacio, "error": "la orden de recursos no devolvió JSON"}
     return {**vacio, **{k: d.get(k) or [] for k in vacio}}
+
+
+# Las órdenes de `entrega:` (§12, decisiones §1.21): los controles antes de entregar, marcar un punto manual y registrar
+# un uso de la IA.
+ORDENES_ENTREGA = ("revisar", "marcar", "registrar_ia")
+ESTADOS_ENTREGA = ("ok", "aviso", "falla", "manual")
+
+
+def declaracion_entrega(principal: str | Path) -> dict | None:
+    """La sección `entrega:` del esquema del marco (contrato §12), con sus órdenes resueltas; None si no la declara o no
+    aplica (sin `revisar`, o sin la carpeta del `marcador`)."""
+    if not principal:
+        return None
+    esquema = configuracion.buscar_esquema(Path(principal))
+    if esquema is None:
+        return None
+    try:
+        import yaml
+        e = (yaml.safe_load(esquema.read_text(encoding="utf-8")) or {}).get("entrega")
+    except Exception:
+        return None
+    if not isinstance(e, dict) or not e.get("revisar"):
+        return None
+    proyecto = _proyecto(Path(principal), str(e.get("marcador") or "")) if e.get("marcador") else Path(principal).resolve().parent
+    if proyecto is None:
+        return None
+    return {"nombre": str(e.get("nombre") or "Antes de entregar"), "proyecto": str(proyecto),
+            **{k: _resolver(e.get(k) or [], esquema, proyecto) for k in ORDENES_ENTREGA}}
+
+
+def resultado_entrega(dato, proyecto: str | Path) -> dict:
+    """Lo que devolvió `revisar`, listo para la ventana: cada hallazgo con su `ruta` absoluta (el `archivo` es relativo a
+    {proyecto}), los grupos en su orden y el veredicto. Nunca lanza: lo mal formado vuelve como {error}."""
+    if not isinstance(dato, dict):
+        return {"error": "la orden no devolvió los controles", "controles": [], "grupos": [], **veredicto([])}
+    if dato.get("error"):
+        return {"error": str(dato["error"]), "controles": [], "grupos": [], **veredicto([])}
+    base = Path(proyecto)
+    controles = []
+    for c in dato.get("controles") or []:
+        if not isinstance(c, dict) or c.get("estado") not in ESTADOS_ENTREGA:
+            continue
+        hallazgos = []
+        for h in c.get("hallazgos") or []:
+            archivo = str(h.get("archivo") or "")
+            ruta = str(archivo if Path(archivo).is_absolute() else base / archivo) if archivo else ""
+            hallazgos.append({"archivo": archivo, "ruta": ruta, "linea": int(h.get("linea") or 0), "texto": str(h.get("texto") or "")})
+        controles.append({**c, "grupo": str(c.get("grupo") or ""), "modo": str(c.get("modo") or ""),
+                          "marcado": str(c.get("marcado") or ""), "nota": str(c.get("nota") or ""), "hallazgos": hallazgos})
+    grupos = [g for g in dato.get("grupos") or [] if isinstance(g, dict) and g.get("clave")]
+    vistos = {g["clave"] for g in grupos}
+    for c in controles:                                     # un grupo que el marco no nombró, con su clave
+        if c["grupo"] not in vistos:
+            vistos.add(c["grupo"])
+            grupos.append({"clave": c["grupo"], "nombre": c["grupo"].capitalize() or "Otros"})
+    lista = dato.get("lista") if isinstance(dato.get("lista"), dict) else {}
+    return {"error": "", "controles": controles, "grupos": grupos, "lista": lista or {}, "tipo": str(dato.get("tipo") or ""),
+            **veredicto(controles)}
+
+
+def veredicto(controles: list[dict]) -> dict:
+    """«Listo para entregar» solo si no hay fallas y todo lo manual está marcado o justificado (decisiones §1.21): la
+    ventana decide con lo que el marco revisó; ninguna lista bloquea por su cuenta."""
+    fallas = sum(1 for c in controles if c.get("estado") == "falla")
+    pendientes = sum(1 for c in controles if c.get("estado") == "manual" and not c.get("marcado"))
+    avisos = sum(1 for c in controles if c.get("estado") == "aviso")
+    return {"fallas": fallas, "pendientes": pendientes, "avisos": avisos, "faltan": fallas + pendientes,
+            "listo": bool(controles) and fallas == 0 and pendientes == 0}
+
+
+def uso_de_ia(proyecto: str | Path, ruta: str, parte: str, prompt: dict, antes: str, despues: str, fecha: str = "") -> dict:
+    """El uso de la IA que se registra al aceptar un cambio sugerido (contrato §12, `registrar_ia`): el archivo relativo a
+    {proyecto}, la parte, el prompt (título, ruta, versión y su texto, del que el marco guarda la huella) y el resumen."""
+    try:
+        archivo = str(Path(ruta).resolve().relative_to(Path(proyecto).resolve()))
+    except (ValueError, OSError):
+        archivo = str(ruta)
+    n_antes = len([l for l in (antes or "").splitlines() if l.strip()])
+    n_despues = len([l for l in (despues or "").splitlines() if l.strip()])
+    resumen = (f"reemplazó {n_antes} línea{'s' if n_antes != 1 else ''} de texto por {n_despues}" if n_antes
+               else f"añadió {n_despues} línea{'s' if n_despues != 1 else ''} de texto")
+    uso = {"archivo": archivo, "parte": parte or "", "prompt": {k: v for k, v in (prompt or {}).items() if v}, "resumen": resumen}
+    if fecha:
+        uso["fecha"] = fecha
+    return uso

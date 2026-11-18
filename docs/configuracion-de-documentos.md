@@ -90,7 +90,7 @@ Sin esquema, o además del esquema, todo documento muestra «Documento»: títul
 | marco | esquema | qué expone |
 |---|---|---|
 | docencia | `docencia/config/latex-studio.yml` | `academic-exam`: datos de la evaluación, presentación de preguntas, solución, cajas, membrete y salida (`\configuracion{…}` de la clase, 2026-11-08); `academic-report`, `academic-beamer`: sus metadatos |
-| escritura | `escritura/core/config/latex-studio.yml` | opciones de clase (formato, tema, salida, modo, doblecara…), metadatos `\setmeta` de `metadata.tex` y los datos de sus paquetes (§8) |
+| escritura | `escritura/core/config/latex-studio.yml` | opciones de clase (formato, tema, salida, modo, doblecara…), metadatos `\setmeta` de `metadata.tex`, los datos de sus paquetes (§8), la biblioteca, la ayuda de la IA, los documentos nuevos y «Antes de entregar» (§9 a §12) |
 | qillqasqa (marco_documental) | `qillqasqa/marco_documental/config/latex-studio.yml` | los documentos institucionales y legislativos: sus metadatos y opciones |
 | yupay | `yupay/…/latex-studio.yml` | la rendición de viáticos |
 | cv | `cv/main/config/latex-studio.yml` | el CV multiperfil (categoría «Currículum vítae») |
@@ -236,3 +236,37 @@ real; con `--aplicar` lo crea y devuelve lo mismo con `escrito: true`, y la vent
 un dato obligatorio, la carpeta ya existe) vuelve como `{error}`. Lo declara escritura (`escritura/core/config/latex-studio.yml`,
 con `escritura/scripts/nuevo_documento.py` sobre `proyecto/main.py nuevo`); la muestra, `studio/ejemplo/proyectos/marco`
 (`studio/ejemplo/proyectos/marco/scripts/nuevo_muestra.py`). Pruebas: `tests/test_datos.py` y `tests/test_controladores.py`.
+
+## 12. Antes de entregar (`entrega:`)
+
+Un marco que sabe revisar un documento antes de entregarlo lo declara al nivel del esquema; la ventana lo ofrece en
+Herramientas › «Antes de entregar…» (Ctrl+Alt+E y la paleta; decisiones §1.21):
+
+```yaml
+entrega:
+  nombre: Antes de entregar
+  marcador: proyecto.yaml          # {proyecto}: la carpeta más cercana al principal que lo tiene (sin ella, no aplica)
+  revisar: [/usr/bin/python3, ../../scripts/antes_de_entregar.py, revisar, '{proyecto}']
+  marcar: [/usr/bin/python3, ../../scripts/antes_de_entregar.py, marcar, '{proyecto}', '{id}', '{estado}', '{nota}']   # + --aplicar
+  registrar_ia: [/usr/bin/python3, ../../scripts/antes_de_entregar.py, registrar_ia, '{proyecto}', '{datos}']          # + --aplicar
+```
+
+`revisar` (120 s como mucho; no escribe nada) imprime `{tipo, lista: {clave, nombre, fuente}, grupos: [{clave, nombre}],
+controles: [{id, grupo, nombre, porque, fuente, estado, detalle, hallazgos: [{archivo, linea, texto}]}]}` o `{error}`.
+`estado` es `ok`, `aviso`, `falla` o `manual` (un punto que marca el autor; lleva además `marcado`: `hecho`, `justificado` o
+vacío, y `nota`); `porque` es una línea y `fuente` la referencia que lo funda, que la ventana pinta tenues bajo el nombre;
+`archivo` es relativo a `{proyecto}` (o absoluto) y un clic en el hallazgo lo abre en esa `linea`. Los `grupos` dan el
+orden y el título de las secciones del diálogo. **El veredicto es de la ventana** (`datos.veredicto`): «Listo para
+entregar» solo si ningún control está en `falla` y todo `manual` está marcado; si no, «Faltan N» (las fallas más lo manual
+sin marcar). Los avisos no bloquean.
+
+`marcar` guarda un punto manual: `{id}` es el del control, `{estado}` es `hecho` (la casilla), `justificado` (sin casilla y
+con nota) o `pendiente`, y `{nota}` puede ir vacía; imprime `{id, estado, nota, fecha, escrito}` o `{error}` (justificar
+sin nota, un punto que no es manual). `registrar_ia` recibe en `{datos}` el JSON `{archivo, parte, prompt: {titulo, ruta,
+version, componente, texto}, resumen}` de un cambio de la ayuda de la IA (§10) que el autor puso en el editor, y lo
+agrega al registro del marco (escritura: `<proyecto>/ia/registro.yml`, del que regenera `<proyecto>/ia/declaracion.tex`); imprime `{uso, total,
+escrito}`. Las dos simulan sin `--aplicar`; la ventana las corre con él: marcar al tocar la casilla o al terminar la nota
+(y vuelve a revisar), registrar al pulsar «Poner en el editor». Lo declara escritura (`escritura/core/config/latex-studio.yml`,
+con `escritura/scripts/antes_de_entregar.py`; sus controles, en `escritura/docs/verificacion.md` §9); la muestra,
+`studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/entrega_muestra.py`). Pruebas: `tests/test_datos.py` y
+`tests/test_controladores.py`.

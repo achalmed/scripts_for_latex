@@ -150,3 +150,60 @@ def test_nuevo_documento_declara_simula_y_crea(marco, tmp_path):
     assert otra["error"].startswith("Ya existe")
     falta, _ = datos._json(datos.con(d["crear"], datos=json.dumps({**campos, "autores": ""})), d["carpeta"])
     assert "Autores" in falta["error"]
+
+
+def test_entrega_declara_revisa_marca_y_registra(marco):
+    """La sección `entrega:` (contrato §12, decisiones §1.21): `revisar` devuelve los controles (la ventana les pone la
+    ruta y el veredicto); `marcar` y `registrar_ia` simulan sin --aplicar y escriben con él."""
+    import json
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_entrega(principal)
+    assert d["nombre"] == "Antes de entregar" and d["proyecto"] == str(principal.parent.resolve())
+    assert d["revisar"][1] == str((marco / "scripts" / "entrega_muestra.py").resolve()) and d["revisar"][-1] == d["proyecto"]
+    assert datos.declaracion_entrega(marco / "pruebas" / "caso.tex") is None and datos.declaracion_entrega("") is None
+
+    dato, error = datos._json(d["revisar"], d["proyecto"])
+    r = datos.resultado_entrega(dato, d["proyecto"])
+    assert not error and not r["error"] and [g["clave"] for g in r["grupos"]] == ["cifras", "lista", "referencias", "ia"]
+    cifras = r["controles"][0]
+    assert cifras["estado"] == "falla" and cifras["hallazgos"][1]["ruta"] == str(principal) and cifras["hallazgos"][1]["linea"] == 8
+    assert (r["fallas"], r["pendientes"], r["faltan"], r["listo"]) == (1, 2, 3, False)
+
+    sim, _ = datos._json(datos.con(d["marcar"], id="lista.revision", estado="hecho", nota="La leyó Tomás"), d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "entrega.yml").exists(), "marcar sin --aplicar no escribe"
+    for id_, estado, nota in (("lista.revision", "hecho", "La leyó Tomás"), ("lista.origen", "justificado", "Sin cuadros")):
+        hecho, _ = datos._json(datos.con(d["marcar"], id=id_, estado=estado, nota=nota) + ["--aplicar"], d["proyecto"])
+        assert hecho["escrito"]
+    error, _ = datos._json(datos.con(d["marcar"], id="lista.origen", estado="justificado", nota="") + ["--aplicar"], d["proyecto"])
+    assert error["error"]
+    subprocess.run(datos.declaracion(principal)["actualizar"], check=True, capture_output=True, cwd=d["proyecto"])
+    r = datos.resultado_entrega(datos._json(d["revisar"], d["proyecto"])[0], d["proyecto"])
+    assert r["listo"] and r["avisos"] == 1                        # un aviso no bloquea: listo para entregar
+
+    uso = datos.uso_de_ia(d["proyecto"], str(principal), "Informe anual", {"titulo": "Redacción", "version": "1.0", "ruta": ""},
+                          "Una línea.\nOtra.\n", "Una sola.\n")
+    assert uso == {"archivo": "informe.tex", "parte": "Informe anual", "prompt": {"titulo": "Redacción", "version": "1.0"},
+                   "resumen": "reemplazó 2 líneas de texto por 1"}
+    sim, _ = datos._json(datos.con(d["registrar_ia"], datos=json.dumps(uso, ensure_ascii=False)), d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "ia").exists(), "registrar sin --aplicar no escribe"
+    hecho, _ = datos._json(datos.con(d["registrar_ia"], datos=json.dumps(uso, ensure_ascii=False)) + ["--aplicar"], d["proyecto"])
+    assert hecho["escrito"] and (principal.parent / "ia" / "declaracion.tex").is_file()
+    r = datos.resultado_entrega(datos._json(d["revisar"], d["proyecto"])[0], d["proyecto"])
+    assert not r["listo"] and next(c for c in r["controles"] if c["id"] == "ia")["estado"] == "falla"
+
+
+def test_veredicto_y_lo_mal_formado():
+    """El veredicto lo da la ventana con lo revisado: listo solo sin fallas y con todo lo manual marcado o justificado;
+    un resultado mal formado es un error, nunca «listo»."""
+    controles = [{"estado": "ok"}, {"estado": "aviso"}, {"estado": "manual", "marcado": "justificado"}]
+    assert datos.veredicto(controles)["listo"]
+    assert datos.veredicto(controles + [{"estado": "manual", "marcado": ""}]) == {"fallas": 0, "pendientes": 1, "avisos": 1, "faltan": 1, "listo": False}
+    assert datos.veredicto(controles + [{"estado": "falla"}])["faltan"] == 1
+    assert not datos.veredicto([])["listo"]
+    for malo in (None, [], "texto", {"error": "no hay maestro"}):
+        r = datos.resultado_entrega(malo, "/x")
+        assert r["error"] and not r["listo"] and r["controles"] == []
+    r = datos.resultado_entrega({"controles": [{"id": "x", "estado": "raro"}, {"id": "y", "grupo": "nuevo", "estado": "ok",
+                                                "hallazgos": [{"archivo": "/abs/a.tex", "linea": "3", "texto": "t"}]}]}, "/p")
+    assert [c["id"] for c in r["controles"]] == ["y"] and r["grupos"] == [{"clave": "nuevo", "nombre": "Nuevo"}]
+    assert r["controles"][0]["hallazgos"][0] == {"archivo": "/abs/a.tex", "ruta": "/abs/a.tex", "linea": 3, "texto": "t"}
