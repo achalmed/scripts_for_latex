@@ -274,6 +274,17 @@ declara las tres órdenes con comprobaciones de juguete y sin datos reales. Prue
 revisar, marcar y registrar, simulando y aplicando; el veredicto y lo mal formado) y `tests/test_controladores.py` (el
 controlador en sus hilos); captura con `studio/capturar.py --entrega` en `docs/figuras/latex-studio-antes-de-entregar.png`.
 
+### §1.25 El PDF etiquetado se activa desde «Configurar el documento»: el destino `metadatos_documento` (2026-11-18)
+
+La mejora C13.1 (LaTeX Project, 2025; ISO, 2014) pide el PDF etiquetado y accesible con `\DocumentMetadata`, que tiene
+que ir **antes** de `\documentclass`: ninguno de los destinos que la ventana sabía escribir (opción de clase, orden en el
+preámbulo, clave de una lista) llega ahí. El destino nuevo `{metadatos_documento: <clave>}` edita una clave dentro de
+`\DocumentMetadata{…}` en el principal (nunca en `metadata.tex`: ahí ya sería tarde), con las mismas reglas que una
+lista: la omisión la quita, una orden sin claves se quita, y sin orden se inserta justo antes de `\documentclass`. Así
+el etiquetado es opcional por documento y quitarlo deja el texto como estaba (la prueba lo comprueba byte a byte). El
+marco decide qué claves expone (escritura: `tagging`, `lang`, `pdfstandard`, `pdfversion`) y «Antes de entregar» revisa
+el PDF que sale.
+
 ### §1.22 La norma del flujo de conocimiento: la matriz, el asistente de pregunta, la autoevaluación, el texto alternativo y el aviso antes de copiar un prompt (2026-11-18)
 
 El autor aprobó como norma `prompts/00 metodo/FLUJO_DE_CONOCIMIENTO.md` (67 mejoras con su fuente; el fundamento, en

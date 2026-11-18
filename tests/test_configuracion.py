@@ -194,3 +194,23 @@ def test_documento_fuera_del_arbol_del_marco_halla_el_esquema_junto_a_su_clase(m
     assert cf.configuracion_de(lejos).esquema is None
     conf = cf.configuracion_de(lejos, rutas=[raiz])
     assert conf.marco == "muestra" and conf.campos()["curso"].valor == "Matemáticas III"
+
+
+def test_metadatos_del_documento_antes_de_la_clase():
+    """El destino `metadatos_documento` (decisiones §1.25): la clave dentro de \\DocumentMetadata{…}, antes de
+    \\documentclass; la omisión la quita, sin claves se quita la orden y el texto vuelve a ser el de antes."""
+    from latex_app import configuracion as c
+    original = "% cabecera\n\\documentclass[11pt]{informe}\n\\begin{document}\nx\n\\end{document}\n"
+    tag, lang = {"metadatos_documento": "tagging"}, {"metadatos_documento": "lang"}
+    assert c.leer(original, tag, "opcion") is None
+    uno = c.escribir(original, tag, "opcion", "on", "off")
+    assert uno.split("\n")[1] == "\\DocumentMetadata{tagging=on}" and uno.index("DocumentMetadata") < uno.index("documentclass")
+    dos = c.escribir(uno, lang, "texto", "es-PE", None)
+    assert c.leer(dos, tag, "opcion") == "on" and c.leer(dos, lang, "texto") == "es-PE"
+    assert "\\DocumentMetadata{tagging=on, lang=es-PE}" in dos
+    tres = c.escribir(c.escribir(dos, tag, "opcion", "off", "off"), lang, "texto", "", None)
+    assert tres == original
+    anidado = c.escribir("\\DocumentMetadata{testphase={phase-III,math}}\n\\documentclass{x}\n", tag, "opcion", "on", "off")
+    assert anidado.startswith("\\DocumentMetadata{testphase={phase-III,math}, tagging=on}\n")
+    comentado = "% \\DocumentMetadata{tagging=on}\n\\documentclass{x}\n"
+    assert c.leer(comentado, tag, "opcion") is None

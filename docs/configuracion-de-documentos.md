@@ -66,6 +66,7 @@ documento.
 | `{opcion_clase: bn}` con `tipo: interruptor` | `\documentclass[…, bn]{…}` | presente o no | añade o quita la bandera |
 | `{opcion_clase: tema}` | `\documentclass[…, tema=congreso]{…}` | el valor de la clave | reemplaza, añade o (vacío) quita la clave |
 | `{lista: '\configuracion', clave: nivel}` | `\configuracion{nivel=false, …}` | el valor de la clave; `true`/`false` para interruptores | edita la clave dentro de la lista; si el valor es el de `omision`, la quita; si la lista queda vacía, quita la orden |
+| `{metadatos_documento: tagging}` | `\DocumentMetadata{tagging=on, lang=es-PE, …}` **antes** de `\documentclass`, siempre en el principal | el valor de la clave | edita la clave; la omisión o el vacío la quitan; sin claves, se quita la orden; sin orden, se inserta justo antes de `\documentclass` (decisiones §1.25; el PDF etiquetado y accesible, C13.1) |
 
 Cualquier destino admite `archivo: metadata.tex` (relativo a la carpeta del principal): se lee y se escribe en ese
 archivo si existe y, si no, en el principal. Solo se toca el preámbulo (lo anterior a `\begin{document}`) y las

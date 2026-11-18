@@ -224,8 +224,26 @@ def _magico_re(nombre: str) -> re.Pattern:
 _VISOR_TXS = re.compile(r"^[ \t]*%[ \t]*!TeX[ \t]+TXS-program:view[ \t]*=[^\n]*view-pdf-internal[^\n]*\n?", re.M | re.I)
 
 
+# \DocumentMetadata{clave=valor, …}: la orden que va ANTES de \documentclass (PDF etiquetado y accesible, C13.1; LaTeX
+# Project, 2025). Una sola línea, sin comentar.
+_METADATOS = re.compile(r"^(?P<sangria>[ \t]*)\\DocumentMetadata\s*\{(?P<valor>(?:[^{}]|\{[^{}]*\})*)\}(?P<resto>[^\n]*)$", re.M)
+
+
+def _metadatos(texto: str) -> re.Match | None:
+    m_clase = _clase(texto)
+    limite = m_clase.start() if m_clase else len(texto)
+    return next((m for m in _METADATOS.finditer(texto[:limite])), None)
+
+
 def leer(texto: str, destino: dict, tipo: str, omision: object = None) -> object:
     """El valor de un campo en el texto del archivo (None si no está escrito)."""
+    if "metadatos_documento" in destino:
+        m = _metadatos(texto)
+        for par in _partir_opciones(m.group("valor")) if m else []:
+            k, _, v = par.partition("=")
+            if k.strip() == str(destino["metadatos_documento"]):
+                return v.strip()
+        return None
     if "version" in destino:
         m = _magico_re(destino["version"]["comentario"]).search(texto[:4000])
         valor = m.group("valor").strip().lower() if m else None
@@ -288,6 +306,24 @@ def escribir(texto: str, destino: dict, tipo: str, valor: object, omision: objec
              anclas: list[re.Pattern] | None = None) -> str:
     """El texto con el campo puesto en `valor` (sin tocar nada más)."""
     anclas = anclas or []
+    if "metadatos_documento" in destino:
+        # la clave dentro de \DocumentMetadata{…}: la omisión o el vacío la quitan; sin claves, se quita la orden; sin
+        # orden, se inserta justo antes de \documentclass (decisiones §1.25)
+        clave = str(destino["metadatos_documento"])
+        m = _metadatos(texto)
+        pares = [p for p in (_partir_opciones(m.group("valor")) if m else []) if p.split("=", 1)[0].strip() != clave]
+        valor_txt = str(valor if valor is not None else "").strip()
+        if valor_txt and valor_txt != str(omision if omision is not None else ""):
+            pares.append(f"{clave}={valor_txt}")
+        if m:
+            nueva = f"{m.group('sangria')}\\DocumentMetadata{{{', '.join(pares)}}}{m.group('resto')}" if pares else ""
+            fin = m.end() + (1 if not pares and texto[m.end():m.end() + 1] == "\n" else 0)
+            return texto[:m.start()] + nueva + texto[fin:]
+        if not pares:
+            return texto
+        c = _clase(texto)
+        inicio = texto.rfind("\n", 0, c.start()) + 1 if c else 0
+        return texto[:inicio] + f"\\DocumentMetadata{{{', '.join(pares)}}}\n" + texto[inicio:]
     if "version" in destino:
         # «% !MODO = soluciones» y la línea del visor de TeXstudio, justo antes de \documentclass; la de omisión no se
         # escribe (quita las dos)
