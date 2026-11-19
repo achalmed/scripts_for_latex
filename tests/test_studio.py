@@ -123,6 +123,77 @@ def test_autocompletado_en_el_editor_de_la_base(tmp_path):
                  "archivo": "\\input{capitulos/metodo.tex|", "cita": "\\cite{knuth1984|"}, d
 
 
+CERRAR = r"""
+import sys, json, os; sys.path.insert(0, sys.argv[1])
+from latex_app import aplicacion
+from gui_comun.nucleo import Aplicacion
+from gui_comun.qt import QTimer
+from PySide6.QtCore import QMetaObject, QObject, Q_ARG, Q_RETURN_ARG
+app = Aplicacion("latex-studio", "LaTeX Studio", version="prueba", nombre_ajustes="LatexStudio")
+piezas = aplicacion.construir(app); piezas["proyectos"].detectar_ya()
+app.cargar(aplicacion.QML_DIR / "Main.qml"); raiz = app.motor.rootObjects()[0]
+ed, i = piezas["editor"], piezas["interfaz"]
+principal = sys.argv[2]; carpeta = os.path.dirname(principal)
+metodo, bib = os.path.join(carpeta, "capitulos", "metodo.tex"), os.path.join(carpeta, "referencias.bib")
+original = open(bib, encoding="utf-8").read()
+salida = {}
+import time
+temporizadores = []
+def cuando(condicion, accion, tope=30.0):
+    inicio = time.monotonic()
+    t = QTimer(); t.setInterval(40)
+    def tic():
+        if condicion() or time.monotonic() - inicio > tope:
+            t.stop(); accion()
+    t.timeout.connect(tic); temporizadores.append(t); t.start()
+pestanas = next(o for o in raiz.findChildren(QObject) if o.property("atajoCerrar") is not None)
+dialogo = next(o for o in raiz.findChildren(QObject) if o.property("textoDescartar") is not None)
+def abrir():
+    i.pedir.emit("abrir_proyecto", {"ruta": principal})
+    cuando(lambda: ed.abiertos.filas > 0, lambda: (i.pedir.emit("ir_a", {"archivo": metodo, "linea": 0}), i.pedir.emit("ir_a", {"archivo": bib, "linea": 0}),
+                                                  cuando(lambda: ed.abiertos.filas == 3, lambda: QTimer.singleShot(300, cerrar_anterior))))
+def cerrar_anterior():
+    salida["al_abrir"] = [ed.abiertos.filas, pestanas.property("hayAbiertos")]
+    QMetaObject.invokeMethod(pestanas, "cerrarPedido", Q_ARG("QString", principal))      # la × de una pestaña que no es la activa
+    QTimer.singleShot(200, modificar)
+def modificar():
+    salida["tras_x"] = [ed.abiertos.filas, os.path.basename(ed.actual), ed.indiceActual]
+    i.pedir.emit("comentar", {})                                                           # un cambio sin guardar en la activa
+    i.pedir.emit("cerrar_archivo", {})                                                     # Ctrl+W con cambios: pregunta
+    QTimer.singleShot(300, descartar)
+def descartar():
+    salida["pregunta"] = [dialogo.property("opened"), ed.abiertos.filas, dialogo.property("nombres")]
+    accion = next(o for o in dialogo.findChildren(QObject) if o.property("text") == "Descartar" and o.metaObject().indexOfMethod("trigger()") >= 0)
+    QMetaObject.invokeMethod(accion, "trigger")
+    QTimer.singleShot(300, ultima)
+def ultima():
+    salida["tras_descartar"] = [ed.abiertos.filas, os.path.basename(ed.actual), open(bib, encoding="utf-8").read() == original]
+    i.pedir.emit("cerrar_archivo", {})                                                     # la última, sin cambios: cierra sin preguntar
+    QTimer.singleShot(300, fin)
+def fin():
+    salida["vacio"] = [ed.abiertos.filas, ed.actual, pestanas.property("hayAbiertos"), pestanas.property("visible")]
+    app.app.quit()
+QTimer.singleShot(400, abrir); app.app.exec(); app.cerrar()
+print(json.dumps(salida, default=lambda x: x.toVariant() if hasattr(x, "toVariant") else str(x)))
+"""
+
+
+@requiere_sistema
+def test_cerrar_pestanas_con_la_x_ctrl_w_y_cambios_sin_guardar(tmp_path):
+    """Las pestañas de gui-comun (PestanasArchivos 4.2): la × de una pestaña que no es la activa la cierra y el editor
+    sigue en la activa (su índice baja); Ctrl+W con cambios pregunta (DialogoCambiosSinGuardar) y «Descartar» cierra sin
+    escribir; la última se cierra sin preguntar y queda el estado vacío, sin barra de pestañas."""
+    muestra, env = _entorno(tmp_path)
+    r = correr_python(CERRAR, env, str(muestra / "tesis-multiarchivo" / "principal.tex"))
+    assert r.returncode == 0, r.stderr[-3000:]
+    d = json.loads(r.stdout.strip().splitlines()[-1])
+    assert d["al_abrir"] == [3, True], d
+    assert d["tras_x"] == [2, "referencias.bib", 1], d                       # la activa sigue elegida con su nuevo índice
+    assert d["pregunta"] == [True, 2, "referencias.bib"], d
+    assert d["tras_descartar"] == [1, "metodo.tex", True], d                 # descartar no escribe
+    assert d["vacio"] == [0, "", False, False], d
+
+
 COMPONENTE = """
 import sys, json, os; sys.path.insert(0, sys.argv[1])
 from latex_app import aplicacion

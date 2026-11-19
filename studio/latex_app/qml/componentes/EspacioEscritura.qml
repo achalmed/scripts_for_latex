@@ -36,11 +36,20 @@ QQC2.SplitView {
     function guardarTodo() {
         for (let i = 0; i < editores.count; i++) { const e = editores.itemAt(i); if (e && e.modificado) guardar(e, false) }
     }
-    function cerrarActual() {
-        const e = editorActual
-        if (!e) return
-        if (e.modificado) { confirmarCerrar.editor = e; confirmarCerrar.open() }
-        else studio.editor.cerrar(e.ruta)
+    function cerrarActual() { if (editorActual) cerrar(editorActual.ruta) }
+    // cerrar un archivo abierto: con cambios sin guardar pregunta antes (Guardar · Descartar · Cancelar); guardar que
+    // falla o que pisaría un cambio externo deja el archivo abierto con su aviso
+    function cerrar(ruta) {
+        const e = editorDe(ruta)
+        if (!e) { studio.editor.cerrar(ruta); return }
+        if (!e.modificado) { studio.editor.cerrar(ruta); return }
+        studio.editor.fijarActual(ruta)
+        confirmarCerrar.pedir(ruta.split("/").pop(), () => {
+            const r = e.guardar(false)
+            if (r === "") studio.editor.cerrar(ruta)
+            else if (r === "externo") { confirmarSobrescribir.editor = e; confirmarSobrescribir.open() }
+            else ventana.mensajes.mostrar(r, "error")
+        }, () => studio.editor.cerrar(ruta))
     }
 
     Connections {
@@ -58,32 +67,12 @@ QQC2.SplitView {
         QQC2.SplitView.minimumWidth: Kirigami.Units.gridUnit * 20
         spacing: 0
 
-        // la barra de pestañas solo existe con archivos abiertos (el estilo de KDE falla con una TabBar vacía)
-        Loader {
+        // las pestañas de los archivos abiertos (PestanasArchivos de gui-comun 4.2): la × (al pasar el ratón y siempre en
+        // la activa) y el clic central piden cerrar; Ctrl+W es la acción archivo.cerrar. Sin archivos no ocupa nada.
+        PestanasArchivos {
             Layout.fillWidth: true
-            active: studio.editor.abiertos.filas > 0
-            visible: active
-            sourceComponent: Component {
-                QQC2.TabBar {
-                    currentIndex: studio.editor.indiceActual
-                    Accessible.name: "Archivos abiertos"
-                    Repeater {
-                        model: studio.editor.abiertos
-                        delegate: QQC2.TabButton {
-                            required property var model
-                            required property int index
-                            width: implicitWidth
-                            text: (model.modificado ? "● " : "") + model.nombre
-                            icon.name: model.solo_lectura ? "object-locked" : ""
-                            onClicked: studio.editor.fijarActual(model.ruta)
-                            QQC2.ToolTip.text: model.ruta
-                            QQC2.ToolTip.visible: hovered
-                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
-                            TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: { studio.editor.fijarActual(model.ruta); raiz.cerrarActual() } }
-                        }
-                    }
-                }
-            }
+            controlador: studio.editor
+            onCerrarPedido: ruta => raiz.cerrar(ruta)
         }
 
         // la barra de insertar: el LaTeX de memoria, en un formulario corto (DialogoInsertar en Main)
@@ -303,15 +292,8 @@ QQC2.SplitView {
             Kirigami.Action { text: "Sobrescribir"; icon.name: "document-save"; onTriggered: { raiz.guardar(confirmarSobrescribir.editor, true); confirmarSobrescribir.close() } }
         ]
     }
-    Kirigami.PromptDialog {
+    DialogoCambiosSinGuardar {
         id: confirmarCerrar
-        property var editor: null
-        title: "Cambios sin guardar"
-        subtitle: (editor ? editor.ruta.split("/").pop() : "") + " tiene cambios sin guardar. ¿Guardarlos antes de cerrar?"
-        standardButtons: Kirigami.Dialog.Cancel
-        customFooterActions: [
-            Kirigami.Action { text: "Descartar"; icon.name: "edit-delete"; onTriggered: { studio.editor.cerrar(confirmarCerrar.editor.ruta); confirmarCerrar.close() } },
-            Kirigami.Action { text: "Guardar y cerrar"; icon.name: "document-save"; onTriggered: { const e = confirmarCerrar.editor; if (e.guardar(false) === "") studio.editor.cerrar(e.ruta); confirmarCerrar.close() } }
-        ]
+        explicacion: "Si lo cierras sin guardar, esos cambios se pierden."
     }
 }

@@ -7,6 +7,8 @@ esquema de color que se pida, la vista y el proyecto y archivo abiertos.
     /usr/bin/python3 studio/capturar.py docs/figuras/latex-studio-proyectos.png --esquema …/LliphiOscuro.colors --vista proyectos
     /usr/bin/python3 studio/capturar.py docs/figuras/latex-studio-escritura.png --esquema …/LliphiOscuro.colors --vista escritura \\
         --proyecto tesis-multiarchivo/principal.tex --archivo capitulos/metodo.tex --linea 18
+    /usr/bin/python3 studio/capturar.py salida.png --vista escritura --abrir referencias.bib --archivo capitulos/metodo.tex \\
+        --cerrar-modificado --sin-compilar                                            # pestañas con su × y «Cambios sin guardar»
     /usr/bin/python3 studio/capturar.py salida.png --paleta "compilar"
     /usr/bin/python3 studio/capturar.py salida.png --nuevo memoria --sin-compilar     # «Nuevo documento», ya revisado
     /usr/bin/python3 studio/capturar.py salida.png --vista escritura --proyecto marco/informes/informe-anual/informe.tex \\
@@ -63,6 +65,9 @@ def main() -> int:
     parser.add_argument("--proyecto", default="tesis-multiarchivo/principal.tex", help="el proyecto seleccionado o abierto (relativo a la muestra)")
     parser.add_argument("--archivo", default="", help="el archivo abierto en el editor (relativo a la carpeta del proyecto)")
     parser.add_argument("--linea", type=int, default=0)
+    parser.add_argument("--abrir", default="", help="más archivos abiertos en pestañas, separados por comas (relativos a la carpeta del proyecto)")
+    parser.add_argument("--cerrar-modificado", action="store_true",
+                        help="cambia el texto del archivo abierto (sin guardarlo) y pide cerrarlo: «Cambios sin guardar»")
     parser.add_argument("--panel", type=int, default=0, help="pestaña del panel inferior (0 Problemas · 1 Registro · 2 Cola); −1 lo cierra")
     parser.add_argument("--sin-compilar", action="store_true")
     parser.add_argument("--synctex", action="store_true", help="marca en el PDF la línea del editor (SyncTeX)")
@@ -175,6 +180,24 @@ def main() -> int:
             if args.archivo:
                 archivo = str(Path(principal).parent / args.archivo)
                 QTimer.singleShot(600, lambda: interfaz.pedir.emit("ir_a", {"archivo": archivo, "linea": args.linea}))
+            for n, extra in enumerate(x for x in args.abrir.split(",") if x):
+                ruta_extra = str(Path(principal).parent / extra)
+                QTimer.singleShot(500 + 50 * n, lambda r=ruta_extra: interfaz.pedir.emit("ir_a", {"archivo": r, "linea": 0}))
+            if args.cerrar_modificado and args.archivo:
+                def cerrar_modificado():
+                    archivo = str(Path(principal).parent / args.archivo)
+                    # los editores los crea un Repeater (fuera de findChildren): se recorren los ítems hasta el TextArea
+                    # del EditorTexto de ese archivo
+                    pendientes, dentro = [(raiz.property("contentItem"), False)], False
+                    while pendientes:
+                        item, dentro = pendientes.pop()
+                        dentro = dentro or item.property("ruta") == archivo
+                        if dentro and item.metaObject().className().startswith("TextArea"):
+                            item.setProperty("text", item.property("text") + "\nUn párrafo sin guardar.\n")
+                            break
+                        pendientes.extend((h, dentro) for h in item.childItems())
+                    QTimer.singleShot(300, lambda: interfaz.pedir.emit("cerrar_archivo", {}))
+                QTimer.singleShot(1400, cerrar_modificado)
             if args.synctex and args.archivo:
                 QTimer.singleShot(1800, lambda: visor.desdeCodigo(str(Path(principal).parent / args.archivo), args.linea, 0))
         else:
