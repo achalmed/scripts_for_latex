@@ -5,10 +5,15 @@
 // Los puntos manuales tienen casilla y nota: sin casilla y con nota quedan justificados. La única acción rellena es
 // «Revisar de nuevo»; la ventana no sabe qué es cada control: lo dice el marco. Un control con `accion` (autoevaluar,
 // matriz) trae el botón que abre su ventana (la autoevaluación con la rúbrica, la matriz de consistencia; §1.22).
+// La medición (§1.21, C14.1): «Revisar de nuevo» mide (anota la corrida en el registro del marco), cada control dice lo
+// medido en una línea tenue y lo que marcó puede declararse «falso positivo» con su motivo; «Tiempo por etapa» empieza y
+// termina la etapa del flujo en curso. El candado (§1.21): «Entregar el PDF…» con «Faltan N» pide «Entregar de todos
+// modos» con un motivo escrito, que el marco anota con la entrega.
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
     id: dialogo
@@ -23,14 +28,88 @@ Kirigami.Dialog {
     padding: Kirigami.Units.largeSpacing
 
     property bool preparandoFrio: false
-    function abrir() { e.revisar(); open() }
+    property string motivoEntrega: ""               // el motivo escrito para entregar con «Faltan N»
+    function abrir() { e.revisar(); e.leerTiempos(); open() }
+    // «Entregar el PDF…»: listo, se elige el destino; con «Faltan N», primero el motivo (el marco vuelve a revisar y,
+    // si algo cambió, responde `bloqueado` y el motivo se pide otra vez)
+    function entregar() {
+        motivoEntrega = ""
+        if (r.listo) elegirDestino()
+        else dialogoMotivo.open()
+    }
+    function elegirDestino() {
+        // el nombre sugerido no es el del PDF del proyecto (el marco no copia un archivo sobre sí mismo)
+        const hoy = new Date().toISOString().slice(0, 10)
+        destinoEntrega.abrir(r.carpeta || "", (r.maestro || "documento").split("/").pop().replace(/\.tex$/, "") + "-entrega-" + hoy + ".pdf")
+    }
+    function medido(c) {                            // «Medido: 12 corridas · atrapó 3 · 1 falso · molesta»
+        const m = c.medicion
+        if (!m || !m.corridas) return ""
+        const partes = [m.corridas + (m.corridas === 1 ? " corrida" : " corridas"), "atrapó " + m.atrapo]
+        if (m.falsos) partes.push(m.falsos + (m.falsos === 1 ? " falso positivo" : " falsos positivos"))
+        if (m.marca) partes.push(m.marca)
+        return "Medido: " + partes.join(" · ")
+    }
+    GuardarComo {
+        id: destinoEntrega
+        titulo: "Entregar el PDF"
+        filtros: ["PDF (*.pdf)"]
+        sufijo: "pdf"
+        onElegido: ruta => dialogo.e.entregar(ruta, dialogo.motivoEntrega)
+    }
+    Kirigami.Dialog {
+        id: dialogoMotivo
+        title: "Faltan " + (dialogo.r.faltan || 0)
+        preferredWidth: Kirigami.Units.gridUnit * 28
+        standardButtons: Kirigami.Dialog.Cancel
+        padding: Kirigami.Units.largeSpacing
+        onOpened: { motivo.text = dialogo.motivoEntrega; motivo.forceActiveFocus() }
+        customFooterActions: [
+            Kirigami.Action {
+                text: "Entregar de todos modos"; icon.name: "document-send"
+                enabled: motivo.text.trim() !== ""
+                onTriggered: { dialogo.motivoEntrega = motivo.text.trim(); dialogoMotivo.close(); dialogo.elegirDestino() }
+            }
+        ]
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+            QQC2.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: "El documento no está listo para entregar (" + dialogo.resumen() + "). Puedes entregarlo de todos modos: "
+                      + "escribe por qué y quedará con la entrega en el registro del proyecto."
+            }
+            QQC2.TextArea {
+                id: motivo
+                Layout.fillWidth: true
+                Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+                wrapMode: TextEdit.Wrap
+                placeholderText: "Motivo (por ejemplo: el jurado pidió esta versión hoy; la falla de Biber es de una entrada ajena)"
+                Accessible.name: "Motivo para entregar con puntos pendientes"
+            }
+        }
+    }
     Connections {
         target: dialogo.e
+        function onFalsoDeclarado(d) {
+            if (d.error) ventana.mensajes.mostrar("Falso positivo: " + d.error, "aviso")
+            else ventana.mensajes.mostrar("Falso positivo anotado con su motivo.", "positivo")
+        }
+        function onEtapaMarcada(d) {
+            if (d.error) ventana.mensajes.mostrar("Tiempo por etapa: " + d.error, "aviso")
+        }
+        function onEntregado(d) {
+            if (d.error) ventana.mensajes.mostrar("Entregar: " + d.error, "aviso")
+            else if (d.bloqueado) { dialogo.motivoEntrega = ""; ventana.mensajes.mostrar(d.mensaje || ("Faltan " + d.faltan + "."), "aviso"); dialogoMotivo.open() }
+            else if (d.escrito) ventana.mensajes.mostrar("PDF entregado" + ((d.entrega || {}).motivo ? " con «Faltan " + d.faltan + "»" : "")
+                                                         + "; queda en el registro del proyecto.", "positivo")
+        }
         function onLectorFrioListo(d) {
             dialogo.preparandoFrio = false
             if (d.error) ventana.mensajes.mostrar("Lector frío: " + d.error, "aviso")
             else if (d.pdf) {
-                ventana.mensajes.mostrar("Versión sin nombres lista" + ((d.pendientes || []).length ? ": revisa " + d.pendientes.length + " nombres en el texto" : "") + ".", "positivo")
+                ventana.mensajes.mostrar("Versión sin nombres lista" + (d.hoja ? ", con la hoja del revisor junto al PDF" : "")
+                                         + ((d.pendientes || []).length ? ": revisa " + d.pendientes.length + " nombres en el texto" : "") + ".", "positivo")
                 studio.sistema.abrirEnOkular(d.pdf, "", 0)
             }
         }
@@ -65,10 +144,13 @@ Kirigami.Dialog {
             spacing: Kirigami.Units.smallSpacing
             QQC2.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 8     // el pie no ensancha el diálogo: el texto se corta
                 elide: Text.ElideRight
                 font: Kirigami.Theme.smallFont
                 color: Kirigami.Theme.disabledTextColor
-                text: dialogo.e.revisando ? "Revisando…" : "Un clic en un hallazgo lo abre en el editor. Revisar no escribe nada."
+                text: dialogo.e.revisando ? "Revisando…"
+                      : dialogo.e.puedeMedir ? "Un clic en un hallazgo lo abre en el editor. «Revisar de nuevo» anota la corrida para medir cada control."
+                      : "Un clic en un hallazgo lo abre en el editor. Revisar no escribe nada."
             }
             Chip { text: "Cerrar"; onClicked: dialogo.close() }
             Chip {
@@ -80,11 +162,21 @@ Kirigami.Dialog {
                 onClicked: { dialogo.preparandoFrio = true; dialogo.e.lectorFrio() }
             }
             Chip {
+                text: "Entregar el PDF…"; icono: "document-send"
+                visible: dialogo.e.puedeEntregar
+                enabled: !dialogo.e.revisando && (dialogo.r.controles || []).length > 0
+                opacity: enabled ? 1 : 0.5
+                ayuda: dialogo.r.listo ? "Copia el PDF adonde elijas y deja constancia de la entrega"
+                                       : "Con «Faltan " + (dialogo.r.faltan || 0) + "» pide el motivo antes de entregar"
+                onClicked: dialogo.entregar()
+            }
+            Chip {
                 text: "Revisar de nuevo"; icono: "view-refresh"; destacado: true
                 enabled: !dialogo.e.revisando
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Vuelve a correr los controles del marco sobre lo guardado"
-                onClicked: dialogo.e.revisar()
+                ayuda: dialogo.e.puedeMedir ? "Vuelve a correr los controles del marco sobre lo guardado y anota la corrida (mide cada control)"
+                                            : "Vuelve a correr los controles del marco sobre lo guardado"
+                onClicked: dialogo.e.revisarMidiendo()
             }
         }
     }
@@ -129,6 +221,47 @@ Kirigami.Dialog {
                 visible: dialogo.e.revisando && (dialogo.r.controles || []).length === 0
                 running: visible
             }
+            // --- el tiempo por etapa del flujo (C14.1): la etapa en curso y los minutos; empezar otra cierra la que corre
+            RowLayout {
+                id: tiempo
+                readonly property var t: dialogo.e.tiempos
+                readonly property var opciones: t.opciones || []
+                readonly property string elegida: opciones.length ? opciones[Math.max(0, etapa.currentIndex)].clave : ""
+                readonly property bool enCurso: !!t.abierta && t.abierta.etapa === elegida
+                Layout.fillWidth: true
+                visible: dialogo.e.puedeTiempo && opciones.length > 0
+                spacing: Kirigami.Units.smallSpacing
+                QQC2.Label { text: "Tiempo por etapa"; font.weight: Font.Medium }
+                QQC2.ComboBox {
+                    id: etapa
+                    model: tiempo.opciones
+                    textRole: "nombre"
+                    Accessible.name: "Etapa del flujo"
+                    Component.onCompleted: currentIndex = 0
+                    Connections {
+                        target: dialogo.e
+                        function onTiemposCambiados() {
+                            const a = dialogo.e.tiempos.abierta
+                            if (a) etapa.currentIndex = Math.max(0, tiempo.opciones.findIndex(o => o.clave === a.etapa))
+                        }
+                    }
+                }
+                Chip {
+                    text: tiempo.enCurso ? "Terminar" : "Empezar"
+                    icono: tiempo.enCurso ? "media-playback-stop" : "media-playback-start"
+                    ayuda: tiempo.enCurso ? "Cierra la etapa y anota sus minutos"
+                           : (tiempo.t.abierta ? "Empieza esta etapa y cierra «" + tiempo.t.abierta.nombre + "»" : "Empieza a contar esta etapa")
+                    onClicked: dialogo.e.marcarEtapa(tiempo.elegida, tiempo.enCurso ? "terminar" : "empezar")
+                }
+                QQC2.Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    color: Kirigami.Theme.disabledTextColor
+                    text: (tiempo.t.abierta ? "En curso: " + tiempo.t.abierta.nombre + ", " + dialogo.e.duracion(tiempo.t.abierta.minutos)
+                                            : "Ninguna etapa en curso")
+                          + (tiempo.t.total ? " · en total " + dialogo.e.duracion(tiempo.t.total) : "")
+                }
+            }
             Kirigami.InlineMessage {
                 Layout.fillWidth: true
                 visible: !!dialogo.r.error
@@ -155,7 +288,9 @@ Kirigami.Dialog {
                             required property var modelData
                             readonly property var c: modelData
                             readonly property bool manual: c.estado === "manual"
+                            readonly property bool atrapo: c.estado === "falla" || c.estado === "aviso"
                             property bool desplegado: false
+                            property bool declarando: false
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing / 2
 
@@ -194,6 +329,12 @@ Kirigami.Dialog {
                                     elide: Text.ElideRight
                                     color: Kirigami.Theme.disabledTextColor
                                 }
+                                Chip {                         // lo que marcó no era un defecto: con su motivo (§1.21)
+                                    visible: fila.atrapo && dialogo.e.puedeFalso && !fila.declarando
+                                    text: "Falso positivo…"
+                                    ayuda: "Declara que lo que marcó este control no era un error; el motivo queda en la medición"
+                                    onClicked: { fila.declarando = true; motivoFalso.forceActiveFocus() }
+                                }
                                 Chip {                         // el control que se resuelve en otra ventana (decisiones §1.22)
                                     visible: (fila.c.accion === "autoevaluar" && dialogo.e.puedeAutoevaluar)
                                              || (fila.c.accion === "matriz" && studio.matriz.disponible)
@@ -209,6 +350,34 @@ Kirigami.Dialog {
                                 wrapMode: Text.WordWrap
                                 font: Kirigami.Theme.smallFont
                                 color: Kirigami.Theme.disabledTextColor
+                            }
+                            QQC2.Label {                               // lo medido (C14.1)
+                                Layout.fillWidth: true
+                                Layout.leftMargin: Kirigami.Units.gridUnit
+                                visible: text !== ""
+                                text: dialogo.medido(fila.c)
+                                font: Kirigami.Theme.smallFont
+                                color: fila.c.medicion && fila.c.medicion.marca ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.disabledTextColor
+                            }
+                            RowLayout {                                // el falso positivo, con su motivo
+                                Layout.fillWidth: true
+                                Layout.leftMargin: Kirigami.Units.gridUnit
+                                visible: fila.declarando
+                                spacing: Kirigami.Units.smallSpacing
+                                QQC2.TextField {
+                                    id: motivoFalso
+                                    Layout.fillWidth: true
+                                    placeholderText: "Por qué no era un error (queda en la medición del control)"
+                                    Accessible.name: "Motivo del falso positivo de «" + fila.c.nombre + "»"
+                                    onAccepted: if (text.trim() !== "") { dialogo.e.declararFalso(fila.c.id, text); fila.declarando = false; text = "" }
+                                }
+                                Chip {
+                                    text: "Declarar"
+                                    enabled: motivoFalso.text.trim() !== ""
+                                    opacity: enabled ? 1 : 0.5
+                                    onClicked: { dialogo.e.declararFalso(fila.c.id, motivoFalso.text); fila.declarando = false; motivoFalso.text = "" }
+                                }
+                                Chip { text: "Cancelar"; onClicked: { fila.declarando = false; motivoFalso.text = "" } }
                             }
                             QQC2.TextField {
                                 id: nota

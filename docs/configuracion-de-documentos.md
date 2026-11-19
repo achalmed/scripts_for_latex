@@ -302,11 +302,28 @@ que trae `accion: autoevaluar` en «Antes de entregar».
 
 **El lector frío** (opcional; decisiones §1.22; mejora C11.4): `lector_frio: [..., '{proyecto}']` con `--aplicar` prepara
 fuera del documento una versión sin nombres para un revisor externo y la compila; imprime `{pdf, quitado: [{archivo, linea,
-campo}], pendientes, escrito}` o `{error}`. La ventana la ofrece en el pie de «Antes de entregar» («Versión para lector
-frío») y abre el PDF. Los comentarios del revisor los trae el marco y vuelven como un control más, con sus hallazgos.
+campo}], pendientes, escrito}` o `{error}`, y puede traer `hoja` (la hoja para el revisor que el marco deja junto al
+PDF; escritura: las preguntas de la guía de COPE). La ventana la ofrece en el pie de «Antes de entregar» («Versión para
+lector frío»), abre el PDF y dice si va con su hoja. Los comentarios del revisor los trae el marco y vuelven como un control más, con sus hallazgos.
 
 **Un control con `accion`** (`autoevaluar` o `matriz`) lleva en el diálogo el botón que abre su ventana (la autoevaluación,
 la matriz de consistencia de §13): el control se resuelve allí y «Antes de entregar» lo vuelve a revisar.
+
+**La medición, el tiempo por etapa y el candado** (opcionales; decisiones §1.21; C14.1 y la propuesta P2):
+
+```yaml
+  medir: [..., medir, '{proyecto}']                          # + --aplicar: revisa y anota la corrida
+  falso: [..., falso, '{proyecto}', '{control}', '{nota}']   # + --aplicar
+  tiempo: [..., tiempo, '{proyecto}']                        # + <etapa> empezar|terminar --aplicar
+  entregar: [..., entregar, '{proyecto}']                    # + --destino RUTA [--motivo TEXTO] --aplicar
+```
+
+`medir` imprime `{corrida, ruta, escrito, revision}` (`revision`, lo de `revisar`); «Revisar de nuevo» lo usa. Un control
+puede traer `medicion: {corridas, atrapo, falsos, marca}`, pintada tenue; `falso` («Falso positivo…», en todo control en
+`falla` o `aviso`) exige la nota. `tiempo` solo imprime `{abierta: {etapa, nombre, minutos} | null, etapas, total,
+opciones: [{clave, nombre}]}`; con etapa y acción, marca. `entregar` vuelve a revisar: con puntos que faltan y sin
+`--motivo`, `{bloqueado: true, faltan, mensaje}` sin escribir; si no, copia el PDF y anota (`{entrega, escrito}`). La
+ventana lo ofrece en el pie («Entregar el PDF…») y con «Faltan N» pide el motivo antes del destino.
 
 ## 13. La matriz de consistencia (`matriz:`)
 

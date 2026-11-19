@@ -256,8 +256,8 @@ ventana pinta lo que devuelven.
   una línea tenue con el porqué y la fuente, y sus hallazgos (los cinco primeros y «Ver los N»): un clic cierra el diálogo
   y abre el archivo en esa línea. La única acción rellena es «Revisar de nuevo»; nada de pastillas.
 - **Ninguna lista bloquea por su cuenta**: el veredicto lo calcula la ventana (`datos.veredicto`): listo si no hay fallas y
-  todo lo manual está marcado o justificado. Los avisos se leen y no bloquean: un número de redacción escrito a mano o una
-  obra que aún no está en la biblioteca no deben impedir entregar, pero se ven.
+  todo lo manual marcado; los avisos no bloquean. **Desde el 2026-11-18 pesa al entregar** (P2): «Entregar el PDF…», en el
+  pie, pide motivo con «Faltan N» (no impide); «Revisar de nuevo» mide (C14.1); «Falso positivo…»; «Tiempo por etapa».
 - **Lo manual**, con casilla y nota: la casilla lo da por hecho; sin casilla y con nota, queda justificado («no aplica»).
   Se escribe al tocar la casilla o al terminar la nota (`marcar --aplicar`): el clic es la confirmación, como en una lista
   de control en papel, y el diálogo revisa de nuevo. El estado vive en el proyecto (escritura: `<proyecto>/registro/entrega.yml`, con

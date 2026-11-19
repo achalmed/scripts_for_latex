@@ -462,6 +462,50 @@ def test_antes_de_entregar_revisa_marca_y_registra_el_uso_de_la_ia(app, piezas):
 
 
 @requiere_binding
+def test_antes_de_entregar_mide_cuenta_el_tiempo_y_pone_el_candado(app, piezas, tmp_path):
+    """La medición y el candado (decisiones §1.21): «Revisar de nuevo» mide (la corrida queda en el registro del
+    marco y cada control trae lo medido); un falso positivo se declara con su motivo; el tiempo por etapa se lee y se
+    marca; entregar con «Faltan N» y sin motivo se detiene, y con motivo copia el PDF."""
+    from latex_app.controladores.entrega import AntesDeEntregar
+    p, muestra = piezas["proyectos"], piezas["muestra"]
+    e = AntesDeEntregar(p, piezas["tareas"], piezas["consola"])
+    principal = muestra / "marco" / "informes" / "informe-anual" / "informe.tex"
+    assert not p.abrir(str(principal))
+    assert e.puedeMedir and e.puedeFalso and e.puedeTiempo and e.puedeEntregar
+    e.revisarMidiendo()
+    _esperar(app, lambda: e.revisando, 60)
+    r = dict(e.resultado)
+    assert not r["error"] and r["faltan"] == 3 and (principal.parent / "controles.yml").is_file()
+    assert dict(r["controles"][0]["medicion"])["corridas"] == 1
+    falsos = []
+    e.falsoDeclarado.connect(lambda d: falsos.append(dict(d)))
+    e.declararFalso("cifras", "Era un número de página")
+    _esperar(app, lambda: not falsos or e.revisando, 60)
+    assert falsos[0]["escrito"] and dict(dict(e.resultado)["controles"][0]["medicion"])["marca"] == "molesta"
+
+    e.leerTiempos()
+    _esperar(app, lambda: not dict(e.tiempos).get("opciones"), 60)
+    assert dict(e.tiempos)["abierta"] is None
+    marcadas = []
+    e.etapaMarcada.connect(lambda d: marcadas.append(dict(d)))
+    e.marcarEtapa("escritura", "empezar")
+    _esperar(app, lambda: not marcadas or not dict(e.tiempos).get("abierta"), 60)
+    assert marcadas[0]["escrito"] and dict(dict(e.tiempos)["abierta"])["etapa"] == "escritura"
+    assert e.duracion(70) == "1 h 10 min"
+
+    (principal.parent / "informe.pdf").write_bytes(b"%PDF-1.7\n")
+    destino = tmp_path / "entregado.pdf"
+    entregas = []
+    e.entregado.connect(lambda d: entregas.append(dict(d)))
+    e.entregar(str(destino), "")
+    _esperar(app, lambda: not entregas, 60)
+    assert entregas[0]["bloqueado"] and not destino.exists()
+    e.entregar(str(destino), "Lo pidió el jurado")
+    _esperar(app, lambda: len(entregas) < 2, 60)
+    assert entregas[1]["escrito"] and destino.is_file()
+
+
+@requiere_binding
 def test_matriz_lee_crea_genera_y_guarda_la_pregunta(app, piezas, tmp_path, monkeypatch):
     """La matriz de consistencia (decisiones §1.22): con el proyecto del marco abierto, `leer` llega en un hilo; «Crear»
     y «Generar el cuadro» escriben y vuelven a leer; el asistente revisa sin escribir y guarda con aplicar."""

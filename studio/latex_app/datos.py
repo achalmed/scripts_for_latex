@@ -188,8 +188,10 @@ def recursos(decl: dict) -> dict:
 
 
 # Las órdenes de `entrega:` (§12, decisiones §1.21): los controles antes de entregar, marcar un punto manual y registrar
-# un uso de la IA.
-ORDENES_ENTREGA = ("revisar", "marcar", "registrar_ia", "rubrica", "autoevaluar", "lector_frio")
+# un uso de la IA; desde §1.21, medir los controles, declarar un falso positivo, el tiempo por etapa y entregar
+# el PDF con el candado de «Faltan N».
+ORDENES_ENTREGA = ("revisar", "marcar", "registrar_ia", "rubrica", "autoevaluar", "lector_frio", "medir", "falso", "tiempo",
+                   "entregar")
 ESTADOS_ENTREGA = ("ok", "aviso", "falla", "manual")
 
 
@@ -242,7 +244,32 @@ def resultado_entrega(dato, proyecto: str | Path) -> dict:
             grupos.append({"clave": c["grupo"], "nombre": c["grupo"].capitalize() or "Otros"})
     lista = dato.get("lista") if isinstance(dato.get("lista"), dict) else {}
     return {"error": "", "controles": controles, "grupos": grupos, "lista": lista or {}, "tipo": str(dato.get("tipo") or ""),
-            **veredicto(controles)}
+            "maestro": str(dato.get("maestro") or ""), "carpeta": str(dato.get("carpeta") or proyecto or ""), **veredicto(controles)}
+
+
+def resultado_tiempos(dato) -> dict:
+    """Lo que devolvió `tiempo` de `entrega:` sin etapa (§12, decisiones §1.21): la etapa en curso, los minutos por etapa,
+    el total y las etapas que se pueden marcar, con su porqué y su fuente. Nunca lanza."""
+    vacio = {"error": "", "abierta": None, "etapas": [], "opciones": [], "total": 0, "porque": "", "fuente": ""}
+    if not isinstance(dato, dict):
+        return {**vacio, "error": "la orden no devolvió el tiempo por etapa"}
+    if dato.get("error"):
+        return {**vacio, "error": str(dato["error"])}
+    abierta = dato.get("abierta") if isinstance(dato.get("abierta"), dict) else None
+    etapas = [{"etapa": str(e.get("etapa") or ""), "nombre": str(e.get("nombre") or e.get("etapa") or ""),
+               "minutos": int(e.get("minutos") or 0)} for e in dato.get("etapas") or [] if isinstance(e, dict)]
+    opciones = [{"clave": str(o.get("clave") or ""), "nombre": str(o.get("nombre") or o.get("clave") or "")}
+                for o in dato.get("opciones") or [] if isinstance(o, dict) and o.get("clave")]
+    return {**vacio, "etapas": etapas, "opciones": opciones or [{"clave": e["etapa"], "nombre": e["nombre"]} for e in etapas],
+            "total": int(dato.get("total") or 0), "porque": str(dato.get("porque") or ""), "fuente": str(dato.get("fuente") or ""),
+            "abierta": ({"etapa": str(abierta.get("etapa") or ""), "nombre": str(abierta.get("nombre") or abierta.get("etapa") or ""),
+                         "minutos": int(abierta.get("minutos") or 0)} if abierta and abierta.get("etapa") else None)}
+
+
+def duracion(minutos: int) -> str:
+    """«45 min», «2 h», «3 h 10 min»."""
+    h, m = divmod(max(0, int(minutos or 0)), 60)
+    return f"{h} h {m} min" if h and m else f"{h} h" if h else f"{m} min"
 
 
 def veredicto(controles: list[dict]) -> dict:
@@ -327,7 +354,7 @@ def resultado_matriz(dato, proyecto: str | Path) -> dict:
         problemas = [x for x in f.get("problemas") or [] if isinstance(x, dict) and x.get("estado") in ESTADOS_MATRIZ]
         estado = "falla" if any(x["estado"] == "falla" for x in problemas) else "aviso" if problemas else "ok"
         filas.append({**{k: str(f.get(k) or "") for k in ("id", "nivel", "problema", "objetivo", "hipotesis", "prueba",
-                                                           "refutaria", "supuesto")},
+                                                           "refutaria", "supuesto", "tipo")},
                       "variables": [str(v) for v in f.get("variables") or []], "indicadores": indicadores,
                       "secciones": secciones, "problemas": problemas, "estado": estado, "linea": int(f.get("linea") or 0)})
     huerfanos = [{**h, "ruta": absoluta(str(h.get("archivo") or "")), "linea": int(h.get("linea") or 0)}

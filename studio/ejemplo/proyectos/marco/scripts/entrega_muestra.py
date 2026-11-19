@@ -4,7 +4,10 @@
 revisar <proyecto>: los controles en JSON, con comprobaciones de juguete sobre informe.tex y datos.yml (un número escrito
 a mano, el paquete en una versión vieja, un punto que se comprueba solo y dos manuales); marcar <proyecto> <id> <estado>
 [<nota>] [--aplicar]: el estado de un punto manual en <proyecto>/entrega.yml; registrar_ia <proyecto> <json> [--aplicar]:
-un uso en <proyecto>/ia/registro.yml y su declaración en ia/declaracion.tex. Sin --aplicar, nada se escribe. Lo usan las
+un uso en <proyecto>/ia/registro.yml y su declaración en ia/declaracion.tex; medir y falso (C14.1): la corrida y los
+falsos positivos en <proyecto>/controles.yml; tiempo [<etapa> empezar|terminar]: la etapa en curso en tiempos.yml;
+entregar [--destino RUTA] [--motivo TEXTO]: el candado de entrega (con «Faltan N» y sin motivo, se detiene). Sin
+--aplicar, nada se escribe. Lo usan las
 pruebas y las capturas; ningún dato real (el marco real, escritura, lo sirve con scripts/antes_de_entregar.py).
 """
 import json
@@ -35,7 +38,7 @@ def _control(id, grupo, nombre, estado, detalle="", hallazgos=(), **extra):
 orden, proyecto = sys.argv[1], Path(sys.argv[2])
 aplicar = "--aplicar" in sys.argv
 estado_yml = proyecto / "entrega.yml"
-if orden == "revisar":
+def revisar() -> dict:
     tex = (proyecto / "informe.tex").read_text(encoding="utf-8")
     a_mano = [{"archivo": "informe.tex", "linea": n, "texto": f"«{m.group(0)}» escrito a mano: {l.strip()}"}
               for n, l in enumerate(tex.split("\n"), 1) for m in re.finditer(r"\d+,\d+(?:~?\\%)?", l)]
@@ -65,11 +68,89 @@ if orden == "revisar":
                  [{"archivo": "informe.tex", "linea": 1, "texto": "El documento no incluye la declaración: añada \\input{ia/declaracion}"}]
                  if usos and not incluida else []),
     ]
-    _json({"tipo": "memoria", "lista": {"clave": "memoria", "nombre": "Memoria de muestra", "fuente": "Fuente de muestra (2026)"},
+    medidos = _yaml(proyecto / "controles.yml")
+    for c in controles:                                # lo medido de cada control (C14.1)
+        corridas = [x["controles"][c["id"]] for x in medidos.get("corridas") or [] if c["id"] in x.get("controles", {})]
+        if corridas:
+            atrapo = sum(1 for x in corridas if x in ("falla", "aviso"))
+            falsos = sum(1 for f in medidos.get("falsos") or [] if f["control"] == c["id"])
+            c["medicion"] = {"corridas": len(corridas), "atrapo": atrapo, "falsos": falsos,
+                             "marca": "molesta" if atrapo and falsos > atrapo - falsos else ""}
+    return {"tipo": "memoria", "lista": {"clave": "memoria", "nombre": "Memoria de muestra", "fuente": "Fuente de muestra (2026)"},
            "grupos": [{"clave": "cifras", "nombre": "Cifras y datos"}, {"clave": "lista", "nombre": "Lista de control · Memoria de muestra"},
                       {"clave": "referencias", "nombre": "Referencias y citas"}, {"clave": "ia", "nombre": "Inteligencia artificial"},
                       {"clave": "matriz", "nombre": "Matriz de consistencia"}, {"clave": "autoevaluacion", "nombre": "Autoevaluación"}],
-           "controles": controles})
+           "controles": controles}
+
+
+def _faltan(r: dict) -> int:
+    return sum(1 for c in r["controles"] if c["estado"] == "falla" or (c["estado"] == "manual" and not c.get("marcado")))
+
+
+def _opcion(nombre: str) -> str:
+    return sys.argv[sys.argv.index(nombre) + 1] if nombre in sys.argv else ""
+
+
+if orden == "revisar":
+    _json(revisar())
+if orden == "medir":                                   # revisa y anota la corrida en controles.yml (C14.1)
+    r = revisar()
+    corrida = {"fecha": date.today().isoformat(), "segundos": 0.1, "controles": {c["id"]: c["estado"] for c in r["controles"]}}
+    if aplicar:
+        d = _yaml(proyecto / "controles.yml")
+        d.setdefault("corridas", []).append(corrida)
+        (proyecto / "controles.yml").write_text(yaml.safe_dump(d, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        r = revisar()
+    _json({"corrida": corrida, "ruta": "controles.yml", "escrito": aplicar, "revision": r})
+if orden == "falso":
+    control, nota = sys.argv[3], (sys.argv[4] if len(sys.argv) > 4 else "").strip()
+    if not nota or nota == "--aplicar":
+        _json({"error": "Un falso positivo se declara con su nota."})
+    if aplicar:
+        d = _yaml(proyecto / "controles.yml")
+        d.setdefault("falsos", []).append({"fecha": date.today().isoformat(), "control": control, "nota": nota})
+        (proyecto / "controles.yml").write_text(yaml.safe_dump(d, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    _json({"falso": {"control": control, "nota": nota}, "ruta": "controles.yml", "escrito": aplicar})
+if orden == "tiempo":                                  # el tiempo por etapa (C14.1), sin horas: solo qué etapa corre
+    ETAPAS = [("datos", "Datos"), ("escritura", "Escritura"), ("entrega", "Entrega")]
+    d = _yaml(proyecto / "tiempos.yml")
+    abierta = d.get("abierta") or ""
+    args = [a for a in sys.argv[3:] if not a.startswith("--")]
+    if args:
+        etapa, accion = args[0], (args[1] if len(args) > 1 else "")
+        if etapa not in dict(ETAPAS) or accion not in ("empezar", "terminar"):
+            _json({"error": f"«{etapa} {accion}» no es una etapa y una acción."})
+        if accion == "terminar" and abierta != etapa:
+            _json({"error": f"«{dict(ETAPAS)[etapa]}» no está en curso."})
+        d["abierta"] = etapa if accion == "empezar" else ""
+        d.setdefault("minutos", {})
+        if abierta and abierta != d["abierta"]:
+            d["minutos"][abierta] = d["minutos"].get(abierta, 0) + 30
+        if aplicar:
+            (proyecto / "tiempos.yml").write_text(yaml.safe_dump(d, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        _json({"etapa": etapa, "accion": accion, "escrito": aplicar})
+    minutos = d.get("minutos") or {}
+    _json({"abierta": {"etapa": abierta, "nombre": dict(ETAPAS)[abierta], "minutos": 5} if abierta else None,
+           "etapas": [{"etapa": k, "nombre": n, "minutos": minutos.get(k, 0)} for k, n in ETAPAS],
+           "total": sum(minutos.values()), "opciones": [{"clave": k, "nombre": n} for k, n in ETAPAS],
+           "porque": "Por qué de muestra.", "fuente": "Fuente de muestra (2026)"})
+if orden == "entregar":                                # el candado: con «Faltan N» y sin motivo, se detiene
+    faltan, motivo, destino = _faltan(revisar()), _opcion("--motivo").strip(), _opcion("--destino")
+    pdf = proyecto / "informe.pdf"
+    if not pdf.is_file():
+        _json({"error": "No hay PDF: compile el documento antes de entregarlo."})
+    if faltan and not motivo:
+        _json({"bloqueado": True, "faltan": faltan, "escrito": False,
+               "mensaje": f"Faltan {faltan}: para entregar de todos modos, escriba el motivo."})
+    entrada = {"fecha": date.today().isoformat(), "pdf": "informe.pdf", "destino": destino, "faltan": faltan,
+               **({"motivo": motivo} if motivo else {})}
+    if aplicar:
+        if destino:
+            Path(destino).write_bytes(pdf.read_bytes())
+        d = _yaml(estado_yml)
+        d.setdefault("entregas", []).append(entrada)
+        estado_yml.write_text(yaml.safe_dump(d, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    _json({"bloqueado": False, "faltan": faltan, "entrega": entrada, "archivo": "entrega.yml", "escrito": aplicar})
 if orden == "marcar":
     clave, estado = sys.argv[3].removeprefix("lista."), sys.argv[4]
     nota = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] != "--aplicar" else ""

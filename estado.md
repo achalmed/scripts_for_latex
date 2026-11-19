@@ -9,6 +9,7 @@ actualizado: 2026-11-18
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-18 | **«Antes de entregar» mide y entrega con candado** (decisiones §1.21): «Revisar de nuevo» mide (`medir --aplicar`) y cada control dice lo medido; «Falso positivo…» con su motivo (`falso`); «Tiempo por etapa» (Empezar o Terminar la etapa del flujo en curso; `tiempo`); «Entregar el PDF…» en el pie, que con «Faltan N» pide «Entregar de todos modos» con el motivo, y el marco lo anota con la entrega; la hoja del revisor del lector frío se anuncia; la matriz dice «Hipótesis de trabajo» o «estadística» si la fila declara `tipo` | `docs/configuracion-de-documentos.md` §12; `tests/test_datos.py`, `tests/test_controladores.py`; escritura `scripts/antes_de_entregar.py` (`medir`, `falso`, `tiempo`, `entregar`) |
 | 2026-11-18 | **Los huecos de la guía del flujo** (decisiones §1.26): «Nuevo documento» ofrece la nota de política y el informe técnico NISO (entre los esquemas del informe) y «Láminas» (las de un proyecto que no las tiene); Herramientas › «Autoevaluación con la rúbrica…» (sin atajo); «Ajustes de composición» en los informes (la lámina no los admite: beamer); la ayuda de la IA pasa de Ctrl+Alt+I (el de la paleta de gui-comun) a **Ctrl+Alt+A**, y la prueba de la ventana exige cero atajos repetidos | `docs/decisiones.md` §1.26; `tests/test_studio.py::test_abre_la_ventana_y_un_proyecto`; escritura `scripts/nuevo_documento.py`, `config/entrega/listas/` |
 | 2026-11-18 | **La norma del flujo de conocimiento** (decisiones §1.22 a §1.24): la matriz de consistencia viva (Ctrl+Alt+M, contrato §13) con el asistente de pregunta en cuatro pasos; la autoevaluación con la rúbrica (§12, `rubrica` y `autoevaluar`); el texto alternativo obligatorio al insertar una figura (§8, `insertar_alt`); el aviso antes de copiar un prompt con datos sensibles (§10, `revisar_prompt`); la pestaña «Revisión» del panel inferior (estilo y LaTeX con reglas citadas, §14, Ctrl+Alt+R) y las plantillas del marco (§15, Ctrl+Alt+T) | `docs/configuracion-de-documentos.md` §8 a §15; `tests/test_datos.py`, `tests/test_controladores.py`; `docs/figuras/latex-studio-matriz.png` y siguientes |
 | 2026-11-18 | **Antes de entregar** (decisiones §1.21): Herramientas › «Antes de entregar…» (Ctrl+Alt+E y la paleta) muestra los controles que declara el marco (contrato §12, `entrega:`): el veredicto «Listo para entregar» o «Faltan N», cada control con su punto de color, su porqué y su fuente, y sus hallazgos (un clic va a la línea); lo manual con casilla y nota. «Poner en el editor» de la ayuda de la IA registra el uso (`registrar_ia`). Escritura lo sirve con `scripts/antes_de_entregar.py` (cifras vivas, lista de control del tipo, referencias y citas cotejadas, la IA declarada) | `docs/configuracion-de-documentos.md` §12; `tests/test_datos.py`, `tests/test_controladores.py`; `docs/figuras/latex-studio-antes-de-entregar.png` |
@@ -58,10 +59,9 @@ nada en curso
 - 2026-11-18 · dueño: **el autor** · probar en la sesión real la matriz (Ctrl+Alt+M) y el asistente de pregunta sobre un
   plan de tesis, la pestaña «Revisión» (¿sobran avisos de estilo?) y las plantillas; la norma pide apagar con su nota el
   control que moleste sin ayudar (FLUJO_DE_CONOCIMIENTO.md §5).
-- 2026-11-18 · dueño: **el autor** · probar en la sesión real lo de §1.26: «Nuevo documento», la autoevaluación, Ctrl+Alt+A.
-- 2026-11-18 · dueño: **el autor** · usar «Antes de entregar» (Ctrl+Alt+E) en la sesión real sobre un escrito de
-  `escritura` y decir qué avisos sobran (las excepciones se ajustan en `escritura/config/entrega/ajustes.yml` o en el
-  `registro/entrega.yml` del proyecto) y si alguna lista de control pide puntos que no corresponden a su tipo.
+- 2026-11-18 · dueño: **el autor** · probar en la sesión real §1.26 («Nuevo documento», la autoevaluación, Ctrl+Alt+A) y
+  «Antes de entregar» (Ctrl+Alt+E) sobre un escrito: avisos que sobran (`escritura/config/entrega/ajustes.yml`), listas
+  con puntos ajenos a su tipo y lo de §1.21 del 2026-11-18 (medir, falso positivo, tiempo, «Entregar el PDF…»).
 Los números P4–P17 son los de la revisión del 2026-10-03 y 2026-10-04; se conservan porque el
 manual los cita.
 

@@ -160,7 +160,7 @@ Kirigami.Dialog {
                         columnSpacing: Kirigami.Units.largeSpacing
                         rowSpacing: Kirigami.Units.smallSpacing
                         Repeater {
-                            model: [["Problema", fila.f.problema], ["Objetivo", fila.f.objetivo], ["Hipótesis", fila.f.hipotesis]]
+                            model: [["Problema", fila.f.problema], ["Objetivo", fila.f.objetivo], ["Hipótesis" + ({"trabajo": " de trabajo", "estadistica": " estadística"}[fila.f.tipo] || ""), fila.f.hipotesis]]
                             delegate: Item {
                                 required property var modelData
                                 Layout.columnSpan: 2

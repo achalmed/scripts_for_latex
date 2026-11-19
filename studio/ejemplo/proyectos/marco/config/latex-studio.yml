@@ -32,6 +32,10 @@ entrega:                           # §12 del contrato: los controles antes de e
   rubrica: [python3, ../scripts/flujo_muestra.py, rubrica, '{proyecto}']                   # la autoevaluación (§1.22)
   autoevaluar: [python3, ../scripts/flujo_muestra.py, autoevaluar, '{proyecto}', '{datos}']
   lector_frio: [python3, ../scripts/flujo_muestra.py, lector-frio, '{proyecto}']             # la versión sin nombres (§1.22)
+  medir: [python3, ../scripts/entrega_muestra.py, medir, '{proyecto}']                      # la medición de los controles (§1.21)
+  falso: [python3, ../scripts/entrega_muestra.py, falso, '{proyecto}', '{control}', '{nota}']
+  tiempo: [python3, ../scripts/entrega_muestra.py, tiempo, '{proyecto}']                    # el tiempo por etapa (§1.21)
+  entregar: [python3, ../scripts/entrega_muestra.py, entregar, '{proyecto}']                # el candado de entrega (§1.21)
 matriz:                            # §13 del contrato: la matriz de consistencia y el asistente de pregunta
   nombre: Matriz de consistencia
   marcador: datos.yml

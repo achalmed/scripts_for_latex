@@ -193,6 +193,44 @@ def test_entrega_declara_revisa_marca_y_registra(marco):
     assert not r["listo"] and next(c for c in r["controles"] if c["id"] == "ia")["estado"] == "falla"
 
 
+def test_entrega_mide_declara_falsos_cuenta_el_tiempo_y_pone_el_candado(marco, tmp_path):
+    """La medición (C14.1, decisiones §1.21): `medir --aplicar` anota la corrida y devuelve la revisión con lo medido de
+    cada control; `falso` lo declara con su motivo. El tiempo por etapa: `tiempo` da la etapa en curso y los minutos;
+    marcar simula sin --aplicar. El candado (§1.21): `entregar` con «Faltan N» y sin motivo se detiene y no copia;
+    con motivo copia el PDF y anota la entrega."""
+    import yaml
+    principal = marco / "informes" / "informe-anual" / "informe.tex"
+    d = datos.declaracion_entrega(principal)
+    assert all(d[k] for k in ("medir", "falso", "tiempo", "entregar"))
+    sim, _ = datos._json(d["medir"], d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "controles.yml").exists(), "medir sin --aplicar no escribe"
+    hecho, _ = datos._json(d["medir"] + ["--aplicar"], d["proyecto"])
+    r = datos.resultado_entrega(hecho["revision"], d["proyecto"])
+    assert hecho["escrito"] and r["controles"][0]["medicion"] == {"corridas": 1, "atrapo": 1, "falsos": 0, "marca": ""}
+    falso, _ = datos._json(datos.con(d["falso"], control="cifras", nota="Era un número de página") + ["--aplicar"], d["proyecto"])
+    assert falso["escrito"]
+    r = datos.resultado_entrega(datos._json(d["revisar"], d["proyecto"])[0], d["proyecto"])
+    assert r["controles"][0]["medicion"]["marca"] == "molesta"
+
+    t = datos.resultado_tiempos(datos._json(d["tiempo"], d["proyecto"])[0])
+    assert not t["error"] and t["abierta"] is None and [o["clave"] for o in t["opciones"]] == ["datos", "escritura", "entrega"]
+    sim, _ = datos._json(d["tiempo"] + ["escritura", "empezar"], d["proyecto"])
+    assert not sim["escrito"] and not (principal.parent / "tiempos.yml").exists(), "marcar una etapa sin --aplicar no escribe"
+    datos._json(d["tiempo"] + ["escritura", "empezar", "--aplicar"], d["proyecto"])
+    t = datos.resultado_tiempos(datos._json(d["tiempo"], d["proyecto"])[0])
+    assert t["abierta"]["nombre"] == "Escritura"
+    assert datos.resultado_tiempos(None)["error"] and datos.resultado_tiempos({"error": "x"})["error"] == "x"
+    assert (datos.duracion(45), datos.duracion(120), datos.duracion(190)) == ("45 min", "2 h", "3 h 10 min")
+
+    (principal.parent / "informe.pdf").write_bytes(b"%PDF-1.7\n")
+    destino = tmp_path / "entregado.pdf"
+    bloqueado, _ = datos._json(d["entregar"] + ["--destino", str(destino), "--aplicar"], d["proyecto"])
+    assert bloqueado["bloqueado"] and bloqueado["faltan"] == 3 and not destino.exists()
+    hecho, _ = datos._json(d["entregar"] + ["--destino", str(destino), "--motivo", "Lo pidió el jurado", "--aplicar"], d["proyecto"])
+    assert hecho["escrito"] and destino.is_file()
+    assert yaml.safe_load((principal.parent / "entrega.yml").read_text(encoding="utf-8"))["entregas"][0]["motivo"] == "Lo pidió el jurado"
+
+
 def test_veredicto_y_lo_mal_formado():
     """El veredicto lo da la ventana con lo revisado: listo solo sin fallas y con todo lo manual marcado o justificado;
     un resultado mal formado es un error, nunca «listo»."""
