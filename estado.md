@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-18
+actualizado: 2026-11-19
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-18
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-19 | «Cambió en el disco y aquí tiene cambios sin guardar» ya no es una franja en la ventana: va a las notificaciones de KDE con sus dos botones («Recargar del disco» · «Mantener lo mío»), por `ventana.mensajes.notificarConAcciones` de gui-comun (pedido del autor: ningún aviso dentro de la ventana en la familia) | `studio/*/qml/componentes/EspacioEscritura.qml` |
 | 2026-11-18 | **«Antes de entregar» mide y entrega con candado** (decisiones §1.21): «Revisar de nuevo» mide (`medir --aplicar`) y cada control dice lo medido; «Falso positivo…» con su motivo (`falso`); «Tiempo por etapa» (Empezar o Terminar la etapa del flujo en curso; `tiempo`); «Entregar el PDF…» en el pie, que con «Faltan N» pide «Entregar de todos modos» con el motivo, y el marco lo anota con la entrega; la hoja del revisor del lector frío se anuncia; la matriz dice «Hipótesis de trabajo» o «estadística» si la fila declara `tipo` | `docs/configuracion-de-documentos.md` §12; `tests/test_datos.py`, `tests/test_controladores.py`; escritura `scripts/antes_de_entregar.py` (`medir`, `falso`, `tiempo`, `entregar`) |
 | 2026-11-18 | **Los huecos de la guía del flujo** (decisiones §1.26): «Nuevo documento» ofrece la nota de política y el informe técnico NISO (entre los esquemas del informe) y «Láminas» (las de un proyecto que no las tiene); Herramientas › «Autoevaluación con la rúbrica…» (sin atajo); «Ajustes de composición» en los informes (la lámina no los admite: beamer); la ayuda de la IA pasa de Ctrl+Alt+I (el de la paleta de gui-comun) a **Ctrl+Alt+A**, y la prueba de la ventana exige cero atajos repetidos | `docs/decisiones.md` §1.26; `tests/test_studio.py::test_abre_la_ventana_y_un_proyecto`; escritura `scripts/nuevo_documento.py`, `config/entrega/listas/` |
 | 2026-11-18 | **La norma del flujo de conocimiento** (decisiones §1.22 a §1.24): la matriz de consistencia viva (Ctrl+Alt+M, contrato §13) con el asistente de pregunta en cuatro pasos; la autoevaluación con la rúbrica (§12, `rubrica` y `autoevaluar`); el texto alternativo obligatorio al insertar una figura (§8, `insertar_alt`); el aviso antes de copiar un prompt con datos sensibles (§10, `revisar_prompt`); la pestaña «Revisión» del panel inferior (estilo y LaTeX con reglas citadas, §14, Ctrl+Alt+R) y las plantillas del marco (§15, Ctrl+Alt+T) | `docs/configuracion-de-documentos.md` §8 a §15; `tests/test_datos.py`, `tests/test_controladores.py`; `docs/figuras/latex-studio-matriz.png` y siguientes |
