@@ -1,5 +1,5 @@
-// DialogoAyudaIA — «Ayuda de la IA para esta parte…» (Ctrl+Alt+I; decisiones §1.19, contrato §10). Dos pasos, como en
-// Yachay: copiar el prompt que el marco arma para la parte abierta (el del ecosistema, con su entrada rellena con el
+// DialogoAyudaIA — «Ayuda de la IA para esta parte…» (Ctrl+Alt+A desde el 2026-11-18, decisiones §1.26: Ctrl+Alt+I es la
+// paleta de gui-comun; decisiones §1.19, contrato §10). Dos pasos, como en Yachay: copiar el prompt que el marco arma para la parte abierta (el del ecosistema, con su entrada rellena con el
 // escrito) y pegar lo que respondió el chat; la ventana no llama a ningún modelo. Lo pegado se comprueba sin IA y se
 // muestra como cambio sugerido; «Poner en el editor» reemplaza el tramo de la parte en el editor (deshacer con Ctrl+Z) y
 // el archivo se escribe solo con Ctrl+S. Si el marco declara `entrega:` (§12), aceptar registra el uso (`registrar_ia`).

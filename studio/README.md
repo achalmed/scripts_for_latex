@@ -10,7 +10,7 @@ Entorno de escritura científica (QML + Kirigami sobre gui-comun 3.0): detecta l
 
 - Escribe en: archivos · simula por defecto: no
 - Depende de: /usr/bin/python3 con PySide6 del sistema (python3-pyside6.*) y Kirigami (qml6-module-org-kde-kirigami), gui-comun 3.0 (módulo QML GuiComun; QApplication para los diálogos de KDE), script_compilar_latex, poppler-utils (pdftoppm, pdfinfo) y synctex para el visor; latexmk para los proyectos con latexmkrc
-- Nota: No compila por su cuenta: cada proyecto con su compilador (el scripts/build.sh de su marco, latexmk si tiene latexmkrc, o script_compilar_latex/main.sh -k); nunca escribe fuentes salvo Ctrl+S en el editor, «Configurar el documento» (Ctrl+Alt+D: solo el preámbulo, tras mostrar la diferencia; lo configurable lo declara el latex-studio.yml del marco) y lo que el marco declara y se confirma (citar un libro nuevo, guardar una ficha tras revisarla, crear un documento nuevo tras revisarlo, Ctrl+N); la ayuda de la IA (Ctrl+Alt+I) solo copia el prompt y pone lo pegado en el editor; no ofrece pdfLaTeX ni XeLaTeX a un proyecto que no los declare (regla 6). Las carpetas de trabajo del usuario van a sus ajustes, nunca al repo.
+- Nota: No compila por su cuenta: cada proyecto con su compilador (el scripts/build.sh de su marco, latexmk si tiene latexmkrc, o script_compilar_latex/main.sh -k); nunca escribe fuentes salvo Ctrl+S en el editor, «Configurar el documento» (Ctrl+Alt+D: solo el preámbulo, tras mostrar la diferencia; lo configurable lo declara el latex-studio.yml del marco) y lo que el marco declara y se confirma (citar un libro nuevo, guardar una ficha tras revisarla, crear un documento nuevo tras revisarlo, Ctrl+N); la ayuda de la IA (Ctrl+Alt+A) solo copia el prompt y pone lo pegado en el editor; no ofrece pdfLaTeX ni XeLaTeX a un proyecto que no los declare (regla 6). Las carpetas de trabajo del usuario van a sus ajustes, nunca al repo.
 
 Comandos:
 
@@ -90,7 +90,7 @@ del editor está apagada por omisión (Ajustes › Editor).
 | Ctrl+Mayús+D | revisar dependencias | F7 · F4 · F9 | PDF · panel inferior · barra lateral |
 | Ctrl+Mayús+L | limpiar auxiliares (muestra la lista) | Ctrl+N · Ctrl+O · Ctrl+Mayús+O | nuevo documento (lo que el marco sabe crear) · abrir un `.tex` · carpetas de trabajo |
 | Ctrl+Mayús+P | abrir el PDF con su aplicación | Ctrl+K · Ctrl+Alt+I | paleta de órdenes |
-| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones; botón «Configurar» de la barra); Ctrl+Alt+I, la ayuda de la IA de la parte abierta (si el marco la declara) | Ctrl+Mayús+E | abrir en TeXstudio (archivo y línea actuales; botón «TeXstudio» de la barra) |
+| Ctrl+Alt+D | configurar el documento (metadatos, elementos visibles, opciones; botón «Configurar» de la barra); Ctrl+Alt+A, la ayuda de la IA de la parte abierta (si el marco la declara) | Ctrl+Mayús+E | abrir en TeXstudio (archivo y línea actuales; botón «TeXstudio» de la barra) |
 | Ctrl+Alt+F | buscar en el PDF (Intro · Mayús+Intro: siguiente · anterior) | arrastrar en el PDF · Ctrl+C · Ctrl+A | seleccionar · copiar · toda la página (con QtPdf) |
 
 La lista completa, generada de las acciones: Ayuda › Atajos de teclado.

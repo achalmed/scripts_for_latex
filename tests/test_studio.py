@@ -62,7 +62,10 @@ QTimer.singleShot(400, abrir)
 app.app.exec(); app.cerrar()
 limpiar = a.accion("compilar.limpiar")
 confirmaciones = {"limpiar": [limpiar.operacion, limpiar.requiereConfirmacion], "escritorio": type(app.escritorio).__module__}
+herramientas = [e.get("nombre") for m in a.menus if m["titulo"] == "&Herramientas" for e in m["elementos"]]
+atajos = {n: a.accion(n).atajo for n in ("escritura.ayuda_ia", "ventana.paleta", "escritura.autoevaluar")}
 print(json.dumps({"ok": ok, "confirmaciones": confirmaciones, "titulo_sin": titulo_sin, "errores": errores, "acciones": a.nombres(), "menus": [m["titulo"] for m in a.menus],
+                  "conflictos": a.conflictos(), "atajos": atajos, "herramientas": herramientas,
                   "barra": a.barra, "sin": sin, "total": p.total, **resultado}))
 """
 
@@ -169,6 +172,11 @@ def test_abre_la_ventana_y_un_proyecto(tmp_path):
               "ventana.paleta", "app.ajustes", "app.acerca"):
         assert n in datos["acciones"], n
     assert datos["menus"] == ["&Archivo", "&Editar", "&Ver", "&Compilar", "&Herramientas", "A&justes", "Ay&uda"]
+    # ningún atajo en dos acciones (Qt no ejecuta ninguna): la ayuda de la IA cedió Ctrl+Alt+I a la paleta de gui-comun
+    # (decisiones §1.26), y la autoevaluación tiene su entrada en Herramientas, sin atajo
+    assert datos["conflictos"] == {}, datos["conflictos"]
+    assert datos["atajos"] == {"escritura.ayuda_ia": "Ctrl+Alt+A", "ventana.paleta": "Ctrl+Alt+I", "escritura.autoevaluar": ""}
+    assert "escritura.autoevaluar" in datos["herramientas"]
     assert datos["barra"][:3] == ["compilar.compilar", "compilar.cancelar", "compilar.reconstruir"]
     assert datos["sin"] == [False, False, False, False, True]          # sin proyecto: nada que compilar, guardar ni ver
     assert datos["vista"] == "escritura" and datos["titulo"] == "tesis-multiarchivo · principal.tex — LaTeX Studio"

@@ -203,7 +203,7 @@ la norma de fichas, de Calibre, de Zotero ni de qué prompt sirve a qué parte):
   Guardar va en dos tiempos, como citar: «Revisar» simula (el nombre del archivo, el cotejo contra el PDF, lo que la norma
   objeta, si el libro se suma a las fuentes) y «Guardar la ficha» escribe lo revisado con `--aplicar`: esa es la
   confirmación (regla de las fuentes: solo lo que el marco declara y se confirma). El texto del documento no se toca.
-- **La ayuda de la IA de la parte abierta** (contrato §10, nuevo: `ayuda:` con `prompt` y `pegar`; Herramientas, Ctrl+Alt+I).
+- **La ayuda de la IA de la parte abierta** (contrato §10, nuevo: `ayuda:` con `prompt` y `pegar`; Herramientas, Ctrl+Alt+I; Ctrl+Alt+A desde §1.26).
   «Copiar el prompt» pone en el portapapeles el que el marco arma para la parte (escritura: el prompt del ecosistema que
   le toca a su `\componente`, traducido para un chat externo, con su entrada rellena). La respuesta del chat se pega en el
   diálogo y «Comprobar lo pegado» la pasa a la orden `pegar` junto con el texto del editor (dos archivos en la caché):
@@ -341,6 +341,18 @@ que LaTeX Studio reduzca el costo de LaTeX en lo que más se repite. Una secció
 Herramientas › «Insertar una plantilla…» (Ctrl+Alt+T; `DialogoPlantillas.qml`, `controladores/plantillas.py`): la lista a
 la izquierda, el formulario corto y lo compuesto a la derecha, «Insertar» en el cursor. Las plantillas las da el marco;
 la barra de insertar (§1.17) sigue para lo genérico (sección, figura suelta, tabla, cita, ecuación).
+
+### §1.26 Los huecos de la comprobación de la guía del flujo (2026-11-18)
+
+Cinco huecos de `prompts/00 metodo/GUIA_FLUJO_DE_CONOCIMIENTO.md` §9, cerrados sin que la ventana aprenda nada de un marco.
+**«Nuevo documento»** ofrece la nota de política, el informe NISO y «Láminas» (las de un proyecto que no las tiene; lo
+resuelve escritura; la ventana solo aprendió que una opción obligatoria con `omision` ya está llena). **La autoevaluación** tiene su
+entrada, Herramientas › «Autoevaluación con la rúbrica…» (sin atajo), si el marco declara `rubrica` y `autoevaluar`.
+**«Ajustes de composición»** llega a los informes (norma de cita y PDF accesible, compilados); la lámina no los admite:
+beamer detiene la compilación ante `\DocumentMetadata` y su biblatex fija APA. **Las listas** de la nota de política y del
+informe NISO son del marco. **Ctrl+Alt+I era de dos acciones** (la paleta de `gui-comun`, convención de KDE, y la ayuda
+de la IA): un atajo repetido no ejecuta ninguna. Cede la ventana, no el marco común: la ayuda pasa a **Ctrl+Alt+A** y
+`tests/test_studio.py` exige `Acciones.conflictos()` vacío.
 
 ### §1.17 Rediseño: una mesa de escritura al estilo de Datafw Studio (2026-11-17)
 

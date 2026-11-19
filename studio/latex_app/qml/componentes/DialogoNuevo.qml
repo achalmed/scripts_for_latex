@@ -20,10 +20,11 @@ Kirigami.Dialog {
     readonly property var def: { n.tipos; return n.tipos.find(t => t.clave === tipo) || null }
     readonly property var revision: n.revision
     readonly property bool revisada: !!revision && !!revision.destino && !revision.error && !revision.aplicar
+    // un campo de opciones obligatorio con su omisión (el proyecto de las láminas) ya está lleno sin tocarlo
     readonly property bool completo: {
         cambios
         if (!def) return false
-        return def.campos.every(c => !c.obligatorio || String(valores[c.clave] || "").trim() !== "")
+        return def.campos.every(c => !c.obligatorio || String(valores[c.clave] !== undefined ? valores[c.clave] : (c.omision || "")).trim() !== "")
     }
 
     title: "Nuevo documento"

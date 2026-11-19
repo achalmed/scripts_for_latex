@@ -286,8 +286,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
 
     # --- Archivo
     acciones.registrar("archivo.nuevo", "&Nuevo documento…", "document-new", StandardKey.New, "Archivo", al_disparar=pedir("nuevo_documento"),
-                       descripcion="Un informe, una tesis, una monografía, un artículo, un ensayo o un libro con la estructura de su "
-                                   "marco: eliges el tipo y llenas el formulario; «Revisar» muestra lo que se creará")
+                       descripcion="Lo que el marco sabe crear (en escritura, un informe con la nota de política y el informe NISO, "
+                                   "una tesis, una monografía, un artículo, un ensayo, un libro o las láminas de un proyecto): eliges "
+                                   "el tipo y llenas el formulario; «Revisar» muestra lo que se creará")
     acciones.registrar("archivo.abrir", "&Abrir un .tex…", "document-open", StandardKey.Open, "Archivo", al_disparar=pedir("abrir_tex"),
                        descripcion="Abre el proyecto de ese .tex (un capítulo abre su documento principal); con el diálogo de archivos de KDE")
     acciones.registrar("archivo.carpetas", "Carpetas de &trabajo…", "folder-open", "Ctrl+Shift+O", "Archivo", al_disparar=pedir("carpetas"),
@@ -328,7 +329,9 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        habilitada=False, al_disparar=lambda *_: interfaz.pedir.emit("configurar_documento", {"ruta": proyectos.principal}),
                        descripcion="Metadatos, elementos visibles y opciones del documento, según el latex-studio.yml de su marco; "
                                    "muestra la diferencia y escribe solo al confirmar")
-    acciones.registrar("escritura.ayuda_ia", "&Ayuda de la IA para esta parte…", "tools-wizard", "Ctrl+Alt+I", "Herramientas",
+    # Ctrl+Alt+A y no Ctrl+Alt+I: Ctrl+Alt+I es la paleta de órdenes de gui-comun (la de Kate y Dolphin), y un atajo en
+    # dos acciones es ambiguo y Qt no ejecuta ninguna (decisiones §1.26; tests/test_studio.py vigila los choques)
+    acciones.registrar("escritura.ayuda_ia", "&Ayuda de la IA para esta parte…", "tools-wizard", "Ctrl+Alt+A", "Herramientas",
                        habilitada=False, al_disparar=pedir("ayuda_ia"),
                        descripcion="Copia el prompt que el marco arma para la parte abierta (con su entrada rellena) y lee la "
                                    "respuesta del chat que pegues: la muestra como cambio sugerido y la pone en el editor si la aceptas")
@@ -337,6 +340,10 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                        descripcion="Los controles que el marco revisa antes de entregar: cifras vivas, la lista de control del "
                                    "tipo, referencias y citas cotejadas, y el uso de la IA declarado; un clic en un hallazgo "
                                    "lleva a su línea")
+    acciones.registrar("escritura.autoevaluar", "A&utoevaluación con la rúbrica…", "rating", None, "Herramientas",
+                       habilitada=False, al_disparar=pedir("autoevaluar"),
+                       descripcion="La rúbrica que le toca al documento, criterio por criterio: eliges el nivel, justificas y se "
+                                   "guarda al pulsar «Guardar» (también desde «Antes de entregar»)")
     acciones.registrar("escritura.matriz", "&Matriz de consistencia…", "view-list-details", "Ctrl+Alt+M", "Herramientas",
                        habilitada=False, al_disparar=pedir("matriz"),
                        descripcion="La matriz del proyecto: cada hipótesis con su indicador y su sección, lo que la refutaría "
@@ -436,7 +443,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
                   "ver.acercar", "ver.alejar", "ver.ajustar", "|", "ventana.pantalla_completa"]),
         ("&Compilar", ["compilar.compilar", "compilar.reconstruir", "compilar.borrador", "compilar.simular", "compilar.cancelar", "|", "compilar.seleccion", "|",
                        "compilar.siguiente", "synctex.pdf", "|", "compilar.dependencias", "compilar.limpiar", "|", "compilar.al_guardar", "historial.vaciar"]),
-        ("&Herramientas", ["documento.configurar", "escritura.ayuda_ia", "escritura.entrega", "|", "escritura.matriz",
+        ("&Herramientas", ["documento.configurar", "escritura.ayuda_ia", "escritura.entrega", "escritura.autoevaluar", "|", "escritura.matriz",
                            "escritura.pregunta", "escritura.revisar", "escritura.plantillas", "|", "texstudio.configurar", "okular.configurar", "|", "ventana.paleta"]),
         ("A&justes", ["app.ajustes"]),
         ("Ay&uda", ["ayuda.atajos", "ayuda.manual", "app.acerca"]),
@@ -484,6 +491,7 @@ def construir(app: Aplicacion, cache: Path | None = None) -> dict:
         acciones.habilitar("documento.configurar", hay_proyecto)
         acciones.habilitar("escritura.ayuda_ia", hay_archivo and ayuda.disponible)
         acciones.habilitar("escritura.entrega", hay_proyecto and entrega.disponible)
+        acciones.habilitar("escritura.autoevaluar", hay_proyecto and entrega.puedeAutoevaluar)
         acciones.habilitar("escritura.matriz", hay_proyecto and matriz.disponible)
         acciones.habilitar("escritura.pregunta", hay_proyecto and matriz.disponible and matriz.puede.get("pregunta", False))
         acciones.habilitar("escritura.revisar", hay_archivo and revisor.disponible)

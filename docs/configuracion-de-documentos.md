@@ -198,7 +198,7 @@ que se leyó con esa `huella`, o `{error}`.
 ## 10. La ayuda de la IA de una parte (`ayuda:`)
 
 Un marco cuyos documentos tienen prompts por parte lo declara al nivel del esquema; la ventana lo ofrece en Herramientas ›
-«Ayuda de la IA para esta parte…» (Ctrl+Alt+I; decisiones §1.19):
+«Ayuda de la IA para esta parte…» (Ctrl+Alt+A desde el 2026-11-18; decisiones §1.19 y §1.26):
 
 ```yaml
 ayuda:
@@ -242,8 +242,11 @@ nombre, descripcion}]}, campos: [{clave, rotulo, obligatorio, tipo, opciones, om
 JSON `{tipo, variante, <clave>: valor…}` del formulario. Sin `--aplicar`, `crear` **simula**: crea el documento en un
 temporal y devuelve `{destino, carpeta, slug, tipo, principal, archivos, avisos, escrito: false}` sin tocar la carpeta
 real; con `--aplicar` lo crea y devuelve lo mismo con `escrito: true`, y la ventana abre `principal`. Un problema (falta
-un dato obligatorio, la carpeta ya existe) vuelve como `{error}`. Lo declara escritura (`escritura/core/config/latex-studio.yml`,
-con `escritura/scripts/nuevo_documento.py` sobre `proyecto/main.py nuevo`); la muestra, `studio/ejemplo/proyectos/marco`
+un dato obligatorio, la carpeta ya existe) vuelve como `{error}`. Un campo `opcion` obligatorio con `omision` cuenta como lleno.
+Un tipo puede crear dentro de un proyecto que ya existe (las láminas de escritura: `destino` y `principal` son el
+`presentacion.tex` nuevo y `archivos`, lo que se escribirá). Lo declara escritura (`escritura/core/config/latex-studio.yml`,
+con `escritura/scripts/nuevo_documento.py` sobre `proyecto/main.py nuevo` y `proyecto/presentacion.py armar`: el informe
+con la nota de política y el informe NISO, y las láminas; decisiones §1.26); la muestra, `studio/ejemplo/proyectos/marco`
 (`studio/ejemplo/proyectos/marco/scripts/nuevo_muestra.py`). Pruebas: `tests/test_datos.py` y `tests/test_controladores.py`.
 
 ## 12. Antes de entregar (`entrega:`)
@@ -293,7 +296,9 @@ cambio, problemas, porque, fuente}`; `rubrica` tiene el **formato común** del e
 `null` si el documento no tiene; `cambio` dice que la rúbrica cambió desde que se puntuó. `autoevaluar` recibe en `{datos}`
 `{clave, puntaje, justificacion}` y, con `--aplicar`, lo guarda (imprime `{puntajes, nota, escrito}` o `{error}`: un
 puntaje que no es nivel, una justificación corta). La ventana lo pinta en «Autoevaluación» (`DialogoRubrica.qml`): los
-niveles del mejor al peor con su descriptor, la justificación y «Guardar» por criterio.
+niveles del mejor al peor con su descriptor, la justificación y «Guardar» por criterio. Se abre desde Herramientas ›
+«Autoevaluación con la rúbrica…» (la paleta también; habilitada si el marco declara las dos órdenes) o desde el control
+que trae `accion: autoevaluar` en «Antes de entregar».
 
 **El lector frío** (opcional; decisiones §1.22; mejora C11.4): `lector_frio: [..., '{proyecto}']` con `--aplicar` prepara
 fuera del documento una versión sin nombres para un revisor externo y la compila; imprime `{pdf, quitado: [{archivo, linea,
