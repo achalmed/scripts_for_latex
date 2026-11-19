@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maqueta — LaTeX Studio</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+/* Variables de respaldo: imitan las del anfitrión donde se mostró la maqueta. */
+:root{color-scheme:light;
+--bg-primary:#ffffff;--surface-1:#f4f3ef;--surface-2:#ffffff;
+--text-primary:#1c1c1e;--text-secondary:#6b6b66;--text-muted:#8e8e88;
+--text-accent:#2563eb;--text-success:#15803d;--text-warning:#b45309;--text-danger:#b91c1c;
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.24);--border-accent:#2563eb;--border-danger:#dc2626;--border-warning:#d97706;
+--bg-accent:#dbe7fd;--bg-accent-muted:#eef3fe;--bg-success:#dcfce7;--bg-warning:#fef3c7;--bg-danger:#fee2e2;
+--fill-accent:#2563eb;--fill-success:#16a34a;--fill-warning:#d97706;--fill-danger:#dc2626;--fill-ghost-selected:rgba(0,0,0,.06);
+--on-accent:#ffffff;--radius:8px;
+--font-sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;--font-voice:Georgia,"Source Serif 4",serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+--bg-primary:#1c1c1e;--surface-1:#242426;--surface-2:#2c2c2e;
+--text-primary:#f5f5f0;--text-secondary:#a0a09a;--text-muted:#7c7c76;
+--text-accent:#7aa7ff;--text-success:#4ade80;--text-warning:#fbbf24;--text-danger:#f87171;
+--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.24);--border-accent:#7aa7ff;
+--bg-accent:#1e3a6e;--bg-accent-muted:#1a2740;--bg-success:#14532d;--bg-warning:#4a3410;--bg-danger:#4c1d1d;
+--fill-ghost-selected:rgba(255,255,255,.08)}}
+body{margin:0;padding:24px 16px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);font-size:14px;line-height:1.5}
+main{max-width:1100px;margin:0 auto}
+.encabezado{margin:0 0 14px}.encabezado h1{font-size:18px;font-weight:600;margin:0}
+.encabezado p{margin:4px 0 0;color:var(--text-secondary);font-size:12px}
+button{font:inherit;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:var(--radius);cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<main>
+<header class="encabezado"><h1>Maqueta — LaTeX Studio</h1>
+<p>Recuperada de la sesión del 2026-11-17 (widget «latex_studio_maqueta_rediseno»).</p></header>
+<h2 class="sr-only">Maqueta del rediseño de LaTeX Studio: la vista de proyectos como tarjetas y la vista de escritura con capítulos, editor con inserciones, PDF y datos.</h2>
+<style>
+.w{border:.5px solid var(--border);border-radius:12px;background:var(--surface-2);overflow:hidden;font-size:12px;margin-bottom:1.25rem}
+.top{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:.5px solid var(--border)}
+.chip{display:inline-flex;align-items:center;gap:4px;border:.5px solid var(--border-strong);border-radius:var(--radius);padding:3px 8px;color:var(--text-primary);white-space:nowrap}
+.chip.p{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.mut{color:var(--text-secondary)}.sm{font-size:11px;color:var(--text-muted)}
+.card{border:.5px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.lab{font-size:11px;color:var(--text-muted);margin:8px 0 4px}
+.mono{font-family:var(--font-mono);font-size:11px}
+</style>
+
+<div class="w">
+ <div class="top">
+  <b style="font-weight:500">LaTeX Studio</b><span class="mut">· Tus documentos</span>
+  <span style="flex:1"></span>
+  <input placeholder="Buscar un documento" style="height:26px;width:170px;font-size:12px">
+  <span class="chip"><i class="ti ti-plus" aria-hidden="true"></i>Nuevo</span>
+  <span class="chip"><i class="ti ti-player-play" aria-hidden="true"></i>Compilar los marcados</span>
+ </div>
+ <div style="display:flex">
+  <div style="width:130px;padding:8px;border-right:.5px solid var(--border)">
+   <div class="lab">Tipos</div>
+   <div style="padding:4px 6px;border-radius:6px;background:var(--fill-ghost-selected)">Todos <span class="sm">87</span></div>
+   <div style="padding:4px 6px">Informes <span class="sm">22</span></div>
+   <div style="padding:4px 6px">Tesis <span class="sm">4</span></div>
+   <div style="padding:4px 6px">Docencia <span class="sm">31</span></div>
+   <div style="padding:4px 6px">Despacho <span class="sm">18</span></div>
+   <div class="lab">Estado</div>
+   <div style="padding:4px 6px"><span class="dot" style="background:var(--fill-danger)"></span> Con errores <span class="sm">2</span></div>
+   <div style="padding:4px 6px"><span class="dot" style="background:var(--fill-warning)"></span> Datos nuevos <span class="sm">1</span></div>
+  </div>
+  <div style="flex:1;padding:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+   <div class="card" style="padding:8px;border:2px solid var(--border-accent)">
+    <div style="height:78px;border-radius:6px;background:var(--surface-1);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px"><div style="width:60%;height:5px;background:var(--border-strong);border-radius:3px"></div><div style="width:40%;height:4px;background:var(--border);border-radius:3px"></div><div style="width:50%;height:22px;margin-top:4px;display:flex;align-items:end;gap:3px"><div style="flex:1;height:60%;background:#993C1D;opacity:.8"></div><div style="flex:1;height:90%;background:#993C1D;opacity:.8"></div><div style="flex:1;height:40%;background:#993C1D;opacity:.8"></div></div></div>
+    <div style="margin-top:6px;font-weight:500">Presupuesto 2027</div>
+    <div class="sm">Informe · hace 2 h · 64 págs.</div>
+    <div style="display:flex;gap:4px;margin-top:6px;align-items:center"><span class="dot" style="background:var(--fill-success)"></span><span class="sm">Compilado</span><span style="flex:1"></span><span class="chip" style="padding:1px 6px;background:var(--bg-warning);color:var(--text-warning);border-color:transparent">v8 de datos</span></div>
+   </div>
+   <div class="card" style="padding:8px">
+    <div style="height:78px;border-radius:6px;background:var(--surface-1);display:flex;justify-content:center;align-items:center"><div style="width:55%;display:flex;flex-direction:column;gap:4px"><div style="height:5px;background:var(--border-strong);border-radius:3px"></div><div style="height:3px;background:var(--border);border-radius:3px"></div><div style="height:3px;background:var(--border);border-radius:3px"></div><div style="height:3px;width:70%;background:var(--border);border-radius:3px"></div></div></div>
+    <div style="margin-top:6px;font-weight:500">Tesis de maestría</div>
+    <div class="sm">Tesis · ayer · 112 págs.</div>
+    <div style="display:flex;gap:4px;margin-top:6px;align-items:center"><span class="dot" style="background:var(--fill-warning)"></span><span class="sm">3 avisos</span></div>
+   </div>
+   <div class="card" style="padding:8px">
+    <div style="height:78px;border-radius:6px;background:var(--surface-1);display:flex;justify-content:center;align-items:center"><i class="ti ti-file-alert" style="font-size:24px;color:var(--text-danger)" aria-hidden="true"></i></div>
+    <div style="margin-top:6px;font-weight:500">Examen semana 6</div>
+    <div class="sm">Docencia · hace 3 días</div>
+    <div style="display:flex;gap:4px;margin-top:6px;align-items:center"><span class="dot" style="background:var(--fill-danger)"></span><span class="sm">No compila: falta \begin</span></div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div class="w">
+ <div class="top">
+  <i class="ti ti-arrow-left mut" aria-hidden="true"></i>
+  <b style="font-weight:500">Presupuesto 2027</b><span class="sm">informe · LuaLaTeX + Biber</span>
+  <span style="flex:1"></span>
+  <span class="dot" style="background:var(--fill-success)"></span><span class="sm" style="margin-right:6px">Compilado hace 2 min · 1 aviso</span>
+  <span class="chip p"><i class="ti ti-player-play" aria-hidden="true"></i>Compilar</span>
+  <span class="chip"><i class="ti ti-adjustments" aria-hidden="true"></i>Configurar</span>
+  <span class="chip"><i class="ti ti-chart-bar" aria-hidden="true"></i>Datafw Studio</span>
+ </div>
+ <div style="display:flex;min-height:330px">
+  <div style="width:150px;padding:8px;border-right:.5px solid var(--border)">
+   <div class="lab">Capítulos</div>
+   <div style="padding:3px 6px">1 Resumen <span class="sm">420 pal.</span></div>
+   <div style="padding:3px 6px">2 Introducción <span class="sm">910</span></div>
+   <div style="padding:3px 6px;border-radius:6px;background:var(--fill-ghost-selected)">3 Evolución <span class="sm">2 140</span></div>
+   <div style="padding:2px 6px 2px 18px" class="mut">3.1 Rubros</div>
+   <div style="padding:2px 6px 2px 18px" class="mut">3.2 Funciones</div>
+   <div style="padding:3px 6px">4 Programas <span class="sm">1 860</span></div>
+   <div style="padding:3px 6px">5 Endeudamiento</div>
+   <div class="lab">Datos del informe <span class="chip" style="padding:0 5px;font-size:10px;background:var(--bg-warning);color:var(--text-warning);border-color:transparent">v8</span></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+    <div class="card" style="height:34px;display:flex;align-items:end;gap:2px;padding:3px"><div style="flex:1;height:50%;background:#993C1D"></div><div style="flex:1;height:85%;background:#993C1D"></div><div style="flex:1;height:65%;background:#993C1D"></div></div>
+    <div class="card" style="height:34px;padding:3px"><svg viewBox="0 0 40 20" width="100%" height="100%"><polyline points="0,15 10,10 20,12 30,5 40,7" fill="none" stroke="#993C1D" stroke-width="1.5"/></svg></div>
+    <div class="card" style="height:34px;padding:3px;display:flex;flex-direction:column;gap:2px"><div style="height:3px;background:var(--border-strong)"></div><div style="height:3px;background:var(--border)"></div><div style="height:3px;background:var(--border)"></div><div style="height:3px;background:var(--border)"></div></div>
+    <div class="card" style="height:34px;display:flex;align-items:center;justify-content:center" class="mono"><span class="mono">62,2 %</span></div>
+   </div>
+   <div class="sm" style="margin-top:4px">Arrastra al texto o doble clic</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;border-right:.5px solid var(--border)">
+   <div style="display:flex;gap:4px;padding:6px 8px;border-bottom:.5px solid var(--border);flex-wrap:wrap">
+    <span class="chip"><i class="ti ti-heading" aria-hidden="true"></i>Sección</span>
+    <span class="chip"><i class="ti ti-photo" aria-hidden="true"></i>Figura</span>
+    <span class="chip"><i class="ti ti-table" aria-hidden="true"></i>Tabla</span>
+    <span class="chip"><i class="ti ti-quote" aria-hidden="true"></i>Cita</span>
+    <span class="chip"><i class="ti ti-math" aria-hidden="true"></i>Ecuación</span>
+    <span class="chip"><i class="ti ti-link" aria-hidden="true"></i>Referencia</span>
+   </div>
+   <div class="mono" style="padding:8px 10px;line-height:1.75;flex:1">
+    <div><span class="mut">12</span>&nbsp; \section{Rubros del gasto}</div>
+    <div><span class="mut">13</span>&nbsp; El gasto en educación llega a \cifraEducacion{} millones</div>
+    <div><span class="mut">14</span>&nbsp; de soles en el dictamen \citep{mef2026}.</div>
+    <div style="background:var(--bg-accent-muted);border-radius:4px"><span class="mut">15</span>&nbsp; \figv{rubros_pct_ley}</div>
+    <div><span class="mut">16</span>&nbsp; Como muestra la figura~\ref{fig:rubros_pct_ley}, …</div>
+   </div>
+   <div style="margin:8px;padding:8px 10px;border-radius:8px;background:var(--bg-warning);color:var(--text-warning);display:flex;align-items:center;gap:8px">
+    <i class="ti ti-alert-triangle" aria-hidden="true"></i><span style="flex:1">biblatex pide el paquete csquotes</span><span class="chip" style="border-color:var(--border-warning);color:var(--text-warning)">Añadirlo</span><span class="chip" style="border-color:var(--border-warning);color:var(--text-warning)">Ir a la línea</span>
+   </div>
+  </div>
+  <div style="width:170px;padding:8px;background:var(--surface-1)">
+   <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px"><span class="sm">Página 18 de 64</span><span style="flex:1"></span><i class="ti ti-zoom-in mut" aria-hidden="true"></i></div>
+   <div class="card" style="padding:10px;height:255px">
+    <div style="height:5px;width:70%;background:var(--border-strong);border-radius:3px;margin-bottom:6px"></div>
+    <div style="height:3px;background:var(--border);margin-bottom:3px"></div><div style="height:3px;background:var(--border);margin-bottom:3px"></div><div style="height:3px;width:80%;background:var(--border);margin-bottom:8px"></div>
+    <div style="height:70px;display:flex;align-items:end;gap:5px;border:2px solid var(--border-accent);border-radius:4px;padding:4px"><div style="flex:1;height:40%;background:#993C1D"></div><div style="flex:1;height:75%;background:#993C1D"></div><div style="flex:1;height:55%;background:#993C1D"></div><div style="flex:1;height:90%;background:#993C1D"></div></div>
+    <div class="sm" style="margin-top:4px">Figura 3. Rubros, % de la ley</div>
+    <div style="height:3px;background:var(--border);margin:8px 0 3px"></div><div style="height:3px;background:var(--border);margin-bottom:3px"></div>
+   </div>
+  </div>
+ </div>
+ <div class="top" style="border-top:.5px solid var(--border);border-bottom:none">
+  <span class="sm">3 Evolución · línea 15 · 9 840 palabras en total</span><span style="flex:1"></span>
+  <span class="chip"><i class="ti ti-list-details" aria-hidden="true"></i>Registro</span><span class="chip"><i class="ti ti-history" aria-hidden="true"></i>Historial</span>
+ </div>
+</div>
+</main>
+</body>
+</html>
