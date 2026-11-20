@@ -23,7 +23,7 @@ ColumnLayout {
         Layout.fillHeight: true
         texto: c.registro
         mensajeVacio: studio.proyectos.hayAbierto ? "Sin registro todavía: compila el proyecto (F5)" : "Ningún proyecto abierto"
-        iconoVacio: "text-x-log"
+        iconoVacio: "text-x-generic-symbolic"
         nombreAccesible: "Registro de la compilación"
     }
 }

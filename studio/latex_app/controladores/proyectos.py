@@ -23,8 +23,10 @@ COLUMNAS = [("Proyecto", "nombre"), ("Estado", "estado"), ("Motor", "motor"), ("
 ROLES_ARCHIVOS = ("ruta", "nombre", "relativa", "tipo", "icono", "existe")
 ROLES_ESQUEMA = ("tipo", "orden", "titulo", "nivel", "archivo", "linea", "icono", "etiqueta")
 ROLES_BIB = ("nombre", "tipo", "autor", "anio", "titulo", "archivo", "linea")
-ICONOS_ESTADO = {"compilado": "dialog-ok-apply", "avisos": "data-warning", "errores": "data-error",
-                 "desactualizado": "view-refresh", "sin_compilar": "dialog-cancel", "compilando": "system-run"}
+# simbólicos: la tabla y la ficha los pintan del color del estado (los emblemas a color de Colloid desentonaban y en
+# Oscuro «información» salía con el acento rojo)
+ICONOS_ESTADO = {"compilado": "checkmark-symbolic", "avisos": "dialog-warning-symbolic", "errores": "dialog-error-symbolic",
+                 "desactualizado": "view-refresh-symbolic", "sin_compilar": "action-unavailable-symbolic", "compilando": "system-run-symbolic"}
 ORDEN_ESTADO = {"errores": 0, "avisos": 1, "desactualizado": 2, "sin_compilar": 3, "compilado": 4, "compilando": 5}
 TODAS = "Todas"
 RECIENTES = "Recientes"
@@ -249,11 +251,13 @@ class Proyectos(QObject):
             for n in range(2, len(grupo) + 1):
                 ramas[tuple(grupo[:n])] = ramas.get(tuple(grupo[:n]), 0) + 1
         recientes = set(self.historial.recientes())
-        filas = [{"nombre": TODAS, "texto": "Todos los proyectos", "icono": "view-list-details", "contador": len(self._proyectos)},
-                 {"nombre": RECIENTES, "texto": "Recientes", "icono": "document-open-recent",
+        filas = [{"nombre": TODAS, "texto": "Todos los proyectos", "icono": "view-list-details-symbolic", "contador": len(self._proyectos)},
+                 {"nombre": RECIENTES, "texto": "Recientes", "icono": "document-open-recent-symbolic",
                   "contador": sum(1 for p in self._proyectos if p.principal in recientes)}]
-        iconos = ["document-edit", "school", "document-new", "view-pim-journal", "view-pim-mail", "view-calendar-tasks",
-                  "applications-internet", "view-pim-notes", "archive-extract", "run-build-prune", "folder-documents"]
+        # simbólicos (monocromos) y todos existentes en Breeze y Colloid: «school» no existía y salía «?»
+        iconos = ["document-edit-symbolic", "school-symbolic", "document-new-symbolic", "view-pim-journal-symbolic", "mail-message-symbolic",
+                  "view-calendar-tasks-symbolic", "globe-symbolic", "view-pim-notes-symbolic", "archive-extract-symbolic", "run-build-symbolic",
+                  "folder-documents-symbolic"]
         icono = {c: iconos[i] for i, c in enumerate(pr.CATEGORIAS)} | iconos_extra
         hijas: dict[tuple, list[tuple]] = {}
         for r in ramas:
@@ -267,7 +271,7 @@ class Proyectos(QObject):
                           "ancestros": ancestros, "plegable": bool(debajo),
                           "contador": cuenta[rama[0]] if len(rama) == 1 else ramas[rama]})
             for h in debajo:
-                poner(h, "folder-open" if hijas.get(h) else "folder")
+                poner(h, "folder-open-symbolic" if hijas.get(h) else "folder-symbolic")
 
         for c in sorted((c for c in cuenta if cuenta[c]), key=pr.orden_categoria):
             poner((c,), icono[c])

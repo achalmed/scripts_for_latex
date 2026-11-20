@@ -7,8 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     signal insertar(string texto)
     readonly property var pl: studio.plantillas
@@ -56,9 +58,9 @@ Kirigami.Dialog {
                 font: Kirigami.Theme.smallFont
                 color: Kirigami.Theme.disabledTextColor
             }
-            Chip { text: "Cerrar"; onClicked: dialogo.close() }
-            Chip {
-                text: "Insertar"; icono: "insert-text"; destacado: true
+            QQC2.Button { text: "Cerrar"; onClicked: dialogo.close() }
+            BotonPrincipal {
+                text: "Insertar"; icon.name: "insert-text-symbolic";
                 enabled: !!dialogo.compuesta && !!dialogo.compuesta.insertar && !dialogo.compuesta.error
                 opacity: enabled ? 1 : 0.5
                 onClicked: { dialogo.insertar(dialogo.compuesta.insertar); dialogo.close() }
@@ -76,9 +78,17 @@ Kirigami.Dialog {
                 clip: true
                 model: dialogo.pl.lista
                 delegate: QQC2.ItemDelegate {
+                    id: filaPlantilla
                     required property var modelData
                     width: lista.width
                     highlighted: dialogo.elegida && dialogo.elegida.clave === modelData.clave
+                    hoverEnabled: true
+                    topInset: 1
+                    bottomInset: 1
+                    leftInset: Kirigami.Units.smallSpacing
+                    rightInset: Kirigami.Units.smallSpacing
+                    leftPadding: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    background: FondoSeleccion { elegida: filaPlantilla.highlighted; sobre: filaPlantilla.hovered; pulsada: filaPlantilla.pressed; foco: filaPlantilla.visualFocus }
                     onClicked: dialogo.elegir(modelData)
                     contentItem: ColumnLayout {
                         spacing: 0
@@ -112,7 +122,7 @@ Kirigami.Dialog {
                 Kirigami.PlaceholderMessage {
                     Layout.fillWidth: true
                     visible: !dialogo.elegida
-                    icon.name: "insert-table"
+                    icon.name: "insert-table-symbolic"
                     text: "Elige una plantilla"
                 }
                 Kirigami.Heading { level: 3; visible: !!dialogo.elegida; text: dialogo.elegida ? dialogo.elegida.nombre : "" }

@@ -108,6 +108,7 @@ DialogoAjustes {
     }
 
     Kirigami.Dialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: confirmar
         property string diferencia: ""
         title: "Aplicar la configuración"

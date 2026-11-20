@@ -7,8 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var b: studio.biblioteca
     readonly property var tipos: (b.formulario && b.formulario.tipos) || []
@@ -117,11 +119,11 @@ Kirigami.Dialog {
                 spacing: Kirigami.Units.smallSpacing
                 Repeater {
                     model: dialogo.tipos
-                    Chip {
+                    OpcionColor {
                         required property var modelData
                         text: modelData.nombre
-                        destacado: dialogo.tipo === modelData.clave
                         onClicked: { dialogo.tipo = modelData.clave; dialogo.revision = null }
+                        elegida: dialogo.tipo === modelData.clave
                     }
                 }
             }
@@ -151,10 +153,19 @@ Kirigami.Dialog {
                 model: dialogo.b.resultados
                 Accessible.name: "Libros para la ficha"
                 delegate: QQC2.ItemDelegate {
+                    id: filaLibroFicha
                     required property var modelData
                     width: libros.width
                     highlighted: !!dialogo.libro && dialogo.libro.calibre_id === modelData.calibre_id
                     text: modelData.titulo + ((modelData.autores || []).length ? " · " + modelData.autores.join("; ") : "")
+                    hoverEnabled: true
+                    topInset: 1
+                    bottomInset: 1
+                    leftInset: Kirigami.Units.smallSpacing
+                    rightInset: Kirigami.Units.smallSpacing
+                    leftPadding: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                    background: FondoSeleccion { elegida: filaLibroFicha.highlighted; sobre: filaLibroFicha.hovered; pulsada: filaLibroFicha.pressed; foco: filaLibroFicha.visualFocus }
+                    contentItem: QQC2.Label { text: filaLibroFicha.text; elide: Text.ElideRight; font.weight: filaLibroFicha.highlighted ? Font.DemiBold : Font.Normal }
                     onClicked: { dialogo.libro = modelData; dialogo.revision = null }
                 }
             }
@@ -218,8 +229,9 @@ Kirigami.Dialog {
                     Layout.fillWidth: true
                     readonly property string estado: dialogo.revisada ? dialogo.revision.verificacion.estado || "pendiente" : ""
                     Kirigami.Icon {
-                        source: parent.estado.startsWith("verificada") ? "checkmark" : parent.estado === "observada" ? "data-warning" : "question"
+                        source: parent.estado.startsWith("verificada") ? "checkmark-symbolic" : parent.estado === "observada" ? "dialog-warning-symbolic" : "dialog-question-symbolic"
                         implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth
+                        isMask: true
                         color: parent.estado.startsWith("verificada") ? Kirigami.Theme.positiveTextColor
                              : parent.estado === "observada" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor
                     }

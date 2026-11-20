@@ -9,8 +9,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var a: studio.ayuda
     property var editor: null                   // el EditorTexto de la parte abierta
@@ -123,11 +125,11 @@ Kirigami.Dialog {
                 spacing: Kirigami.Units.smallSpacing
                 Repeater {
                     model: dialogo.prompt ? dialogo.prompt.componentes || [] : []
-                    Chip {
+                    OpcionColor {
                         required property var modelData
                         text: modelData.titulo
-                        destacado: dialogo.componente === modelData.clave
                         onClicked: { dialogo.componente = modelData.clave; dialogo.pegado = null; dialogo.esperando = true; dialogo.a.pedirPrompt(dialogo.editor.ruta, modelData.clave) }
+                        elegida: dialogo.componente === modelData.clave
                     }
                 }
             }

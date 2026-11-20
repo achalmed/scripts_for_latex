@@ -18,6 +18,13 @@ QQC2.AbstractButton {
                                        : fila.nivel === "positivo" ? Kirigami.Theme.positiveTextColor
                                        : fila.nivel === "activo" ? Kirigami.Theme.activeTextColor : Kirigami.Theme.disabledTextColor
 
+    // el nombre que se enseña de un archivo: «carpeta/main.tex» → «carpeta»; «otro.tex» → «otro»
+    function nombreVisible(ruta) {
+        const partes = ruta.split("/").filter(x => x !== "")
+        const archivo = (partes.pop() || "").replace(/\.tex$/, "")
+        return archivo === "main" && partes.length > 0 ? partes.pop() : archivo
+    }
+
     signal elegir(bool marcar)
     signal abrir()
 
@@ -31,7 +38,9 @@ QQC2.AbstractButton {
 
     background: Rectangle {
         radius: Kirigami.Units.cornerRadius * 2
-        color: raiz.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.04) : Kirigami.Theme.backgroundColor
+        // la elegida, teñida del acento (con su borde); al pasar, un velo tenue
+        color: raiz.elegida ? Kirigami.ColorUtils.tintWithAlpha(Kirigami.Theme.backgroundColor, Kirigami.Theme.highlightColor, raiz.hovered ? 0.14 : 0.10)
+             : raiz.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.04) : Kirigami.Theme.backgroundColor
         border.width: raiz.elegida ? 2 : 1
         border.color: raiz.elegida ? Kirigami.Theme.highlightColor
                     : raiz.marcada ? Qt.alpha(Kirigami.Theme.highlightColor, 0.6) : Qt.alpha(Kirigami.Theme.textColor, raiz.hovered ? 0.25 : 0.14)
@@ -59,22 +68,27 @@ QQC2.AbstractButton {
             Kirigami.Icon {
                 anchors.centerIn: parent
                 visible: miniatura.status !== Image.Ready
-                source: raiz.fila.clave === "errores" ? "data-error" : "text-x-tex"
-                implicitWidth: Kirigami.Units.iconSizes.large
+                // sin miniatura, un icono simbólico tenue (antes, la cruz roja de 48 px de «data-error» dominaba la
+                // cuadrícula): el error ya lo dice el punto y la línea de estado de abajo
+                source: raiz.fila.clave === "errores" ? "dialog-error-symbolic" : "text-x-generic-symbolic"
+                implicitWidth: Kirigami.Units.iconSizes.medium
                 implicitHeight: implicitWidth
+                isMask: true
                 color: raiz.fila.clave === "errores" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.disabledTextColor
+                opacity: 0.6
             }
             Rectangle {                                        // marcada para la cola
                 visible: raiz.marcada
                 anchors.top: parent.top; anchors.right: parent.right; anchors.margins: Kirigami.Units.smallSpacing
                 width: Kirigami.Units.iconSizes.smallMedium; height: width; radius: width / 2
                 color: Kirigami.Theme.highlightColor
-                Kirigami.Icon { anchors.centerIn: parent; source: "checkmark"; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth; color: Kirigami.Theme.highlightedTextColor }
+                Kirigami.Icon { anchors.centerIn: parent; source: "checkmark-symbolic"; isMask: true; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth; color: Kirigami.Theme.highlightedTextColor }
             }
         }
         QQC2.Label {
             Layout.fillWidth: true
-            text: raiz.fila.titulo || (raiz.fila.nombre || "").split("/").pop().replace(/\.tex$/, "")
+            // sin título, el nombre del archivo; si es «main.tex» (seis de cada nueve), el de su carpeta
+            text: raiz.fila.titulo || raiz.nombreVisible((raiz.fila.relativa || raiz.fila.nombre || ""))
             font.weight: Font.Medium
             elide: Text.ElideRight
             maximumLineCount: 2

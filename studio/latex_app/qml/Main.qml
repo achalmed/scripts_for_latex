@@ -255,44 +255,69 @@ VentanaStudio {
             }
             QQC2.BusyIndicator { running: studio.tareas.activa; visible: running; implicitWidth: Kirigami.Units.iconSizes.smallMedium; implicitHeight: implicitWidth }
 
-            Chip {
-                visible: ventana.escribiendo
-                text: ventana.compilando ? "Detener" : "Compilar"
-                icono: ventana.compilando ? "process-stop" : "run-build"
-                destacado: !ventana.compilando
-                ayuda: ventana.compilando ? "Detener la compilación (Esc)" : "Compilar con su compilador y su motor (F5 o Ctrl+B)"
-                onClicked: ventana.accion(ventana.compilando ? "compilar.cancelar" : "compilar.compilar").disparar()
+            // compilar es la acción principal (relleno del acento); mientras compila, «Detener» con borde
+            BotonPrincipal {
+                visible: ventana.escribiendo && !ventana.compilando
+                text: "Compilar"
+                icon.name: "run-build-symbolic"
+                onClicked: ventana.accion("compilar.compilar").disparar()
+                QQC2.ToolTip.text: "Compilar con su compilador y su motor (F5 o Ctrl+B)"
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
+            QQC2.Button {
+                visible: ventana.escribiendo && ventana.compilando
+                text: "Detener"
+                icon.name: "process-stop"
+                onClicked: ventana.accion("compilar.cancelar").disparar()
+                QQC2.ToolTip.text: "Detener la compilación (Esc)"
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+            }
+            QQC2.Button {
                 visible: ventana.escribiendo
                 text: "Configurar"
-                icono: "document-properties"
-                ayuda: "Título, autor, tema y opciones de la clase (Ctrl+Alt+D)"
+                icon.name: "document-properties"
+                QQC2.ToolTip.text: "Título, autor, tema y opciones de la clase (Ctrl+Alt+D)"
                 onClicked: studio.interfaz.pedir("configurar_documento", { ruta: p.principal })
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
+            QQC2.Button {
                 visible: ventana.escribiendo && studio.datos.productor !== ""
                 text: studio.datos.productor
-                icono: "office-chart-bar"
-                ayuda: "Hacer o rehacer las figuras y tablas de este documento"
+                icon.name: "office-chart-bar"
+                QQC2.ToolTip.text: "Hacer o rehacer las figuras y tablas de este documento"
                 onClicked: studio.datos.abrirProductor()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
+            QQC2.Button {
                 visible: ventana.escribiendo
                 text: "PDF"
-                icono: "application-pdf"
-                destacado: false
-                ayuda: "Mostrar u ocultar el PDF al lado del código (F7)"
+                icon.name: "document-preview"
+                QQC2.ToolTip.text: "Mostrar u ocultar el PDF al lado del código (F7)"
                 onClicked: studio.interfaz.pedir("alternar_pdf", {})
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
 
-            Chip { visible: !ventana.escribiendo; text: "Nuevo documento"; icono: "document-new"; ayuda: "Un informe, una tesis, un artículo… con la estructura de su marco (Ctrl+N)"
-                   onClicked: studio.interfaz.pedir("nuevo_documento", {}) }
-            Chip { visible: !ventana.escribiendo; text: "Abrir un .tex"; icono: "document-open"; ayuda: "Ctrl+O"; onClicked: studio.interfaz.pedir("abrir_tex", {}) }
-            Chip { visible: !ventana.escribiendo; text: "Compilar los marcados"; icono: "run-build"; ayuda: "Marca con Ctrl+clic; se compilan uno tras otro (Ctrl+Mayús+F5)"
-                   onClicked: paginaProyectos.compilarMarcados() }
-            Chip { visible: !ventana.escribiendo && p.hayAbierto; text: "Volver a " + (p.hayAbierto ? (p.abierto.titulo || p.nombreAbierto) : "")
-                   icono: "go-next"; onClicked: studio.interfaz.fijarVista("escritura"); ayuda: "El documento abierto (Ctrl+2)" }
+            QQC2.Button { visible: !ventana.escribiendo; text: "Nuevo documento"; icon.name: "document-new"; QQC2.ToolTip.text: "Un informe, una tesis, un artículo… con la estructura de su marco (Ctrl+N)"
+                   onClicked: studio.interfaz.pedir("nuevo_documento", {})
+                   QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                   QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                   icon.color: Kirigami.Theme.textColor }
+            QQC2.Button { visible: !ventana.escribiendo; text: "Abrir un .tex"; icon.name: "document-open"; QQC2.ToolTip.text: "Ctrl+O"; onClicked: studio.interfaz.pedir("abrir_tex", {}); QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+            QQC2.Button { visible: !ventana.escribiendo; text: "Compilar los marcados"; icon.name: "run-build"; QQC2.ToolTip.text: "Marca con Ctrl+clic; se compilan uno tras otro (Ctrl+Mayús+F5)"
+                   onClicked: paginaProyectos.compilarMarcados()
+                   QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                   QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                   icon.color: Kirigami.Theme.textColor }
+            QQC2.Button { visible: !ventana.escribiendo && p.hayAbierto; text: "Volver a " + (p.hayAbierto ? (p.abierto.titulo || p.nombreAbierto) : "")
+                   icon.name: "go-next"; onClicked: studio.interfaz.fijarVista("escritura"); QQC2.ToolTip.text: "El documento abierto (Ctrl+2)"
+                   QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                   QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                   icon.color: Kirigami.Theme.textColor }
 
             BotonAccion { visible: ventana.existe("ventana.navegacion"); accion: ventana.existe("ventana.navegacion") ? ventana.acciones.accion("ventana.navegacion") : null; conTexto: false; flat: true }
             BotonAccion { visible: ventana.existe("ventana.inferior"); accion: ventana.existe("ventana.inferior") ? ventana.acciones.accion("ventana.inferior") : null; conTexto: false; flat: true }
@@ -344,14 +369,20 @@ VentanaStudio {
             Connections { target: listaProblemas.c; function onProblemasCambiados() { listaProblemas.actual = listaProblemas.c.problemaActual } }
             nombreAccesible: "Problemas"
             onElegido: (indice) => c.elegir(indice)
-            iconoVacio: c.origenRegistro !== "" && c.nProblemas === 0 ? "data-success" : "data-information"
+            // un icono simbólico (antes, emblemas a color de 64 px: la «i» salía roja en Oscuro); el ✓ solo con «Sin errores»
+            iconoVacio: c.origenRegistro !== "" && c.nProblemas === 0 && studio.proyectos.hayAbierto ? "checkmark-symbolic" : "dialog-information-symbolic"
             mensajeVacio: !studio.proyectos.hayAbierto ? "Ningún proyecto abierto"
                           : c.origenRegistro === "" ? "Sin registro todavía" : c.nProblemas === 0 ? "Sin errores ni avisos" : "Todos los problemas están filtrados"
             explicacionVacia: studio.proyectos.hayAbierto && c.origenRegistro === "" ? "Compila (F5) para leer los errores y avisos con su archivo y su línea." : ""
             cabecera: [
-                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarErrores; onToggled: listaProblemas.c.mostrarErrores = checked; icon.name: "data-error"; text: listaProblemas.c.nErrores; Accessible.name: "Errores: " + listaProblemas.c.nErrores; QQC2.ToolTip.text: "Errores"; QQC2.ToolTip.visible: hovered },
-                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarAvisos; onToggled: listaProblemas.c.mostrarAvisos = checked; icon.name: "data-warning"; text: listaProblemas.c.nAvisos; Accessible.name: "Avisos: " + listaProblemas.c.nAvisos; QQC2.ToolTip.text: "Avisos"; QQC2.ToolTip.visible: hovered },
-                QQC2.ToolButton { checkable: true; checked: listaProblemas.c.mostrarTipografia; onToggled: listaProblemas.c.mostrarTipografia = checked; icon.name: "format-justify-fill"; text: listaProblemas.c.nTipografia; Accessible.name: "Tipografía: " + listaProblemas.c.nTipografia; QQC2.ToolTip.text: "Avisos tipográficos (Overfull, Underfull)"; QQC2.ToolTip.visible: hovered },
+                // los filtros por nivel, en un pozo: píldoras con el punto de su color y su cuenta, teñidas si se ven
+                // (antes, tres botones marcados en azul pleno con el emblema rojo dentro)
+                GrupoOpciones {
+                    titulo: "Qué problemas se ven"
+                    OpcionColor { compacta: true; text: "Errores  " + listaProblemas.c.nErrores; color: Kirigami.Theme.negativeTextColor; elegida: listaProblemas.c.mostrarErrores; onClicked: listaProblemas.c.mostrarErrores = !listaProblemas.c.mostrarErrores; descripcion: "Mostrar u ocultar los errores" }
+                    OpcionColor { compacta: true; text: "Avisos  " + listaProblemas.c.nAvisos; color: Kirigami.Theme.neutralTextColor; elegida: listaProblemas.c.mostrarAvisos; onClicked: listaProblemas.c.mostrarAvisos = !listaProblemas.c.mostrarAvisos; descripcion: "Mostrar u ocultar los avisos" }
+                    OpcionColor { compacta: true; text: "Tipografía  " + listaProblemas.c.nTipografia; color: Kirigami.Theme.disabledTextColor; elegida: listaProblemas.c.mostrarTipografia; onClicked: listaProblemas.c.mostrarTipografia = !listaProblemas.c.mostrarTipografia; descripcion: "Mostrar u ocultar los avisos tipográficos (Overfull, Underfull)" }
+                },
                 QQC2.Label { Layout.fillWidth: true; text: listaProblemas.c.origenRegistro ? "de " + listaProblemas.c.origenRegistro.split("/").pop() : ""; elide: Text.ElideMiddle; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor },
                 QQC2.Button { text: "Revisar dependencias"; icon.name: "tools-check-spelling"; flat: true; enabled: studio.proyectos.hayAbierto; onClicked: listaProblemas.c.revisarDependencias("") }
             ]
@@ -388,6 +419,7 @@ VentanaStudio {
         }
     }
     Kirigami.PromptDialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: dialogoSalir
         title: "Cambios sin guardar"
         subtitle: "Hay archivos con cambios sin guardar: " + studio.editor.modificados.map(r => r.split("/").pop()).join(", ") + "."
@@ -398,6 +430,7 @@ VentanaStudio {
         ]
     }
     Kirigami.Dialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: dialogoLinea
         property int maximo: 1
         title: "Ir a la línea"
@@ -411,6 +444,7 @@ VentanaStudio {
         }
     }
     Kirigami.Dialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: dialogoAtajos
         title: "Atajos de teclado"
         standardButtons: Kirigami.Dialog.Close

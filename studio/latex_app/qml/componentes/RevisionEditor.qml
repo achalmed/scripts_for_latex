@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 ColumnLayout {
     id: raiz
@@ -23,9 +24,16 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.margins: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
-        Chip { text: "Todo (" + (raiz.r.hallazgos || []).length + ")"; destacado: raiz.clase === ""; onClicked: raiz.clase = "" }
-        Chip { text: "Estilo (" + (raiz.r.estilo || 0) + ")"; destacado: raiz.clase === "estilo"; onClicked: raiz.clase = "estilo" }
-        Chip { text: "LaTeX (" + (raiz.r.latex || 0) + ")"; destacado: raiz.clase === "latex"; onClicked: raiz.clase = "latex" }
+        // la clase de hallazgos: una entre tres, el selector segmentado de la base
+        SelectorSegmentado {
+            titulo: "Clase de hallazgos"
+            compacto: true
+            opciones: [{ clave: "todo", texto: "Todo", contador: (raiz.r.hallazgos || []).length },
+                       { clave: "estilo", texto: "Estilo", contador: raiz.r.estilo || 0 },
+                       { clave: "latex", texto: "LaTeX", contador: raiz.r.latex || 0 }]
+            actual: raiz.clase === "" ? "todo" : raiz.clase
+            onElegida: clave => raiz.clase = clave === "todo" ? "" : clave
+        }
         QQC2.Label {
             Layout.fillWidth: true
             elide: Text.ElideMiddle
@@ -60,7 +68,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 width: parent.width - Kirigami.Units.gridUnit * 4
                 visible: lista.count === 0
-                icon.name: studio.revisor.ruta && !raiz.r.error ? "data-success" : "data-information"
+                icon.name: studio.revisor.ruta && !raiz.r.error ? "checkmark-symbolic" : "dialog-information-symbolic"
                 text: !studio.revisor.disponible ? "El marco del proyecto no declara un revisor"
                       : !studio.revisor.ruta ? "Sin revisar todavía" : "Nada que sugerir"
                 explanation: studio.revisor.disponible && !studio.revisor.ruta ? "Guarda el archivo o pulsa «Revisar» (Ctrl+Alt+R)." : ""

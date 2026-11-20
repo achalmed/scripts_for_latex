@@ -80,15 +80,20 @@ QQC2.Control {
                     onActivated: index => studio.proyectos.elegirVersion(filaVersion.versiones[index].clave)
                 }
             }
-            QQC2.TabBar {
+            // las cuatro pestañas: el selector segmentado de la base (antes, una regleta de recuadros grises);
+            // `currentIndex` lo conserva para quien la elige desde fuera (capturar.py)
+            SelectorSegmentado {
                 id: pestanas
                 objectName: "pestanasLaterales"
-                Layout.fillWidth: true
-                // las cuatro a lo ancho (con cuatro, la barra se desplazaba y «Archivos» quedaba fuera de la vista)
-                QQC2.TabButton { text: "Archivos"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
-                QQC2.TabButton { text: "Esquema"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
-                QQC2.TabButton { text: "Citas"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
-                QQC2.TabButton { text: "Datos"; width: pestanas.width / 4; font: Kirigami.Theme.smallFont }
+                property int currentIndex: 0
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
+                titulo: "Barra lateral"
+                compacto: true
+                opciones: [{ clave: "0", texto: "Archivos" }, { clave: "1", texto: "Esquema" }, { clave: "2", texto: "Citas" }, { clave: "3", texto: "Datos" }]
+                actual: String(currentIndex)
+                onElegida: clave => currentIndex = Number(clave)
             }
             StackLayout {
                 Layout.fillWidth: true
@@ -105,11 +110,24 @@ QQC2.Control {
                     section.property: "tipo"
                     section.delegate: Kirigami.ListSectionHeader { required property string section; width: archivos.width; text: section === "principal" ? "Documento principal" : section === "incluido" ? "Incluidos" : section === "bibliografía" ? "Bibliografía" : "Configuración" }
                     delegate: QQC2.ItemDelegate {
+                        id: filaArchivo
                         required property var model
                         width: archivos.width
                         text: model.relativa
                         icon.name: model.icono
                         highlighted: studio.editor.actual === model.ruta
+                        hoverEnabled: true
+                        topInset: 1
+                        bottomInset: 1
+                        leftInset: Kirigami.Units.smallSpacing
+                        rightInset: Kirigami.Units.smallSpacing
+                        leftPadding: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+                        background: FondoSeleccion { elegida: filaArchivo.highlighted; sobre: filaArchivo.hovered; pulsada: filaArchivo.pressed; foco: filaArchivo.visualFocus }
+                        contentItem: RowLayout {
+                            spacing: Kirigami.Units.smallSpacing + Kirigami.Units.smallSpacing / 2
+                            Kirigami.Icon { source: filaArchivo.icon.name; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth; opacity: 0.85 }
+                            QQC2.Label { text: filaArchivo.text; Layout.fillWidth: true; elide: Text.ElideMiddle; font.weight: filaArchivo.highlighted ? Font.DemiBold : Font.Normal }
+                        }
                         enabled: model.existe
                         onClicked: raiz.abrirArchivo(model.ruta, 0)
                         QQC2.ToolTip.text: model.ruta
@@ -142,7 +160,7 @@ QQC2.Control {
                             onClicked: raiz.abrirArchivo(model.archivo, model.linea)
                             contentItem: RowLayout {
                                 spacing: Kirigami.Units.smallSpacing
-                                Kirigami.Icon { source: model.icono; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth }
+                                Kirigami.Icon { visible: model.icono !== ""; source: model.icono; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth; isMask: true; color: Kirigami.Theme.disabledTextColor }
                                 QQC2.Label {
                                     Layout.fillWidth: true
                                     text: model.titulo
@@ -182,12 +200,12 @@ QQC2.Control {
                         spacing: Kirigami.Units.smallSpacing
                         Repeater {
                             model: ["Del proyecto", pestanaCitas.b.nombre, "Fichas (" + pestanaCitas.b.fichas.length + ")"]
-                            Chip {
+                            OpcionColor {
                                 required property string modelData
                                 required property int index
                                 text: modelData
-                                destacado: pestanaCitas.modo === index
                                 onClicked: { pestanaCitas.modo = index; if (index === 1 && pestanaCitas.b.resultados.length === 0) pestanaCitas.b.buscar("") }
+                                elegida: pestanaCitas.modo === index
                             }
                         }
                     }
@@ -196,12 +214,14 @@ QQC2.Control {
                         Layout.leftMargin: Kirigami.Units.smallSpacing
                         Layout.rightMargin: Kirigami.Units.smallSpacing
                         visible: pestanaCitas.modo === 2 && pestanaCitas.b.puedeFichar
-                        Chip {
+                        QQC2.Button {
                             objectName: "nuevaFicha"
                             text: "Nueva ficha"
-                            icono: "document-new"
-                            ayuda: "Una ficha textual, de paráfrasis, de síntesis o de fuente, con la norma de fichas y su cotejo contra el PDF"
+                            icon.name: "document-new"
+                            QQC2.ToolTip.text: "Una ficha textual, de paráfrasis, de síntesis o de fuente, con la norma de fichas y su cotejo contra el PDF"
                             onClicked: dialogoFicha.nuevaPara(null)
+                            QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                         }
                         Item { Layout.fillWidth: true }
                     }
@@ -455,7 +475,7 @@ QQC2.Control {
                                                                                : (filaDato.modelData.titulo || filaDato.modelData.id)
                                     font.family: filaDato.modelData.tipo === "Cifras" ? Kirigami.Theme.fixedWidthFont.family : Kirigami.Theme.defaultFont.family
                                     elide: Text.ElideRight
-                                    color: filaDato.modelData.existe ? Kirigami.Theme.textColor : Kirigami.Theme.neutralTextColor
+                                    color: Kirigami.Theme.textColor
                                 }
                                 QQC2.Label {
                                     visible: filaDato.modelData.tipo !== "Cifras"

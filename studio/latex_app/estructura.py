@@ -14,7 +14,9 @@ from latex_app import proyectos as pr
 NIVELES = {"part": 0, "chapter": 1, "section": 2, "subsection": 3, "subsubsection": 4, "paragraph": 5, "frametitle": 2}
 FLOTANTES = {"figure": "figura", "figure*": "figura", "table": "tabla", "table*": "tabla", "longtable": "tabla",
              "sidewaysfigure": "figura", "sidewaystable": "tabla", "frame": "lámina"}
-ICONOS = {"seccion": "format-text-bold", "figura": "image-x-generic", "tabla": "table", "etiqueta": "tag", "lámina": "view-presentation"}
+# simbólicos y monocromos; las secciones sin icono (la «B» de negrita leía la jerarquía por el icono equivocado):
+# las distinguen la sangría y el peso de la letra
+ICONOS = {"seccion": "", "figura": "image-x-generic-symbolic", "tabla": "insert-table-symbolic", "etiqueta": "tag-symbolic", "lámina": "view-presentation-symbolic"}
 
 _SECCION = re.compile(r"\\(?P<orden>part|chapter|section|subsection|subsubsection|paragraph|frametitle)(?P<estrella>\*?)"
                       r"\s*(?:\[[^\]]*\])?\s*\{(?P<titulo>(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}")

@@ -25,7 +25,7 @@ ColumnLayout {
         claveAjustes: "historial"
         umbralEstrecho: Kirigami.Units.gridUnit * 34
         mensajeVacio: "Sin compilaciones todavía: cada una queda aquí con su resultado y su duración"
-        iconoVacio: "view-history"
+        iconoVacio: "view-history-symbolic"
         columnas: [
             { ancho: 9, secundaria: true },
             { ancho: 0, minimo: 10, conIcono: true },

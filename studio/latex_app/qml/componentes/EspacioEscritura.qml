@@ -79,7 +79,9 @@ QQC2.SplitView {
             onCerrarPedido: ruta => raiz.cerrar(ruta)
         }
 
-        // la barra de insertar: el LaTeX de memoria, en un formulario corto (DialogoInsertar en Main)
+        // la barra de insertar: el LaTeX de memoria, en un formulario corto (DialogoInsertar en Main). Las opciones en
+        // pozos (GrupoOpciones) por familia —estructura, objetos, referencias, formato— y como píldoras de la base
+        // (OpcionColor) con iconos monocromos: antes, nueve botones con borde de iconos mezclados que partían la línea
         Flow {
             Layout.fillWidth: true
             Layout.margins: Kirigami.Units.smallSpacing
@@ -87,26 +89,37 @@ QQC2.SplitView {
             spacing: Kirigami.Units.smallSpacing
             Repeater {
                 model: [
-                    { tipo: "seccion", texto: "Sección", icono: "format-text-heading", ayuda: "Un capítulo, sección o subsección con su etiqueta" },
-                    { tipo: "figura", texto: "Figura", icono: "insert-image", ayuda: "Una imagen con su título, etiqueta, ancho y fuente" },
-                    { tipo: "tabla", texto: "Tabla", icono: "insert-table", ayuda: "Una tabla escrita celda por celda (booktabs)" },
-                    { tipo: "cita", texto: "Cita", icono: "format-text-blockquote", ayuda: "Una o varias entradas de los .bib del proyecto" },
-                    { tipo: "ecuacion", texto: "Ecuación", icono: "labplot-formula", ayuda: "Numerada o no, con su etiqueta" },
-                    { tipo: "referencia", texto: "Referencia", icono: "insert-link", ayuda: "A una figura, tabla, sección o ecuación con \\label" },
-                    { tipo: "lista", texto: "Lista", icono: "format-list-unordered", ayuda: "Con viñetas o numerada, un elemento por línea" }
+                    [{ tipo: "seccion", texto: "Sección", icono: "view-list-tree-symbolic", ayuda: "Un capítulo, sección o subsección con su etiqueta" },
+                     { tipo: "lista", texto: "Lista", icono: "format-list-unordered-symbolic", ayuda: "Con viñetas o numerada, un elemento por línea" }],
+                    [{ tipo: "figura", texto: "Figura", icono: "insert-image-symbolic", ayuda: "Una imagen con su título, etiqueta, ancho y fuente" },
+                     { tipo: "tabla", texto: "Tabla", icono: "insert-table-symbolic", ayuda: "Una tabla escrita celda por celda (booktabs)" },
+                     { tipo: "ecuacion", texto: "Ecuación", icono: "formula-symbolic", ayuda: "Numerada o no, con su etiqueta" }],
+                    [{ tipo: "cita", texto: "Cita", icono: "format-text-blockquote-symbolic", ayuda: "Una o varias entradas de los .bib del proyecto" },
+                     { tipo: "referencia", texto: "Referencia", icono: "insert-link-symbolic", ayuda: "A una figura, tabla, sección o ecuación con \\label" }]
                 ]
-                Chip {
+                delegate: GrupoOpciones {
+                    id: grupoInsertar
                     required property var modelData
-                    text: modelData.texto
-                    icono: modelData.icono
-                    ayuda: modelData.ayuda
-                    onClicked: ventana.pedirInsertar(modelData.tipo)
+                    titulo: "Insertar"
+                    Repeater {
+                        model: grupoInsertar.modelData
+                        delegate: OpcionColor {
+                            required property var modelData
+                            text: modelData.texto
+                            icon.name: modelData.icono
+                            compacta: true
+                            descripcion: modelData.ayuda
+                            onClicked: ventana.pedirInsertar(modelData.tipo)
+                        }
+                    }
                 }
             }
-            Rectangle { width: 1; height: Kirigami.Units.gridUnit * 1.4; color: Qt.alpha(Kirigami.Theme.textColor, 0.15) }
-            Chip { icono: "format-text-bold"; ayuda: "Negrita (\\textbf) sobre lo elegido"; onClicked: ventana.envolver("\\textbf{", "}") }
-            Chip { icono: "format-text-italic"; ayuda: "Énfasis (\\emph) sobre lo elegido"; onClicked: ventana.envolver("\\emph{", "}") }
-            Chip { icono: "format-text-superscript"; ayuda: "Nota al pie (\\footnote) con lo elegido"; onClicked: ventana.envolver("\\footnote{", "}") }
+            GrupoOpciones {
+                titulo: "Formato"
+                OpcionColor { icon.name: "format-text-bold-symbolic"; compacta: true; descripcion: "Negrita (\\textbf) sobre lo elegido"; Accessible.name: "Negrita"; onClicked: ventana.envolver("\\textbf{", "}") }
+                OpcionColor { icon.name: "format-text-italic-symbolic"; compacta: true; descripcion: "Énfasis (\\emph) sobre lo elegido"; Accessible.name: "Énfasis"; onClicked: ventana.envolver("\\emph{", "}") }
+                OpcionColor { icon.name: "format-text-superscript-symbolic"; compacta: true; descripcion: "Nota al pie (\\footnote) con lo elegido"; Accessible.name: "Nota al pie"; onClicked: ventana.envolver("\\footnote{", "}") }
+            }
         }
 
         StackLayout {
@@ -138,7 +151,7 @@ QQC2.SplitView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             visible: studio.editor.abiertos.filas === 0
-            icon.name: "document-edit"
+            icon.name: "document-edit-symbolic"
             text: studio.proyectos.hayAbierto ? "Elige un archivo del proyecto" : "Ningún proyecto abierto"
             explanation: studio.proyectos.hayAbierto ? "Los archivos del proyecto (el principal, sus \\input y sus .bib) están a la izquierda; la estructura, en la pestaña de al lado."
                                                      : "Ctrl+1 muestra los proyectos detectados; Ctrl+O abre un .tex."
@@ -164,7 +177,7 @@ QQC2.SplitView {
                 anchors.margins: Kirigami.Units.smallSpacing
                 anchors.leftMargin: Kirigami.Units.largeSpacing
                 spacing: Kirigami.Units.smallSpacing
-                Kirigami.Icon { source: franja.esError ? "data-error" : "data-warning"; implicitWidth: Kirigami.Units.iconSizes.small; implicitHeight: implicitWidth }
+                QQC2.Label { text: "●"; color: franja.esError ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.neutralTextColor; Accessible.ignored: true }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
@@ -173,9 +186,9 @@ QQC2.SplitView {
                                  color: Kirigami.Theme.disabledTextColor }
                 }
                 QQC2.Label { text: franja.c.nProblemas > 1 ? "1 de " + franja.c.nProblemas : ""; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
-                Chip { text: "Ir a la línea"; visible: (franja.primero.linea || 0) > 0; onClicked: franja.c.elegir(0); ayuda: (franja.primero.relativa || "") + ":" + (franja.primero.linea || "") }
-                Chip { text: "Siguiente"; visible: franja.c.nProblemas > 1; onClicked: franja.c.siguiente(); ayuda: "F8" }
-                Chip { text: "Ver todos"; onClicked: ventana.mostrarPanel(0); ayuda: "El panel de problemas, con la causa y el registro (F4)" }
+                QQC2.Button { text: "Ir a la línea"; visible: (franja.primero.linea || 0) > 0; onClicked: franja.c.elegir(0); QQC2.ToolTip.text: (franja.primero.relativa || "") + ":" + (franja.primero.linea || ""); QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+                QQC2.Button { text: "Siguiente"; visible: franja.c.nProblemas > 1; onClicked: franja.c.siguiente(); QQC2.ToolTip.text: "F8"; QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+                QQC2.Button { text: "Ver todos"; onClicked: ventana.mostrarPanel(0); QQC2.ToolTip.text: "El panel de problemas, con la causa y el registro (F4)"; QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
             }
         }
 
@@ -273,6 +286,7 @@ QQC2.SplitView {
     }
 
     Kirigami.PromptDialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: confirmarSobrescribir
         property var editor: null
         title: "El archivo cambió en el disco"

@@ -9,6 +9,7 @@ import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     property string programa: "TeXstudio"
     property var estadoDe: () => studio.sistema.estadoTexstudio()

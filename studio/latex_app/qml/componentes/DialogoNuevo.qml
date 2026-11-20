@@ -7,8 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var n: studio.nuevo
     property string tipo: ""
@@ -100,20 +102,24 @@ Kirigami.Dialog {
                 text: dialogo.n.trabajando ? "Revisando…" : !dialogo.def ? "" : !dialogo.completo ? "Faltan datos obligatorios."
                       : dialogo.revisada ? "Revisado: nada se ha escrito todavía." : "«Revisar» muestra lo que se creará."
             }
-            Chip { text: "Cancelar"; onClicked: dialogo.close() }
-            Chip {
-                text: "Revisar"; icono: "document-preview"
+            QQC2.Button { text: "Cancelar"; onClicked: dialogo.close() }
+            QQC2.Button {
+                text: "Revisar"; icon.name: "document-preview"
                 enabled: dialogo.completo && !dialogo.n.trabajando
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Simula: la carpeta y los archivos, sin escribir nada"
+                QQC2.ToolTip.text: "Simula: la carpeta y los archivos, sin escribir nada"
                 onClicked: dialogo.revisar()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: "Crear y abrir"; icono: "document-new"; destacado: true
+            BotonPrincipal {
+                text: "Crear y abrir"; icon.name: "document-new-symbolic";
                 enabled: dialogo.revisada && !dialogo.n.trabajando
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Crea lo revisado y lo abre en el editor"
+                QQC2.ToolTip.text: "Crea lo revisado y lo abre en el editor"
                 onClicked: dialogo.n.crear(dialogo.campos())
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
         }
     }
@@ -131,7 +137,7 @@ Kirigami.Dialog {
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.gridUnit * 4
                 visible: dialogo.n.marcos.length === 0
-                icon.name: "document-new"
+                icon.name: "document-new-symbolic"
                 text: "Ningún marco ofrece documentos nuevos"
                 explanation: "Un marco lo declara en su latex-studio.yml (sección nuevo:). Añade su carpeta en Carpetas de trabajo (Ctrl+Mayús+O)."
             }

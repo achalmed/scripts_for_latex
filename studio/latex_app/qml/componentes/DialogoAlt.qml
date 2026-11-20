@@ -6,8 +6,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     signal insertar(string texto)
     property var figura: null
@@ -33,9 +35,9 @@ Kirigami.Dialog {
                 font: Kirigami.Theme.smallFont
                 color: alt.text.trim().length > 250 ? Kirigami.Theme.neutralTextColor : Kirigami.Theme.disabledTextColor
             }
-            Chip { text: "Cancelar"; onClicked: dialogo.close() }
-            Chip {
-                text: "Insertar con este texto"; icono: "insert-image"; destacado: true
+            QQC2.Button { text: "Cancelar"; onClicked: dialogo.close() }
+            BotonPrincipal {
+                text: "Insertar con este texto"; icon.name: "insert-image-symbolic";
                 enabled: alt.text.trim() !== ""
                 opacity: enabled ? 1 : 0.5
                 onClicked: { dialogo.insertar(dialogo.figura.insertarAlt.replace("{alt}", dialogo.escapar(alt.text))); dialogo.close() }

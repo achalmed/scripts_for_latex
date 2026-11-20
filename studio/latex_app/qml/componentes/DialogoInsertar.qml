@@ -10,6 +10,7 @@ import org.kde.kirigami as Kirigami
 import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: raiz
 
     property string tipo: "seccion"
@@ -22,6 +23,7 @@ Kirigami.Dialog {
 
     title: titulos[tipo] || "Insertar"
     preferredWidth: Kirigami.Units.gridUnit * 34
+    padding: Kirigami.Units.largeSpacing * 2          // la rejilla y lo que se escribirá, con el mismo aire que el formulario
     standardButtons: Kirigami.Dialog.Cancel
     customFooterActions: [Kirigami.Action {
         text: "Insertar"; icon.name: "insert-text"
@@ -267,17 +269,28 @@ Kirigami.Dialog {
             }
         }
 
-        // lo que se va a escribir
-        QQC2.Label { text: "Se escribirá:"; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
-        QQC2.Label {
+        // lo que se va a escribir, en un pozo tenue con letra de código (antes, texto gris suelto pegado al borde)
+        QQC2.Label { text: "Se escribirá"; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
+        Rectangle {
+            readonly property bool oscuro: Kirigami.ColorUtils.brightnessForColor(Kirigami.Theme.backgroundColor) === Kirigami.ColorUtils.Dark
             Layout.fillWidth: true
-            text: raiz.codigo() || "—"
-            font.family: Kirigami.Theme.fixedWidthFont.family
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
-            wrapMode: Text.WrapAnywhere
-            maximumLineCount: 12
-            elide: Text.ElideRight
-            color: Kirigami.Theme.disabledTextColor
+            implicitHeight: codigoEscrito.implicitHeight + Kirigami.Units.largeSpacing * 2
+            radius: Kirigami.Units.cornerRadius
+            color: Kirigami.ColorUtils.linearInterpolation(Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, oscuro ? 0.07 : 0.04)
+            border.width: 1
+            border.color: Kirigami.ColorUtils.linearInterpolation(Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor, oscuro ? 0.12 : 0.10)
+            QQC2.Label {
+                id: codigoEscrito
+                anchors.fill: parent
+                anchors.margins: Kirigami.Units.largeSpacing
+                text: raiz.codigo() || "—"
+                font.family: Kirigami.Theme.fixedWidthFont.family
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                wrapMode: Text.WrapAnywhere
+                maximumLineCount: 12
+                elide: Text.ElideRight
+                color: Kirigami.ColorUtils.linearInterpolation(Kirigami.Theme.textColor, Kirigami.Theme.disabledTextColor, 0.35)
+            }
         }
     }
 

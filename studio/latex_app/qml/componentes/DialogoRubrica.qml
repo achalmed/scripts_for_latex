@@ -9,6 +9,7 @@ import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var e: studio.entrega
     readonly property var r: e.rubrica
@@ -77,7 +78,7 @@ Kirigami.Dialog {
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
                 visible: !dialogo.r.hay && !dialogo.r.error
-                icon.name: "view-task"
+                icon.name: "view-task-symbolic"
                 text: "Este documento no tiene rúbrica"
                 explanation: "Si es de un curso, el marco la toma del registro del proyecto (la del docente); si no, de su tipo."
             }
@@ -144,8 +145,8 @@ Kirigami.Dialog {
                             font: Kirigami.Theme.smallFont
                             color: Kirigami.Theme.disabledTextColor
                         }
-                        Chip {
-                            text: "Guardar"; icono: "document-save"
+                        QQC2.Button {
+                            text: "Guardar"; icon.name: "document-save"
                             enabled: dialogo.e.puedeAutoevaluar && criterio.elegido !== ""
                                      && (criterio.elegido !== criterio.c.puntaje || justificacion.text.trim() !== criterio.c.justificacion)
                             opacity: enabled ? 1 : 0.5

@@ -8,8 +8,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var m: studio.matriz
     readonly property var r: m.resultado
@@ -41,31 +43,37 @@ Kirigami.Dialog {
                 color: Kirigami.Theme.disabledTextColor
                 text: dialogo.m.leyendo ? "Leyendo…" : dialogo.tenue(dialogo.r.porque, dialogo.r.fuente)
             }
-            Chip { text: "Cerrar"; onClicked: dialogo.close() }
-            Chip {
-                text: "Asistente de pregunta"; icono: "help-hint"
+            QQC2.Button { text: "Cerrar"; onClicked: dialogo.close() }
+            QQC2.Button {
+                text: "Asistente de pregunta"; icon.name: "help-hint"
                 visible: !!dialogo.m.puede.pregunta
-                ayuda: "De un tema a una pregunta en cuatro pasos; se guarda en la matriz"
+                QQC2.ToolTip.text: "De un tema a una pregunta en cuatro pasos; se guarda en la matriz"
                 onClicked: { dialogo.close(); dialogoPregunta.abrir() }
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: "Editar matriz.yml"; icono: "document-edit"
+            QQC2.Button {
+                text: "Editar matriz.yml"; icon.name: "document-edit"
                 visible: dialogo.r.existe
                 onClicked: dialogo.ir(dialogo.r.ruta, 1)
             }
-            Chip {
-                text: "Crear la matriz"; icono: "document-new"; destacado: true
+            BotonPrincipal {
+                text: "Crear la matriz"; icon.name: "document-new-symbolic";
                 visible: !dialogo.r.existe && !!dialogo.m.puede.nueva && !dialogo.m.leyendo
-                ayuda: "Un matriz.yml con su forma, para llenarlo en el editor o con el asistente"
+                QQC2.ToolTip.text: "Un matriz.yml con su forma, para llenarlo en el editor o con el asistente"
                 onClicked: dialogo.m.crear()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: dialogo.r.cuadro && dialogo.r.cuadro.al_dia ? "Cuadro al día" : "Generar el cuadro"; icono: "insert-table"; destacado: true
+            BotonPrincipal {
+                text: dialogo.r.cuadro && dialogo.r.cuadro.al_dia ? "Cuadro al día" : "Generar el cuadro"; icon.name: "insert-table-symbolic";
                 visible: dialogo.r.existe && !!dialogo.m.puede.cuadro
                 enabled: !(dialogo.r.cuadro && dialogo.r.cuadro.al_dia) && !dialogo.m.leyendo
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Escribe " + (dialogo.r.cuadro ? dialogo.r.cuadro.archivo || "el cuadro" : "el cuadro") + " desde la matriz (no pisa uno escrito a mano)"
+                QQC2.ToolTip.text: "Escribe " + (dialogo.r.cuadro ? dialogo.r.cuadro.archivo || "el cuadro" : "el cuadro") + " desde la matriz (no pisa uno escrito a mano)"
                 onClicked: dialogo.m.generarCuadro()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
         }
     }
@@ -109,7 +117,7 @@ Kirigami.Dialog {
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
                 visible: !dialogo.r.existe && !dialogo.m.leyendo && !dialogo.r.error
-                icon.name: "view-list-details"
+                icon.name: "view-list-details-symbolic"
                 text: "El proyecto no tiene matriz de consistencia"
                 explanation: "Créala o empieza por el asistente de pregunta: cada hipótesis tendrá su indicador y su sección, y lo huérfano se verá aquí y en «Antes de entregar»."
             }

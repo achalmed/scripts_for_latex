@@ -133,7 +133,7 @@ QQC2.SplitView {
                 anchors.centerIn: parent
                 width: parent.width - Kirigami.Units.gridUnit * 4
                 visible: rejilla.count === 0
-                icon.name: raiz.p.enDeteccion ? "view-refresh" : "text-x-tex"
+                icon.name: raiz.p.enDeteccion ? "view-refresh-symbolic" : "text-x-generic-symbolic"
                 text: raiz.p.enDeteccion ? "Buscando tus documentos…" : raiz.p.total === 0 ? "Empieza con un documento" : "Ningún documento coincide"
                 explanation: raiz.p.total === 0 && !raiz.p.enDeteccion ? "Crea uno (Ctrl+N), añade una carpeta de trabajo (Ctrl+Mayús+O) o abre un .tex (Ctrl+O)." : ""
                 helpfulAction: raiz.p.total === 0 && !raiz.p.enDeteccion ? accionNuevo : null
@@ -152,7 +152,7 @@ QQC2.SplitView {
             mensajeVacio: raiz.p.enDeteccion ? "Buscando proyectos en las carpetas de trabajo…"
                           : raiz.p.total === 0 ? "No hay proyectos LaTeX en las carpetas de trabajo: añade una (Ctrl+Mayús+O) o abre un .tex (Ctrl+O)"
                           : "Ningún proyecto coincide"
-            iconoVacio: raiz.p.enDeteccion ? "view-refresh" : "text-x-tex"
+            iconoVacio: raiz.p.enDeteccion ? "view-refresh-symbolic" : "text-x-generic-symbolic"
             columnas: [
                 { ancho: 0, minimo: 14, conIcono: true, lineas: 3, cortarTras: "/" },   // la ruta entera, en hasta tres líneas
                 { ancho: 8, semantica: true, conIcono: true },
@@ -199,7 +199,7 @@ QQC2.SplitView {
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.gridUnit * 4
                 visible: raiz.actual === ""
-                icon.name: "text-x-tex"
+                icon.name: "text-x-generic-symbolic"
                 text: "Elige un proyecto"
                 explanation: "Intro o doble clic lo abre en el editor con su PDF. Un proyecto es un documento principal con sus \\input, sus .bib y su configuración."
             }
@@ -227,23 +227,34 @@ QQC2.SplitView {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
                 Kirigami.Heading { level: 2; text: raiz.datos.titulo || raiz.datos.relativa || ""; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                QQC2.Label { text: raiz.datos.carpeta || ""; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                // la carpeta cortada por el medio (antes se partía en cualquier letra: «…multiarchiv / o»), entera en la ayuda
+                QQC2.Label {
+                    text: raiz.datos.carpeta || ""
+                    elide: Text.ElideMiddle
+                    Layout.fillWidth: true
+                    font: Kirigami.Theme.smallFont
+                    color: Kirigami.Theme.disabledTextColor
+                    QQC2.ToolTip.text: text
+                    QQC2.ToolTip.visible: truncated && zonaCarpeta.hovered
+                    HoverHandler { id: zonaCarpeta }
+                }
                 RowLayout {
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Chip { text: raiz.datos.estado || ""; checkable: false; closable: false; icon.name: raiz.datos.icono ? raiz.datos.icono.estado : "" }
-                    Kirigami.Chip { text: raiz.datos.categoria || ""; checkable: false; closable: false; visible: !!raiz.datos.categoria }
+                    // el estado y la categoría como etiquetas (antes, con el mismo borde que los botones de debajo)
+                    EtiquetaNivel { text: raiz.datos.estado || ""; nivel: raiz.datos.nivel || ""; visible: text !== "" }
+                    EtiquetaNivel { text: raiz.datos.categoria || ""; visible: !!raiz.datos.categoria }
                 }
             }
             Flow {
                 visible: raiz.actual !== ""
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
-                Chip { text: "Abrir"; icono: "document-edit"; destacado: true; onClicked: raiz.abrir(raiz.actual); ayuda: "Escribir con el PDF al lado (Intro o doble clic)" }
-                Chip { text: "Compilar"; icono: "run-build"; onClicked: studio.compilacion.lanzar(raiz.actual, "compilar"); ayuda: "Con su compilador y su motor" }
-                Chip { text: "Configurar"; icono: "document-properties"; onClicked: studio.interfaz.pedir("configurar_documento", { ruta: raiz.actual }); ayuda: "Título, autor, tema y opciones de su clase" }
-                Chip { text: "Ver el PDF"; icono: "application-pdf"; visible: !!raiz.datos.pdf; onClicked: studio.escritorio.abrirConAplicacion(raiz.datos.pdf) }
-                Chip { text: "TeXstudio"; icono: "texstudio"; visible: studio.sistema.hayTexstudio; onClicked: studio.sistema.abrirEnTexstudio(raiz.actual, 1, raiz.actual) }
-                Chip { text: "Dolphin"; icono: "system-file-manager"; onClicked: studio.escritorio.mostrarEnDolphin(raiz.actual) }
+                BotonPrincipal { text: "Abrir"; icon.name: "document-edit-symbolic"; onClicked: raiz.abrir(raiz.actual); QQC2.ToolTip.text: "Escribir con el PDF al lado (Intro o doble clic)"; QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+                QQC2.Button { text: "Compilar"; icon.name: "run-build"; onClicked: studio.compilacion.lanzar(raiz.actual, "compilar"); QQC2.ToolTip.text: "Con su compilador y su motor"; QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+                QQC2.Button { text: "Configurar"; icon.name: "document-properties"; onClicked: studio.interfaz.pedir("configurar_documento", { ruta: raiz.actual }); QQC2.ToolTip.text: "Título, autor, tema y opciones de su clase"; QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""; QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay }
+                QQC2.Button { text: "Ver el PDF"; icon.name: "document-preview"; visible: !!raiz.datos.pdf; onClicked: studio.escritorio.abrirConAplicacion(raiz.datos.pdf) }
+                QQC2.Button { text: "TeXstudio"; icon.name: "document-edit"; visible: studio.sistema.hayTexstudio; onClicked: studio.sistema.abrirEnTexstudio(raiz.actual, 1, raiz.actual) }
+                QQC2.Button { text: "Dolphin"; icon.name: "system-file-manager"; onClicked: studio.escritorio.mostrarEnDolphin(raiz.actual) }
             }
             Kirigami.FormLayout {
                 visible: raiz.actual !== ""

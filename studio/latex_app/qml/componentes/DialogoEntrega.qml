@@ -16,6 +16,7 @@ import org.kde.kirigami as Kirigami
 import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var e: studio.entrega
     readonly property var r: e.resultado
@@ -58,6 +59,7 @@ Kirigami.Dialog {
         onElegido: ruta => dialogo.e.entregar(ruta, dialogo.motivoEntrega)
     }
     Kirigami.Dialog {
+        showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
         id: dialogoMotivo
         title: "Faltan " + (dialogo.r.faltan || 0)
         preferredWidth: Kirigami.Units.gridUnit * 28
@@ -152,31 +154,37 @@ Kirigami.Dialog {
                       : dialogo.e.puedeMedir ? "Un clic en un hallazgo lo abre en el editor. «Revisar de nuevo» anota la corrida para medir cada control."
                       : "Un clic en un hallazgo lo abre en el editor. Revisar no escribe nada."
             }
-            Chip { text: "Cerrar"; onClicked: dialogo.close() }
-            Chip {
-                text: "Versión para lector frío"; icono: "im-invisible-user"
+            QQC2.Button { text: "Cerrar"; onClicked: dialogo.close() }
+            QQC2.Button {
+                text: "Versión para lector frío"; icon.name: "im-invisible-user"
                 visible: dialogo.e.puedeLectorFrio
                 enabled: !dialogo.e.revisando && !dialogo.preparandoFrio
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Un PDF sin nombres para un revisor externo (el marco lo compila aparte; el documento no cambia)"
+                QQC2.ToolTip.text: "Un PDF sin nombres para un revisor externo (el marco lo compila aparte; el documento no cambia)"
                 onClicked: { dialogo.preparandoFrio = true; dialogo.e.lectorFrio() }
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: "Entregar el PDF…"; icono: "document-send"
+            QQC2.Button {
+                text: "Entregar el PDF…"; icon.name: "document-send"
                 visible: dialogo.e.puedeEntregar
                 enabled: !dialogo.e.revisando && (dialogo.r.controles || []).length > 0
                 opacity: enabled ? 1 : 0.5
-                ayuda: dialogo.r.listo ? "Copia el PDF adonde elijas y deja constancia de la entrega"
+                QQC2.ToolTip.text: dialogo.r.listo ? "Copia el PDF adonde elijas y deja constancia de la entrega"
                                        : "Con «Faltan " + (dialogo.r.faltan || 0) + "» pide el motivo antes de entregar"
                 onClicked: dialogo.entregar()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: "Revisar de nuevo"; icono: "view-refresh"; destacado: true
+            BotonPrincipal {
+                text: "Revisar de nuevo"; icon.name: "view-refresh-symbolic";
                 enabled: !dialogo.e.revisando
                 opacity: enabled ? 1 : 0.5
-                ayuda: dialogo.e.puedeMedir ? "Vuelve a correr los controles del marco sobre lo guardado y anota la corrida (mide cada control)"
+                QQC2.ToolTip.text: dialogo.e.puedeMedir ? "Vuelve a correr los controles del marco sobre lo guardado y anota la corrida (mide cada control)"
                                             : "Vuelve a correr los controles del marco sobre lo guardado"
                 onClicked: dialogo.e.revisarMidiendo()
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
         }
     }
@@ -246,12 +254,14 @@ Kirigami.Dialog {
                         }
                     }
                 }
-                Chip {
+                QQC2.Button {
                     text: tiempo.enCurso ? "Terminar" : "Empezar"
-                    icono: tiempo.enCurso ? "media-playback-stop" : "media-playback-start"
-                    ayuda: tiempo.enCurso ? "Cierra la etapa y anota sus minutos"
+                    icon.name: tiempo.enCurso ? "media-playback-stop" : "media-playback-start"
+                    QQC2.ToolTip.text: tiempo.enCurso ? "Cierra la etapa y anota sus minutos"
                            : (tiempo.t.abierta ? "Empieza esta etapa y cierra «" + tiempo.t.abierta.nombre + "»" : "Empieza a contar esta etapa")
                     onClicked: dialogo.e.marcarEtapa(tiempo.elegida, tiempo.enCurso ? "terminar" : "empezar")
+                    QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                 }
                 QQC2.Label {
                     Layout.fillWidth: true
@@ -329,13 +339,15 @@ Kirigami.Dialog {
                                     elide: Text.ElideRight
                                     color: Kirigami.Theme.disabledTextColor
                                 }
-                                Chip {                         // lo que marcó no era un defecto: con su motivo (§1.21)
+                                QQC2.Button {                         // lo que marcó no era un defecto: con su motivo (§1.21)
                                     visible: fila.atrapo && dialogo.e.puedeFalso && !fila.declarando
                                     text: "Falso positivo…"
-                                    ayuda: "Declara que lo que marcó este control no era un error; el motivo queda en la medición"
+                                    QQC2.ToolTip.text: "Declara que lo que marcó este control no era un error; el motivo queda en la medición"
                                     onClicked: { fila.declarando = true; motivoFalso.forceActiveFocus() }
+                                    QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                                    QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                                 }
-                                Chip {                         // el control que se resuelve en otra ventana (decisiones §1.22)
+                                QQC2.Button {                         // el control que se resuelve en otra ventana (decisiones §1.22)
                                     visible: (fila.c.accion === "autoevaluar" && dialogo.e.puedeAutoevaluar)
                                              || (fila.c.accion === "matriz" && studio.matriz.disponible)
                                     text: fila.c.accion === "autoevaluar" ? "Autoevaluar…" : "Abrir la matriz…"
@@ -371,13 +383,13 @@ Kirigami.Dialog {
                                     Accessible.name: "Motivo del falso positivo de «" + fila.c.nombre + "»"
                                     onAccepted: if (text.trim() !== "") { dialogo.e.declararFalso(fila.c.id, text); fila.declarando = false; text = "" }
                                 }
-                                Chip {
+                                QQC2.Button {
                                     text: "Declarar"
                                     enabled: motivoFalso.text.trim() !== ""
                                     opacity: enabled ? 1 : 0.5
                                     onClicked: { dialogo.e.declararFalso(fila.c.id, motivoFalso.text); fila.declarando = false; motivoFalso.text = "" }
                                 }
-                                Chip { text: "Cancelar"; onClicked: { fila.declarando = false; motivoFalso.text = "" } }
+                                QQC2.Button { text: "Cancelar"; onClicked: { fila.declarando = false; motivoFalso.text = "" } }
                             }
                             QQC2.TextField {
                                 id: nota

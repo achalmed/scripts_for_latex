@@ -7,8 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 Kirigami.Dialog {
+    showCloseButton: false            // ya hay botones al pie: sin la × roja del encabezado
     id: dialogo
     readonly property var m: studio.matriz
     readonly property var pasos: (m.guia && m.guia.pasos) || []
@@ -64,29 +66,33 @@ Kirigami.Dialog {
                 color: Kirigami.Theme.disabledTextColor
                 font: Kirigami.Theme.smallFont
             }
-            Chip { text: "Cerrar"; onClicked: dialogo.close() }
-            Chip { text: "Atrás"; icono: "go-previous"; visible: dialogo.paso > 0; onClicked: { dialogo.paso -= 1; dialogo.revision = null } }
-            Chip {
-                text: "Siguiente"; icono: "go-next"; destacado: true
+            QQC2.Button { text: "Cerrar"; onClicked: dialogo.close() }
+            QQC2.Button { text: "Atrás"; icon.name: "go-previous"; visible: dialogo.paso > 0; onClicked: { dialogo.paso -= 1; dialogo.revision = null } }
+            BotonPrincipal {
+                text: "Siguiente"; icon.name: "go-next-symbolic";
                 visible: !dialogo.ultimo && dialogo.pasos.length > 0
                 enabled: !!dialogo.actual && dialogo.completo(dialogo.actual)
                 opacity: enabled ? 1 : 0.5
                 onClicked: dialogo.paso += 1
             }
-            Chip {
-                text: "Revisar"; icono: "tools-check-spelling"
+            QQC2.Button {
+                text: "Revisar"; icon.name: "tools-check-spelling"
                 visible: dialogo.ultimo
                 enabled: !dialogo.esperando
-                ayuda: "Los avisos del marco sobre lo escrito; no escribe nada"
+                QQC2.ToolTip.text: "Los avisos del marco sobre lo escrito; no escribe nada"
                 onClicked: { dialogo.esperando = true; dialogo.m.pregunta(dialogo.valores, false) }
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
-            Chip {
-                text: "Guardar en la matriz"; icono: "document-save"; destacado: true
+            BotonPrincipal {
+                text: "Guardar en la matriz"; icon.name: "document-save-symbolic";
                 visible: dialogo.ultimo
                 enabled: !dialogo.esperando && !!dialogo.revision && dialogo.revision.ok === true
                 opacity: enabled ? 1 : 0.5
-                ayuda: "Escribe la pregunta en matriz.yml (con copia .bak); revisa antes"
+                QQC2.ToolTip.text: "Escribe la pregunta en matriz.yml (con copia .bak); revisa antes"
                 onClicked: { dialogo.esperando = true; dialogo.m.pregunta(dialogo.valores, true) }
+                QQC2.ToolTip.visible: hovered && QQC2.ToolTip.text !== ""
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
         }
     }
