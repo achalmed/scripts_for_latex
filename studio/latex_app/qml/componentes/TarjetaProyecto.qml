@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import GuiComun
 
 QQC2.AbstractButton {
     id: raiz
@@ -17,6 +18,10 @@ QQC2.AbstractButton {
                                        : fila.nivel === "neutro" ? Kirigami.Theme.neutralTextColor
                                        : fila.nivel === "positivo" ? Kirigami.Theme.positiveTextColor
                                        : fila.nivel === "activo" ? Kirigami.Theme.activeTextColor : Kirigami.Theme.disabledTextColor
+    // el texto sobre la elegida: con «Lliphi Dark» (el bloque lleno de gui-comun 4.4), el resaltado; si no, el de siempre
+    readonly property color tinta: elegida ? EstiloSeleccion.texto(Kirigami.Theme.textColor, Kirigami.Theme.highlightedTextColor) : Kirigami.Theme.textColor
+    readonly property color tenue: elegida ? EstiloSeleccion.texto(Kirigami.Theme.disabledTextColor, Qt.alpha(Kirigami.Theme.highlightedTextColor, 0.75))
+                                           : Kirigami.Theme.disabledTextColor
 
     // el nombre que se enseña de un archivo: «carpeta/main.tex» → «carpeta»; «otro.tex» → «otro»
     function nombreVisible(ruta) {
@@ -38,8 +43,9 @@ QQC2.AbstractButton {
 
     background: Rectangle {
         radius: Kirigami.Units.cornerRadius * 2
-        // la elegida, teñida del acento (con su borde); al pasar, un velo tenue
-        color: raiz.elegida ? Kirigami.ColorUtils.tintWithAlpha(Kirigami.Theme.backgroundColor, Kirigami.Theme.highlightColor, raiz.hovered ? 0.14 : 0.10)
+        // la elegida como el esquema de color de la ventana (EstiloSeleccion, gui-comun 4.4): con el predeterminado,
+        // teñida del acento con su borde; con «Lliphi Dark», el bloque lleno como en Dolphin. Al pasar, un velo tenue
+        color: raiz.elegida ? EstiloSeleccion.fondo(Kirigami.Theme.backgroundColor, Kirigami.Theme.highlightColor, raiz.hovered ? 0.14 : 0.10)
              : raiz.hovered ? Qt.alpha(Kirigami.Theme.textColor, 0.04) : Kirigami.Theme.backgroundColor
         border.width: raiz.elegida ? 2 : 1
         border.color: raiz.elegida ? Kirigami.Theme.highlightColor
@@ -90,6 +96,7 @@ QQC2.AbstractButton {
             // sin título, el nombre del archivo; si es «main.tex» (seis de cada nueve), el de su carpeta
             text: raiz.fila.titulo || raiz.nombreVisible((raiz.fila.relativa || raiz.fila.nombre || ""))
             font.weight: Font.Medium
+            color: raiz.tinta
             elide: Text.ElideRight
             maximumLineCount: 2
             wrapMode: Text.Wrap
@@ -98,7 +105,7 @@ QQC2.AbstractButton {
             Layout.fillWidth: true
             text: raiz.fila.tipo + " · " + raiz.fila.hace
             font: Kirigami.Theme.smallFont
-            color: Kirigami.Theme.disabledTextColor
+            color: raiz.tenue
             elide: Text.ElideRight
         }
         RowLayout {
@@ -110,7 +117,7 @@ QQC2.AbstractButton {
                 text: raiz.fila.clave === "compilado" || !raiz.fila.problemas || raiz.fila.problemas === "—" || raiz.fila.problemas === "ninguno"
                       ? raiz.fila.estado : raiz.fila.problemas
                 font: Kirigami.Theme.smallFont
-                color: raiz.fila.nivel === "negativo" ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+                color: raiz.fila.nivel === "negativo" ? Kirigami.Theme.negativeTextColor : raiz.tinta
                 elide: Text.ElideRight
             }
         }

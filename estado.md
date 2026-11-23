@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-19
+actualizado: 2026-11-22
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-19
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-22 | **La tarjeta del proyecto elegido sigue al esquema de color de la ventana (gui-comun 4.4)**: `EstiloSeleccion` en su fondo, su título, su tipo y su estado; con «Ajustes ▸ Esquema de color de la ventana ▸ Lliphi Dark», un bloque lleno como en Dolphin con el texto resaltado; con «Predeterminado», el tinte con su borde de siempre; 151 pruebas | `studio/latex_app/qml/componentes/TarjetaProyecto.qml` |
 | 2026-11-19 | **El acabado de la familia** (gui-comun 4.2, nivel de la barra de Ñawinchay): la copia local `Chip` se retira (57 usos → `BotonPrincipal`, `OpcionColor` o `QQC2.Button`); la barra de insertar en pozos por familia (`GrupoOpciones` + `OpcionColor`, iconos monocromos); las pestañas de la barra lateral y la clase de la revisión en el `SelectorSegmentado`; los filtros de Problemas como píldoras de su color y su cuenta (antes, tres botones en azul pleno); «Compilar», «Abrir», «Crear y abrir»… son `BotonPrincipal`; las listas propias (archivos, libros de la ficha, plantillas) con la selección teñida (`FondoSeleccion` de la base) y la tarjeta elegida teñida; las tarjetas «main» llevan el nombre de su carpeta y sin miniatura un icono tenue (no la cruz roja de 48 px); el Esquema sin la «B» de negrita; iconos simbólicos en categorías, estados y vacíos; los 17 diálogos sin la × roja; «Insertar una tabla» con aire y su LaTeX en un pozo | `studio/latex_app/qml/`, `estructura.py`, `controladores/proyectos.py`; `docs/figuras/latex-studio-acabado.png` |
 | 2026-11-19 | «Cambió en el disco y aquí tiene cambios sin guardar» ya no es una franja en la ventana: va a las notificaciones de KDE con sus dos botones («Recargar del disco» · «Mantener lo mío»), por `ventana.mensajes.notificarConAcciones` de gui-comun (pedido del autor: ningún aviso dentro de la ventana en la familia) | `studio/*/qml/componentes/EspacioEscritura.qml` |
 | 2026-11-18 | **«Antes de entregar» mide y entrega con candado** (decisiones §1.21): «Revisar de nuevo» mide (`medir --aplicar`) y cada control dice lo medido; «Falso positivo…» con su motivo (`falso`); «Tiempo por etapa» (Empezar o Terminar la etapa del flujo en curso; `tiempo`); «Entregar el PDF…» en el pie, que con «Faltan N» pide «Entregar de todos modos» con el motivo, y el marco lo anota con la entrega; la hoja del revisor del lector frío se anuncia; la matriz dice «Hipótesis de trabajo» o «estadística» si la fila declara `tipo` | `docs/configuracion-de-documentos.md` §12; `tests/test_datos.py`, `tests/test_controladores.py`; escritura `scripts/antes_de_entregar.py` (`medir`, `falso`, `tiempo`, `entregar`) |
