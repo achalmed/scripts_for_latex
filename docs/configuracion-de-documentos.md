@@ -221,6 +221,14 @@ también pregunta. Sin la orden, copia sin preguntar. Las declara escritura (`es
 la muestra, `studio/ejemplo/proyectos/marco` (`studio/ejemplo/proyectos/marco/scripts/datos_muestra.py`), las §9 y §10.
 Pruebas: `tests/test_datos.py`.
 
+Desde el 2026-11-24 también las declara **docencia** (`docencia/config/latex-studio.yml`; plan «aprender y enseñar»,
+fase 4.4), con las mismas órdenes de biblioteca-studio y `--cuadro ./ayuda-ia.yml`: sus documentos no tienen
+`\componente`, así que el prompt lo elige el cuadro del marco (`docencia/config/ayuda-ia.yml`: el deck de una clase, la
+consigna o la nota de una sesión, la hoja de apuntes; una evaluación no lleva ayuda y dice por qué) y las partes son sus
+`\section`, que llegan en `componentes` como cualquier componente. Sin `marcador`, `{proyecto}` es la carpeta del
+principal (la de la sesión, con su `sesion.yml` y su guion de contexto). La ventana no cambió: sigue sin saber qué prompt
+sirve a qué parte. Pruebas: `docencia/scripts/test_ayuda_ia.py`.
+
 ## 11. Documentos nuevos (`nuevo:`)
 
 Un marco que sabe crear documentos (un informe, una tesis, un artículo…) lo declara al nivel del esquema; la ventana lo

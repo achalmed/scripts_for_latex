@@ -1,7 +1,7 @@
 ---
 tipo: estado
 estado: activo
-actualizado: 2026-11-22
+actualizado: 2026-11-24
 ---
 # estado.md — latex-studio
 
@@ -9,6 +9,7 @@ actualizado: 2026-11-22
 
 | fecha | qué | dónde se ve |
 |---|---|---|
+| 2026-11-24 | **La ayuda de la IA por parte, también en docencia** (plan «aprender y enseñar», fase 4.4): el marco de docencia declara `ayuda:` y la acción Ctrl+Alt+A se enciende en sus sesiones, decks y hojas de apuntes; el prompt lo elige el cuadro del marco (`docencia/config/ayuda-ia.yml`) y las partes son sus `\section`. La ventana no cambió; el contrato §10 dice cómo lo declara docencia | `docs/configuracion-de-documentos.md` §10; `docencia/scripts/test_ayuda_ia.py` |
 | 2026-11-22 | **La tarjeta del proyecto elegido sigue al esquema de color de la ventana (gui-comun 4.4)**: `EstiloSeleccion` en su fondo, su título, su tipo y su estado; con «Ajustes ▸ Esquema de color de la ventana ▸ Lliphi Dark», un bloque lleno como en Dolphin con el texto resaltado; con «Predeterminado», el tinte con su borde de siempre; 151 pruebas | `studio/latex_app/qml/componentes/TarjetaProyecto.qml` |
 | 2026-11-19 | **El acabado de la familia** (gui-comun 4.2, nivel de la barra de Ñawinchay): la copia local `Chip` se retira (57 usos → `BotonPrincipal`, `OpcionColor` o `QQC2.Button`); la barra de insertar en pozos por familia (`GrupoOpciones` + `OpcionColor`, iconos monocromos); las pestañas de la barra lateral y la clase de la revisión en el `SelectorSegmentado`; los filtros de Problemas como píldoras de su color y su cuenta (antes, tres botones en azul pleno); «Compilar», «Abrir», «Crear y abrir»… son `BotonPrincipal`; las listas propias (archivos, libros de la ficha, plantillas) con la selección teñida (`FondoSeleccion` de la base) y la tarjeta elegida teñida; las tarjetas «main» llevan el nombre de su carpeta y sin miniatura un icono tenue (no la cruz roja de 48 px); el Esquema sin la «B» de negrita; iconos simbólicos en categorías, estados y vacíos; los 17 diálogos sin la × roja; «Insertar una tabla» con aire y su LaTeX en un pozo | `studio/latex_app/qml/`, `estructura.py`, `controladores/proyectos.py`; `docs/figuras/latex-studio-acabado.png` |
 | 2026-11-19 | «Cambió en el disco y aquí tiene cambios sin guardar» ya no es una franja en la ventana: va a las notificaciones de KDE con sus dos botones («Recargar del disco» · «Mantener lo mío»), por `ventana.mensajes.notificarConAcciones` de gui-comun (pedido del autor: ningún aviso dentro de la ventana en la familia) | `studio/*/qml/componentes/EspacioEscritura.qml` |
